@@ -342,6 +342,8 @@
     "filter_devin": "Devin",
     "filter_antigravity": "Antigravity",
     "filter_xai": "xAI",
+    "filter_minimax": "MiniMax",
+    "filter_zai": "Z.ai",
     "filter_iflow": "iFlow",
     "filter_vertex": "Vertex",
     "filter_empty": "空文件",

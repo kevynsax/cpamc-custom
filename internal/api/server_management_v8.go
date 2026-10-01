@@ -29,8 +29,9 @@ func (s *Server) registerManagementV8Routes() {
 
 	v8.GET("/server/latest-version", s.mgmt.GetLatestVersion)
 	v8.POST("/requests/api-call", s.mgmt.APICall)
-	v8.POST("/custom/quota/api-call", s.mgmt.CustomQuotaAPICall) // CUSTOM (cpamc-custom)
-	v8.GET("/custom/quota/status", s.mgmt.CustomQuotaStatus)     // CUSTOM (cpamc-custom)
+	v8.POST("/custom/quota/api-call", s.mgmt.CustomQuotaAPICall)       // CUSTOM (cpamc-custom)
+	v8.GET("/custom/quota/status", s.mgmt.CustomQuotaStatus)           // CUSTOM (cpamc-custom)
+	v8.GET("/custom/quota/credentials", s.mgmt.CustomQuotaCredentials) // CUSTOM (cpamc-custom): MiniMax/Z.ai cards
 	v8.POST("/routing/cooldown/reset", s.mgmt.ResetQuota)
 	v8.GET("/routing/model-definitions/:channel", s.mgmt.GetStaticModelDefinitions)
 

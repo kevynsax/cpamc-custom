@@ -12,6 +12,7 @@ import { KIMI_CONFIG } from './providers/kimi/data';
 import { META_CONFIG } from './providers/meta/data';
 import { XAI_CONFIG } from './providers/xai/data';
 import type { QuotaProviderType } from './providers/types';
+import { MINIMAX_CONFIG, ZAI_CONFIG } from './providers/customApiKeyQuota'; // CUSTOM (cpamc-custom)
 import { QUOTA_TAB_ORDER, type QuotaSortMode, type QuotaTabId } from './constants';
 
 const QUOTA_FILTER_MAP: Record<QuotaProviderType, (file: AuthFileItem) => boolean> = {
@@ -22,6 +23,8 @@ const QUOTA_FILTER_MAP: Record<QuotaProviderType, (file: AuthFileItem) => boolea
   kimi: KIMI_CONFIG.filterFn,
   meta: META_CONFIG.filterFn,
   xai: XAI_CONFIG.filterFn,
+  minimax: MINIMAX_CONFIG.filterFn, // CUSTOM (cpamc-custom)
+  zai: ZAI_CONFIG.filterFn, // CUSTOM (cpamc-custom)
 };
 
 export interface QuotaFileEntry {

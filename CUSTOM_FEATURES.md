@@ -65,6 +65,16 @@ git grep -n "CUSTOM (cpamc-custom)"
   Without them it returns 429 "Usage credits are required for fast mode", which
   upstream already treats as request-scoped (no credential cooldown).
 
+### 6. MiniMax and Z.ai quota cards
+
+- These are API-key providers in `api-keys.openai-compatibility`, so the auth-file list
+  never shows them. `GET /v8/management/custom/quota/credentials` lists them
+  (detected by compat name or base URL; the key itself is never returned).
+- The panel merges that list into the quota page and fetches usage through the same
+  backend cache: MiniMax `coding_plan/remains` (5h window + weekly per model) and
+  Z.ai `monitor/usage/quota/limit` (5-hour + weekly credits). Cards reuse the Kimi row body.
+- Reset fields (`end_time`, `weekly_end_time`, `nextResetTime`) feed the earliest-reset routing.
+
 ## Files
 
 | File | Kind |
@@ -81,6 +91,11 @@ git grep -n "CUSTOM (cpamc-custom)"
 | `internal/managementasset/updater.go` | +2 small guards |
 | `sdk/cliproxy/auth/selector.go` | `authPriority` adds the boost |
 | `.dockerignore` | +2 lines |
+| `internal/api/handlers/management/custom_quota_providers.go` | new (MiniMax/Z.ai credential list) |
+| `panel/src/features/quota/providers/customApiKeyQuota.ts` (+ `tests/customApiKeyQuota.test.ts`) | new |
+| `panel/src/features/quota/{constants,logic}.ts`, `providers/{index,types}.ts`, `QuotaPage.tsx` | minimax/zai entries |
+| `panel/src/features/authFiles/constants.ts`, `i18n/locales/*.json` | icons + tab labels |
+| `panel/tests/quotaPageLogic.test.ts` | +2 expected zero counts |
 | `internal/translator/claude/openai/chat-completions/custom_fast_mode.go` (+ `_test.go`) | new |
 | `internal/translator/claude/openai/chat-completions/claude_openai_request.go` | +4 lines (fast mode) |
 | `panel/src/services/api/apiCall.ts` | `postApiCall` routes quota-scoped calls |

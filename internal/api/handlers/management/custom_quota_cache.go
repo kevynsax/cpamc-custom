@@ -590,6 +590,7 @@ func customQuotaResetValue(key, parentKey string, v any, fetchedAt time.Time) (t
 		return time.Time{}, false
 	case key == "resetat" || key == "resetsat" || key == "resettime" || key == "nextresetat" ||
 		key == "nextreset" || key == "billingperiodend" || strings.HasSuffix(key, "resetatunix") ||
+		key == "nextresettime" || key == "endtime" || key == "weeklyendtime" || // Z.ai, MiniMax
 		(key == "end" && parentKey == "currentperiod"):
 		return customQuotaInstant(v)
 	}

@@ -72,6 +72,8 @@ describe('buildTabCounts', () => {
       kimi: 1,
       devin: 0,
       meta: 0,
+      minimax: 0, // CUSTOM (cpamc-custom): API-key quota tabs
+      zai: 0, // CUSTOM (cpamc-custom)
     });
   });
 });

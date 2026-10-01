@@ -11,6 +11,8 @@ import iconGrokDark from '@/assets/icons/grok-dark.svg';
 import iconIflow from '@/assets/icons/iflow.svg';
 import iconKimiDark from '@/assets/icons/kimi-dark.svg';
 import iconKimiLight from '@/assets/icons/kimi-light.svg';
+import iconMinimax from '@/assets/icons/minimax.svg'; // CUSTOM (cpamc-custom)
+import iconGlm from '@/assets/icons/glm.svg'; // CUSTOM (cpamc-custom)
 import iconQwen from '@/assets/icons/qwen.svg';
 import iconVertex from '@/assets/icons/vertex.svg';
 import type { AuthFileItem, ResolvedTheme, ThemeColors } from '@/types';
@@ -89,6 +91,8 @@ export const AUTH_FILE_ICONS: Record<string, AuthFileIconAsset> = {
   kimi: { light: iconKimiDark, dark: iconKimiLight },
   qwen: iconQwen,
   vertex: iconVertex,
+  minimax: iconMinimax, // CUSTOM (cpamc-custom)
+  zai: iconGlm, // CUSTOM (cpamc-custom)
 };
 
 export const clampCardPageSize = (value: number) =>

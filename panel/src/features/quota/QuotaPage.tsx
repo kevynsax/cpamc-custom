@@ -47,6 +47,7 @@ import {
 import { nextRecoveryMs } from './resetSchedule';
 import { QUOTA_ADAPTERS, getQuotaSetter, type QuotaCardState } from './providers';
 import { withQuotaForceRefresh } from '@/services/api/customQuotaApiCall'; // CUSTOM (cpamc-custom)
+import { listApiKeyQuotaCredentials } from './providers/customApiKeyQuota'; // CUSTOM (cpamc-custom)
 import type { QuotaProviderType } from './providers/types';
 import { useDevinQuotaAutoLoad } from './providers/devin/useDevinQuotaAutoLoad';
 import { useQuotaActions } from './hooks/useQuotaActions';
@@ -102,9 +103,10 @@ export function QuotaPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await authFilesApi.list();
+      // CUSTOM (cpamc-custom): add config API-key credentials (MiniMax, Z.ai).
+      const [data, apiKeyFiles] = await Promise.all([authFilesApi.list(), listApiKeyQuotaCredentials()]);
       if (!isCurrent()) return;
-      setFiles(data?.files || []);
+      setFiles([...(data?.files || []), ...apiKeyFiles]);
       setFilesGeneration(sessionGeneration);
     } catch (err: unknown) {
       if (!isCurrent()) return;
@@ -145,6 +147,8 @@ export function QuotaPage() {
         kimi: kimiQuota,
         meta: metaQuota,
         xai: xaiQuota,
+        minimax: kimiQuota, // CUSTOM (cpamc-custom): shares Kimi state
+        zai: kimiQuota, // CUSTOM (cpamc-custom)
       }) as unknown as Record<QuotaProviderType, Record<string, QuotaCardState>>,
     [antigravityQuota, claudeQuota, codexQuota, devinQuota, kimiQuota, metaQuota, xaiQuota]
   );

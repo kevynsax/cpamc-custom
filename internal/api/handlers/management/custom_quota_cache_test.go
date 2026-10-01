@@ -46,6 +46,8 @@ func TestCustomQuotaCollectResetsAcrossProviders(t *testing.T) {
 		{"xai billingPeriodEnd", `{"config":{"billingPeriodEnd":"2026-10-08T16:48:00Z"}}`, time.Date(2026, 10, 8, 16, 48, 0, 0, time.UTC)},
 		{"devin unix seconds", `{"userStatus":{"planStatus":{"weeklyQuotaResetAtUnix":"1790899200"}}}`, time.Unix(1790899200, 0)},
 		{"meta resets_at seconds", `{"subs_usage":{"weekly":{"resets_at":1790899200}}}`, time.Unix(1790899200, 0)},
+		{"zai nextResetTime", `{"data":{"limits":[{"usage":10000,"nextResetTime":1791410021984}]}}`, time.UnixMilli(1791410021984)},
+		{"minimax weekly_end_time", `{"model_remains":[{"weekly_end_time":1791158400000}]}`, time.UnixMilli(1791158400000)},
 		{"antigravity resetTime", `{"groups":[{"buckets":[{"resetTime":"2026-10-08T00:00:00Z"}]}]}`, time.Date(2026, 10, 8, 0, 0, 0, 0, time.UTC)},
 	}
 	for _, tc := range cases {

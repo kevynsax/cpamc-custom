@@ -12,6 +12,7 @@ import type { AuthFileItem } from '@/types';
 import type { QuotaBodyProps } from '../types';
 import type { QuotaProviderType, QuotaStore } from './types';
 import { withBackendQuotaCache } from './customQuotaCache'; // CUSTOM (cpamc-custom)
+import { MINIMAX_CONFIG, ZAI_CONFIG } from './customApiKeyQuota'; // CUSTOM (cpamc-custom)
 import { ANTIGRAVITY_CONFIG } from './antigravity/data';
 import { AntigravityQuotaBody } from './antigravity/AntigravityQuotaBody';
 import { CLAUDE_CONFIG } from './claude/data';
@@ -61,6 +62,9 @@ const UPSTREAM_QUOTA_ADAPTERS: Record<QuotaProviderType, QuotaAdapter> = {
   kimi: { ...KIMI_CONFIG, Body: KimiQuotaBody } as unknown as QuotaAdapter,
   meta: { ...META_CONFIG, Body: MetaQuotaBody } as unknown as QuotaAdapter,
   xai: { ...XAI_CONFIG, Body: XaiQuotaBody } as unknown as QuotaAdapter,
+  // CUSTOM (cpamc-custom): API-key providers share Kimi's row-based card body.
+  minimax: { ...MINIMAX_CONFIG, Body: KimiQuotaBody } as unknown as QuotaAdapter,
+  zai: { ...ZAI_CONFIG, Body: KimiQuotaBody } as unknown as QuotaAdapter,
 };
 
 // CUSTOM (cpamc-custom): every provider's quota reads go through the backend cache.
