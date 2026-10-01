@@ -11,6 +11,7 @@ import { useQuotaStore } from '@/stores';
 import type { AuthFileItem } from '@/types';
 import type { QuotaBodyProps } from '../types';
 import type { QuotaProviderType, QuotaStore } from './types';
+import { withBackendQuotaCache } from './customQuotaCache'; // CUSTOM (cpamc-custom)
 import { ANTIGRAVITY_CONFIG } from './antigravity/data';
 import { AntigravityQuotaBody } from './antigravity/AntigravityQuotaBody';
 import { CLAUDE_CONFIG } from './claude/data';
@@ -49,7 +50,7 @@ export interface QuotaAdapter {
   Body: ComponentType<QuotaBodyProps<QuotaCardState>>;
 }
 
-export const QUOTA_ADAPTERS: Record<QuotaProviderType, QuotaAdapter> = {
+const UPSTREAM_QUOTA_ADAPTERS: Record<QuotaProviderType, QuotaAdapter> = {
   antigravity: {
     ...ANTIGRAVITY_CONFIG,
     Body: AntigravityQuotaBody,
@@ -61,6 +62,10 @@ export const QUOTA_ADAPTERS: Record<QuotaProviderType, QuotaAdapter> = {
   meta: { ...META_CONFIG, Body: MetaQuotaBody } as unknown as QuotaAdapter,
   xai: { ...XAI_CONFIG, Body: XaiQuotaBody } as unknown as QuotaAdapter,
 };
+
+// CUSTOM (cpamc-custom): every provider's quota reads go through the backend cache.
+// Generic: wraps whatever adapters upstream defines, so new providers are covered.
+export const QUOTA_ADAPTERS = withBackendQuotaCache(UPSTREAM_QUOTA_ADAPTERS);
 
 export type QuotaMapUpdater = (
   updater: (prev: Record<string, QuotaCardState>) => Record<string, QuotaCardState>

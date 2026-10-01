@@ -4,6 +4,25 @@
 
 import type { AxiosRequestConfig } from 'axios';
 import { apiClient } from './client';
+import { quotaCacheRoute } from './customQuotaApiCall'; // CUSTOM (cpamc-custom)
+
+// CUSTOM (cpamc-custom): quota-scoped calls use the backend cache endpoint; a stock
+// backend without it (404) transparently falls back to the direct proxy.
+const postApiCall = async (payload: ApiCallRequest, config?: AxiosRequestConfig) => {
+  const route = quotaCacheRoute();
+  if (route) {
+    try {
+      return await apiClient.post<Record<string, unknown>>(
+        route.path,
+        { ...payload, force: route.force },
+        config
+      );
+    } catch (err: unknown) {
+      if ((err as { status?: number })?.status !== 404) throw err;
+    }
+  }
+  return apiClient.post<Record<string, unknown>>('/requests/api-call', payload, config);
+};
 import { isRecord } from '@/utils/helpers';
 
 export interface ApiCallRequest {
@@ -78,11 +97,7 @@ export const getApiCallErrorMessage = (result: ApiCallResult): string => {
 
 export const apiCallApi = {
   request: async (payload: ApiCallRequest, config?: AxiosRequestConfig): Promise<ApiCallResult> => {
-    const response = await apiClient.post<Record<string, unknown>>(
-      '/requests/api-call',
-      payload,
-      config
-    );
+    const response = await postApiCall(payload, config); // CUSTOM (cpamc-custom)
     const statusCode = Number(response?.status_code ?? 0);
     const header = (response?.header ?? {}) as Record<string, string[]>;
     const { bodyText, body } = normalizeBody(response?.body);

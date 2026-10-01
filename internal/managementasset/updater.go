@@ -117,6 +117,9 @@ func autoUpdateSkipReason(cfg *config.Config) (string, bool) {
 	if cfg.RemoteManagement.DisableAutoUpdatePanel {
 		return "disable-auto-update-panel is enabled", true
 	}
+	if customBundledPanelPath() != "" { // CUSTOM (cpamc-custom)
+		return "bundled panel in use", true
+	}
 	return "", false
 }
 
@@ -189,6 +192,9 @@ func FilePath(configFilePath string) string {
 // EnsureLatestManagementHTML checks the latest management.html asset and updates the local copy when needed.
 // It coalesces concurrent sync attempts and returns whether the asset exists after the sync attempt.
 func EnsureLatestManagementHTML(ctx context.Context, staticDir string, proxyURL string, panelRepository string) bool {
+	if handled, ok := customInstallBundledPanel(strings.TrimSpace(staticDir)); handled { // CUSTOM (cpamc-custom)
+		return ok
+	}
 	if ctx == nil {
 		ctx = context.Background()
 	}

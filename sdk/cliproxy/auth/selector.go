@@ -362,6 +362,10 @@ func (e *modelCooldownError) Headers() http.Header {
 }
 
 func authPriority(auth *Auth) int {
+	return authBasePriority(auth) + customResetPriorityBoost(auth) // CUSTOM (cpamc-custom): earliest-reset boost
+}
+
+func authBasePriority(auth *Auth) int {
 	if auth == nil || auth.Attributes == nil {
 		return 0
 	}

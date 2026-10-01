@@ -46,6 +46,7 @@ import {
 } from './logic';
 import { nextRecoveryMs } from './resetSchedule';
 import { QUOTA_ADAPTERS, getQuotaSetter, type QuotaCardState } from './providers';
+import { withQuotaForceRefresh } from '@/services/api/customQuotaApiCall'; // CUSTOM (cpamc-custom)
 import type { QuotaProviderType } from './providers/types';
 import { useDevinQuotaAutoLoad } from './providers/devin/useDevinQuotaAutoLoad';
 import { useQuotaActions } from './hooks/useQuotaActions';
@@ -274,9 +275,23 @@ export function QuotaPage() {
         disableControls
       )
     ) {
-      void loadQuota(pageItems);
+      void withQuotaForceRefresh(() => loadQuota(pageItems)); // CUSTOM (cpamc-custom): live refresh
     }
   }, [disableControls, error, filesGeneration, loading, loadQuota, pageItems, sessionGeneration]);
+
+  // CUSTOM (cpamc-custom): show the backend-cached quota as soon as the list is ready.
+  const autoLoadedRef = useRef<string>('');
+  useEffect(() => {
+    if (disableControls || loading || batchLoading || error || filesGeneration !== sessionGeneration) return;
+    const key = `${sessionGeneration}:${pageItems.map(({ file }) => getQuotaCacheKey(file)).join('|')}`;
+    if (pageItems.length === 0 || autoLoadedRef.current === key) return;
+    autoLoadedRef.current = key;
+    const targets = pageItems.filter(({ type, file }) => {
+      const state = QUOTA_ADAPTERS[type].storeSelector(useQuotaStore.getState() as never)[getQuotaCacheKey(file)];
+      return !state || state.status === 'idle';
+    });
+    if (targets.length > 0) void loadQuota(targets);
+  }, [batchLoading, disableControls, error, filesGeneration, loading, loadQuota, pageItems, sessionGeneration]);
 
   useDevinQuotaAutoLoad(
     pageItems,

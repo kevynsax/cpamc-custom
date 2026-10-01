@@ -6,6 +6,7 @@
 
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { withQuotaForceRefresh } from '@/services/api/customQuotaApiCall'; // CUSTOM (cpamc-custom)
 import {
   captureQuotaCacheGeneration,
   commitIfQuotaCacheCurrent,
@@ -41,7 +42,7 @@ export function useQuotaActions(disableControls: boolean) {
       }));
 
       try {
-        const data = await adapter.fetchQuota(file, t);
+        const data = await withQuotaForceRefresh(() => adapter.fetchQuota(file, t)); // CUSTOM (cpamc-custom): live refresh
         commitIfQuotaCacheCurrent(cacheGeneration, () => {
           const successState = adapter.buildSuccessState(data);
           setQuota((prev) => ({
