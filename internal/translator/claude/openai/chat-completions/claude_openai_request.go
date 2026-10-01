@@ -448,6 +448,12 @@ func convertOpenAIRequestToClaude(modelName string, inputRawJSON []byte, stream,
 		}
 	}
 
+	// CUSTOM (cpamc-custom): Claude fast mode via chat-completions (see CUSTOM_FEATURES.md).
+	// Upstream only maps this on the Responses translator; chat clients (pi) lost it.
+	if claudeChatRequestWantsFast(root) {
+		out, _ = sjson.SetBytes(out, "speed", "fast")
+	}
+
 	if parallelToolCalls := root.Get("parallel_tool_calls"); parallelToolCalls.Type == gjson.False {
 		if gjson.GetBytes(out, "tool_choice").Exists() {
 			if gjson.GetBytes(out, "tool_choice.type").String() != "none" {

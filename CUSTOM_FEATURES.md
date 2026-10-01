@@ -55,6 +55,16 @@ git grep -n "CUSTOM (cpamc-custom)"
   disabled and the bundled file is installed into the static dir.
 - Upstream's `Dockerfile` is untouched. TeamCity builds `Dockerfile.custom`.
 
+### 5. Claude fast mode for chat-completions clients
+
+- Upstream maps fast mode only on the Responses translator, so chat-completions
+  clients such as pi silently lost it. `custom_fast_mode.go` maps
+  `"speed": "fast"` or `"service_tier": "priority"` to Claude's `speed: "fast"`.
+  The executor then adds the `fast-mode-2026-02-01` beta.
+- Anthropic still requires usage credits (extra usage) on the account for fast mode.
+  Without them it returns 429 "Usage credits are required for fast mode", which
+  upstream already treats as request-scoped (no credential cooldown).
+
 ## Files
 
 | File | Kind |
@@ -71,6 +81,8 @@ git grep -n "CUSTOM (cpamc-custom)"
 | `internal/managementasset/updater.go` | +2 small guards |
 | `sdk/cliproxy/auth/selector.go` | `authPriority` adds the boost |
 | `.dockerignore` | +2 lines |
+| `internal/translator/claude/openai/chat-completions/custom_fast_mode.go` (+ `_test.go`) | new |
+| `internal/translator/claude/openai/chat-completions/claude_openai_request.go` | +4 lines (fast mode) |
 | `panel/src/services/api/apiCall.ts` | `postApiCall` routes quota-scoped calls |
 | `panel/src/features/quota/providers/index.ts` | wraps `QUOTA_ADAPTERS` |
 | `panel/src/features/quota/QuotaPage.tsx` | force on refresh-all + load cached on open |
