@@ -11,14 +11,11 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { copyToClipboard } from '@/utils/clipboard';
 import { getQuotaCacheKey } from '@/utils/quota/identity';
 import {
-  QUOTA_PROVIDER_TYPES,
   clampCardPageSize,
   getTypeLabel,
   isProblemAuthFile,
   isRuntimeOnlyAuthFile,
   normalizeProviderKey,
-  type AuthFileQuotaFilter,
-  type QuotaProviderType,
   type ResolvedTheme,
 } from '@/features/authFiles/constants';
 import { AuthFileCard } from '@/features/authFiles/components/AuthFileCard';
@@ -189,13 +186,8 @@ export function AuthFilesPage() {
 
   const disableControls = connectionStatus !== 'connected' || refreshingAllCredentials;
   const normalizedFilter = normalizeProviderKey(String(filter));
-  const quotaFilterType: QuotaProviderType | null = QUOTA_PROVIDER_TYPES.has(
-    normalizedFilter as QuotaProviderType
-  )
-    ? (normalizedFilter as QuotaProviderType)
-    : null;
-  const activeQuotaFilter: AuthFileQuotaFilter =
-    normalizedFilter === 'all' ? 'all' : quotaFilterType;
+  // CUSTOM (cpamc-custom): quota cards no longer live on the Auth Files page
+  // (Quota page only), so no quota filter wiring is needed here.
   const pageSize = compactMode ? pageSizeByMode.compact : pageSizeByMode.regular;
   const problemOnly = statusFilterMode === 'problem';
   const disabledOnly = statusFilterMode === 'disabled';
@@ -579,7 +571,7 @@ export function AuthFilesPage() {
   const gridClasses = [
     styles.grid,
     compactMode ? styles.gridCompact : '',
-    activeQuotaFilter ? styles.gridQuota : '',
+    // CUSTOM (cpamc-custom): styles.gridQuota dropped — quota cards no longer render here.
   ]
     .filter(Boolean)
     .join(' ');
@@ -713,7 +705,6 @@ export function AuthFilesPage() {
                 statusUpdating={statusUpdating}
                 manualRefreshing={manualRefreshing}
                 cooldownResetting={cooldownResetting}
-                quotaFilterType={activeQuotaFilter}
                 statusBarCache={statusBarCache}
                 entranceDelayMs={cardEntranceDelay(index)}
                 onShowModels={showModels}

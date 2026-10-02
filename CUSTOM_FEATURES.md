@@ -82,6 +82,15 @@ git grep -n "CUSTOM (cpamc-custom)"
   key is read from the openai-compatibility entry and never leaves the server.
 - Used by the pi `speak` extension (`~/.pi/agent/extensions/speak`).
 
+### 8. Quota cards removed from the Auth Files page
+
+- Upstream renders an `AuthFileQuotaSection` inside every `AuthFileCard`. We unmount it:
+  quota usage/reset info lives on the Quota page only, where it is served from the
+  backend cache. The Auth Files page makes zero quota calls on open.
+- The component file and `resolveAuthFileQuotaType` stay on disk untouched
+  (upstream subtree files) to avoid delete/modify conflicts on merges; they are
+  simply not imported by `AuthFileCard` anymore.
+
 ## Files
 
 | File | Kind |
@@ -111,6 +120,8 @@ git grep -n "CUSTOM (cpamc-custom)"
 | `panel/src/features/quota/providers/index.ts` | wraps `QUOTA_ADAPTERS` |
 | `panel/src/features/quota/QuotaPage.tsx` | force on refresh-all + load cached on open |
 | `panel/src/features/quota/hooks/useQuotaActions.ts` | force on card refresh |
+| `panel/src/features/authFiles/components/AuthFileCard.tsx` | quota section unmounted |
+| `panel/src/features/authFiles/AuthFilesPage.tsx` | quota filter wiring + `gridQuota` class removed |
 | `panel/src/features/authFiles/components/AuthFileQuotaSection.tsx` | force on card refresh |
 
 ## Merging a new upstream version

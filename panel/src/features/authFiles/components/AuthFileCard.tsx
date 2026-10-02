@@ -26,13 +26,10 @@ import {
   isRuntimeOnlyAuthFile,
   normalizeProviderKey,
   supportsAuthFileManualRefresh,
-  type AuthFileQuotaFilter,
   type ResolvedTheme,
 } from '@/features/authFiles/constants';
 import { deriveAuthFileIdentity } from '@/features/authFiles/identity';
-import { resolveAuthFileQuotaType } from '@/features/authFiles/logic';
 import type { AuthFileStatusBarData } from '@/features/authFiles/hooks/useAuthFilesStatusBarCache';
-import { AuthFileQuotaSection } from '@/features/authFiles/components/AuthFileQuotaSection';
 import { AuthFileCooldownSection } from './AuthFileCooldownSection';
 import styles from './AuthFileCard.module.scss';
 
@@ -46,7 +43,6 @@ export type AuthFileCardProps = {
   statusUpdating: Record<string, boolean>;
   manualRefreshing: Record<string, boolean>;
   cooldownResetting: Record<string, boolean>;
-  quotaFilterType: AuthFileQuotaFilter;
   statusBarCache: Map<string, AuthFileStatusBarData>;
   /** 首屏一次性级联入场的延迟；null/undefined 表示不做入场动画。 */
   entranceDelayMs?: number | null;
@@ -72,7 +68,6 @@ export function AuthFileCard(props: AuthFileCardProps) {
     statusUpdating,
     manualRefreshing,
     cooldownResetting,
-    quotaFilterType,
     statusBarCache,
     entranceDelayMs,
     onShowModels,
@@ -94,8 +89,8 @@ export function AuthFileCard(props: AuthFileCardProps) {
   const typeLabel = getTypeLabel(t, providerKey);
   const typeColor = getTypeColor(providerKey, resolvedTheme);
 
-  const quotaType = resolveAuthFileQuotaType(file, quotaFilterType);
-  const showQuotaLayout = Boolean(quotaType) && !isRuntimeOnly && !compact;
+  // CUSTOM (cpamc-custom): no quota section on the Auth Files page — quota is
+  // shown (and cached) only on the Quota page. See CUSTOM_FEATURES.md.
 
   const successCount = file.successCount ?? 0;
   const failureCount = file.failureCount ?? 0;
@@ -246,9 +241,7 @@ export function AuthFileCard(props: AuthFileCardProps) {
         )}
       </div>
 
-      {showQuotaLayout && quotaType && (
-        <AuthFileQuotaSection file={file} quotaType={quotaType} disableControls={disableControls} />
-      )}
+      {/* CUSTOM (cpamc-custom): AuthFileQuotaSection intentionally not rendered here. */}
 
       <footer className={styles.actions}>
         <div className={styles.actionsMain}>
