@@ -75,6 +75,13 @@ git grep -n "CUSTOM (cpamc-custom)"
   Z.ai `monitor/usage/quota/limit` (5-hour + weekly credits). Cards reuse the Kimi row body.
 - Reset fields (`end_time`, `weekly_end_time`, `nextResetTime`) feed the earliest-reset routing.
 
+### 7. Text-to-speech endpoint (MiniMax)
+
+- `POST /v1/audio/speech` (client API key) takes OpenAI-style `{input, voice, speed}`
+  and returns mp3 from MiniMax T2A (`speech-2.8-hd`, max 10,000 chars). The MiniMax
+  key is read from the openai-compatibility entry and never leaves the server.
+- Used by the pi `speak` extension (`~/.pi/agent/extensions/speak`).
+
 ## Files
 
 | File | Kind |
@@ -91,6 +98,8 @@ git grep -n "CUSTOM (cpamc-custom)"
 | `internal/managementasset/updater.go` | +2 small guards |
 | `sdk/cliproxy/auth/selector.go` | `authPriority` adds the boost |
 | `.dockerignore` | +2 lines |
+| `internal/api/custom_speech.go` | new (TTS endpoint) |
+| `internal/api/server_routes.go` | +1 route line |
 | `internal/api/handlers/management/custom_quota_providers.go` | new (MiniMax/Z.ai credential list) |
 | `panel/src/features/quota/providers/customApiKeyQuota.ts` (+ `tests/customApiKeyQuota.test.ts`) | new |
 | `panel/src/features/quota/{constants,logic}.ts`, `providers/{index,types}.ts`, `QuotaPage.tsx` | minimax/zai entries |
