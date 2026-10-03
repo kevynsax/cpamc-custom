@@ -9,6 +9,7 @@ package management
 
 import (
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 
@@ -21,12 +22,23 @@ func customQuotaAPIKeyProvider(auth *coreauth.Auth) string {
 	if auth == nil || auth.Attributes == nil {
 		return ""
 	}
+	if strings.TrimSpace(auth.Attributes["api_key"]) == "" {
+		return ""
+	}
 	name := strings.ToLower(strings.TrimSpace(auth.Attributes["compat_name"]))
 	base := strings.ToLower(strings.TrimSpace(auth.Attributes["base_url"]))
+	parsedBase, _ := url.Parse(base)
+	host := ""
+	if parsedBase != nil {
+		host = parsedBase.Hostname()
+	}
+	isHost := func(domain string) bool {
+		return host == domain || strings.HasSuffix(host, "."+domain)
+	}
 	switch {
-	case strings.Contains(base, "minimax.io") || strings.Contains(base, "minimaxi.com") || name == "minimax":
+	case isHost("minimax.io") || isHost("minimaxi.com") || name == "minimax":
 		return "minimax"
-	case strings.Contains(base, "z.ai") || strings.Contains(base, "bigmodel.cn") || name == "zai" || name == "z.ai" || name == "zhipu":
+	case isHost("z.ai") || isHost("bigmodel.cn") || name == "zai" || name == "z.ai" || name == "zhipu":
 		return "zai"
 	}
 	return ""
@@ -62,7 +74,10 @@ func (h *Handler) CustomQuotaCredentials(c *gin.Context) {
 		}
 	}
 	sort.Slice(files, func(i, j int) bool {
-		return files[i]["name"].(string) < files[j]["name"].(string)
+		if files[i]["name"] != files[j]["name"] {
+			return files[i]["name"].(string) < files[j]["name"].(string)
+		}
+		return files[i]["auth_index"].(string) < files[j]["auth_index"].(string)
 	})
 	c.JSON(http.StatusOK, gin.H{"files": files})
 }

@@ -75,6 +75,11 @@ git grep -n "CUSTOM (cpamc-custom)"
 - The panel merges that list into the quota page and fetches usage through the same
   backend cache: MiniMax `coding_plan/remains` (5h window + weekly per model) and
   Z.ai `monitor/usage/quota/limit` (5-hour + weekly credits). Cards reuse the Kimi row body.
+- MiniMax and Z.ai keep independent quota caches, so list refreshes cannot clear
+  another provider's cards. Keys with the same provider label are distinguished
+  by their public `auth_index`, never by exposing the secret key.
+- Z.ai selects the international or BigModel quota host from the configured base
+  URL. Both providers participate in reset sorting and the quota timeline.
 - Reset fields (`end_time`, `weekly_end_time`, `nextResetTime`) feed the earliest-reset routing.
 
 ### 7. Text-to-speech endpoint (MiniMax)
@@ -139,6 +144,9 @@ git grep -n "CUSTOM (cpamc-custom)"
 | `panel/src/features/authFiles/components/AuthFileQuotaSection.tsx` | force on card refresh |
 
 ## Merging a new upstream version
+
+Work directly in the main checkout on `custom`; no task branches or worktrees.
+GitHub Actions must remain disabled. Releases are built and deployed with TeamCity.
 
 Handled by the `cpamc-upgrade` skill (`merge` step). Manually:
 

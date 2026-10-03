@@ -1,11 +1,10 @@
 /**
- * 额度查询页：提供商 tabs + 统一卡网格。
+ * Quota management: provider tabs and a unified card grid.
  *
- * 保留的行为契约（重设计不改）：
- * - 现有提供商保持点击加载；Devin 首次可见时主动查询一次，不轮询；
- * - cacheGeneration 会话隔离 + request-id 去重（见 useQuotaBatchLoader）；
- * - 文件列表变化后按 provider 剪枝额度缓存（已删文件不残留）；
- * - useHeaderRefresh 单槽位：本页唯一注册者，全局刷新 = 重取文件列表。
+ * Behavior contracts:
+ * - Session isolation and request deduplication in useQuotaBatchLoader.
+ * - Per-provider cache pruning when the credential list changes.
+ * - This page owns the header refresh slot and reloads the credential list.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -79,12 +78,12 @@ export function QuotaPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
-  // 页头 + tabs 的入场级联（标题 → meta → 动作 → tabs，级差 70ms）
+  // Stagger the header and tabs entrance by 70 ms.
   const revealRef = useRevealGroup<HTMLDivElement>();
 
   const disableControls = connectionStatus !== 'connected';
 
-  /* ---------- 文件列表 ---------- */
+  /* ---------- Credential list ---------- */
 
   const sessionGeneration = useQuotaStore((state) => state.cacheGeneration);
   const [filesGeneration, setFilesGeneration] = useState<number | null>(null);
@@ -104,7 +103,10 @@ export function QuotaPage() {
     setError('');
     try {
       // CUSTOM (cpamc-custom): add config API-key credentials (MiniMax, Z.ai).
-      const [data, apiKeyFiles] = await Promise.all([authFilesApi.list(), listApiKeyQuotaCredentials()]);
+      const [data, apiKeyFiles] = await Promise.all([
+        authFilesApi.list(),
+        listApiKeyQuotaCredentials(),
+      ]);
       if (!isCurrent()) return;
       setFiles([...(data?.files || []), ...apiKeyFiles]);
       setFilesGeneration(sessionGeneration);
@@ -126,14 +128,16 @@ export function QuotaPage() {
     };
   }, [loadFiles]);
 
-  /* ---------- 额度缓存 ----------
-   * 排在归类/排序之前：「最快恢复优先」要读它算排序键。 */
+  /* ---------- Quota cache ----------
+   * Read before classification and sorting to calculate recovery sort keys. */
 
   const antigravityQuota = useQuotaStore((state) => state.antigravityQuota);
   const claudeQuota = useQuotaStore((state) => state.claudeQuota);
   const codexQuota = useQuotaStore((state) => state.codexQuota);
   const devinQuota = useQuotaStore((state) => state.devinQuota);
   const kimiQuota = useQuotaStore((state) => state.kimiQuota);
+  const minimaxQuota = useQuotaStore((state) => state.minimaxQuota); // CUSTOM (cpamc-custom)
+  const zaiQuota = useQuotaStore((state) => state.zaiQuota); // CUSTOM (cpamc-custom)
   const metaQuota = useQuotaStore((state) => state.metaQuota);
   const xaiQuota = useQuotaStore((state) => state.xaiQuota);
 
@@ -147,10 +151,20 @@ export function QuotaPage() {
         kimi: kimiQuota,
         meta: metaQuota,
         xai: xaiQuota,
-        minimax: kimiQuota, // CUSTOM (cpamc-custom): shares Kimi state
-        zai: kimiQuota, // CUSTOM (cpamc-custom)
+        minimax: minimaxQuota, // CUSTOM (cpamc-custom): independent provider caches
+        zai: zaiQuota, // CUSTOM (cpamc-custom)
       }) as unknown as Record<QuotaProviderType, Record<string, QuotaCardState>>,
-    [antigravityQuota, claudeQuota, codexQuota, devinQuota, kimiQuota, metaQuota, xaiQuota]
+    [
+      antigravityQuota,
+      claudeQuota,
+      codexQuota,
+      devinQuota,
+      kimiQuota,
+      minimaxQuota,
+      zaiQuota,
+      metaQuota,
+      xaiQuota,
+    ]
   );
 
   const getQuota = useCallback(
@@ -159,10 +173,10 @@ export function QuotaPage() {
     [quotaByType]
   );
 
-  /* ---------- 归类 / 过滤 / 排序 / 分页 ---------- */
+  /* ---------- Classification / filtering / sorting / pagination ---------- */
 
-  // 只在「最快恢复优先」下订阅分钟时钟。默认序下不门控的话，pageItems 每分钟
-  // 换一次身份，会反复空转下面那个「刷新全部」的 loading 下降沿 effect。
+  // Subscribe to the minute clock only for recovery sorting, keeping pageItems
+  // stable in the default order and avoiding unnecessary refresh effect runs.
   const tick = useNow(sortMode !== 'default');
   const sortNow = sortMode === 'default' ? 0 : tick;
 
@@ -181,7 +195,7 @@ export function QuotaPage() {
     (entry: QuotaFileEntry) => nextRecoveryMs(entry.type, getQuota(entry), sortNow),
     [getQuota, sortNow]
   );
-  // 排序在分页之前：否则「最快恢复」只在当前页内成立。
+  // Sort before pagination so recovery ordering applies to all credentials.
   const sortedEntries = useMemo(
     () => sortQuotaEntries(filteredEntries, sortMode, resolveNextRecovery),
     [filteredEntries, sortMode, resolveNextRecovery]
@@ -221,7 +235,7 @@ export function QuotaPage() {
     return { loadedCount: loaded, attentionCount: attention };
   }, [entries, quotaByType]);
 
-  // 剪枝：文件列表落定后，各 provider 缓存只保留仍存在的凭证
+  // Once the list settles, retain only credentials still present for each provider.
   useEffect(() => {
     if (loading || error || filesGeneration !== sessionGeneration) return;
     const survivorsByType = new Map<QuotaProviderType, Set<string>>(
@@ -242,7 +256,7 @@ export function QuotaPage() {
     });
   }, [entries, error, filesGeneration, loading, sessionGeneration]);
 
-  /* ---------- 加载与操作 ---------- */
+  /* ---------- Loading and actions ---------- */
 
   const { batchLoading, loadQuota } = useQuotaBatchLoader();
   const { resettingQuotaName, refreshQuota, resetQuota } = useQuotaActions(disableControls);
@@ -250,7 +264,7 @@ export function QuotaPage() {
   const pendingRefreshRef = useRef<number | null>(null);
   const prevLoadingRef = useRef(loading);
 
-  // 刷新全部：先重取文件列表，待其落定（loading 下降沿）再批量拉当前页额度
+  // Refresh all: reload the list, then load quota for the current page when it settles.
   const handleRefreshAll = useCallback(() => {
     if (disableControls) return;
     pendingRefreshRef.current = sessionGeneration;
@@ -286,16 +300,34 @@ export function QuotaPage() {
   // CUSTOM (cpamc-custom): show the backend-cached quota as soon as the list is ready.
   const autoLoadedRef = useRef<string>('');
   useEffect(() => {
-    if (disableControls || loading || batchLoading || error || filesGeneration !== sessionGeneration) return;
+    if (
+      disableControls ||
+      loading ||
+      batchLoading ||
+      error ||
+      filesGeneration !== sessionGeneration
+    )
+      return;
     const key = `${sessionGeneration}:${pageItems.map(({ file }) => getQuotaCacheKey(file)).join('|')}`;
     if (pageItems.length === 0 || autoLoadedRef.current === key) return;
     autoLoadedRef.current = key;
     const targets = pageItems.filter(({ type, file }) => {
-      const state = QUOTA_ADAPTERS[type].storeSelector(useQuotaStore.getState() as never)[getQuotaCacheKey(file)];
+      const state = QUOTA_ADAPTERS[type].storeSelector(useQuotaStore.getState() as never)[
+        getQuotaCacheKey(file)
+      ];
       return !state || state.status === 'idle';
     });
     if (targets.length > 0) void loadQuota(targets);
-  }, [batchLoading, disableControls, error, filesGeneration, loading, loadQuota, pageItems, sessionGeneration]);
+  }, [
+    batchLoading,
+    disableControls,
+    error,
+    filesGeneration,
+    loading,
+    loadQuota,
+    pageItems,
+    sessionGeneration,
+  ]);
 
   useDevinQuotaAutoLoad(
     pageItems,
@@ -309,10 +341,9 @@ export function QuotaPage() {
 
   const canUseActions = !disableControls && !loading && filesGeneration === sessionGeneration;
 
-  /* ---------- 首屏卡片一次性级联入场 ----------
-   * 首批数据渲染后立即翻转 cardsAnimated；已挂载的卡片在挂载时捕获过自己的
-   * 延迟（QuotaCard 内 useState 初始化），后续切 tab/翻页/刷新新挂载的卡片
-   * 拿到 null —— 不重播。 */
+  /* ---------- One-time initial card entrance ----------
+   * Cards capture their delay on mount. After the first render, subsequent
+   * tabs, pages and refreshes receive null and do not replay the entrance. */
 
   const [cardsAnimated, setCardsAnimated] = useState(false);
   const enableCardEntrance = !cardsAnimated && !loading && pageItems.length > 0;
@@ -327,7 +358,7 @@ export function QuotaPage() {
     return Math.round((index / (pageItems.length - 1)) * CARD_ENTRANCE_BUDGET_MS);
   };
 
-  /* ---------- 渲染 ---------- */
+  /* ---------- Rendering ---------- */
 
   const isEmpty = !loading && filteredEntries.length === 0;
 
@@ -343,7 +374,7 @@ export function QuotaPage() {
       />
 
       <section className={styles.workbench}>
-        {/* 提供商导航与搜索工具栏分层，避免不同控件争夺视觉焦点。 */}
+        {/* Separate provider navigation and search to keep their visual roles distinct. */}
         <div className={styles.tabsRow} data-reveal>
           <ProviderTabs
             types={TAB_IDS}
@@ -478,7 +509,7 @@ export function QuotaPage() {
           </div>
         )}
 
-        {/* 时间线只比较当前页凭证，避免大量凭证一次性生成无界泳道。 */}
+        {/* Limit the timeline to the current page to avoid unbounded lane counts. */}
         <QuotaTimeline
           entries={pageItems}
           quotaFor={getQuota}

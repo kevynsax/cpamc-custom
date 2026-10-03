@@ -606,6 +606,34 @@
     "limit_index": "限額 #{{index}}",
     "reset_hint": "{{hint}} 後重置"
   },
+  "minimax_quota": {
+    "empty_title": "暫無 MiniMax API 金鑰",
+    "empty_desc": "在 AI 提供商中設定 MiniMax API 金鑰後即可查看程式設計方案配額。",
+    "idle": "點擊此處重新整理配額",
+    "loading": "正在載入配額...",
+    "load_failed": "配額取得失敗：{{message}}",
+    "missing_auth_index": "憑證缺少 auth_index",
+    "empty_data": "暫無 MiniMax 程式設計方案配額資料",
+    "window": "{{model}} · 目前視窗",
+    "weekly": "{{model}} · 每週"
+  },
+  "zai_quota": {
+    "empty_title": "暫無 Z.ai API 金鑰",
+    "empty_desc": "在 AI 提供商中設定 Z.ai API 金鑰後即可查看程式設計方案配額。",
+    "idle": "點擊此處重新整理配額",
+    "loading": "正在載入配額...",
+    "load_failed": "配額取得失敗：{{message}}",
+    "missing_auth_index": "憑證缺少 auth_index",
+    "empty_data": "暫無 Z.ai 程式設計方案配額資料",
+    "limit_credits": "點數",
+    "limit_tools": "工具呼叫",
+    "hour_credits": "{{count}} 小時點數",
+    "hour_tools": "{{count}} 小時工具呼叫",
+    "week_credits": "{{count}} 週點數",
+    "week_tools": "{{count}} 週工具呼叫",
+    "minute_credits": "{{count}} 分鐘點數",
+    "minute_tools": "{{count}} 分鐘工具呼叫"
+  },
   "xai_quota": {
     "title": "Grok 配額",
     "empty_title": "暫無 xAI/Grok 驗證",

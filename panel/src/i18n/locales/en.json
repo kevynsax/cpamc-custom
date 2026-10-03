@@ -608,6 +608,34 @@
     "limit_index": "Limit #{{index}}",
     "reset_hint": "resets in {{hint}}"
   },
+  "minimax_quota": {
+    "empty_title": "No MiniMax API keys",
+    "empty_desc": "Configure a MiniMax API key in AI Providers to view coding-plan quota.",
+    "idle": "Click here to refresh quota",
+    "loading": "Loading quota...",
+    "load_failed": "Failed to load quota: {{message}}",
+    "missing_auth_index": "Credential missing auth_index",
+    "empty_data": "No MiniMax coding-plan quota data available",
+    "window": "{{model}} · current window",
+    "weekly": "{{model}} · weekly"
+  },
+  "zai_quota": {
+    "empty_title": "No Z.ai API keys",
+    "empty_desc": "Configure a Z.ai API key in AI Providers to view coding-plan quota.",
+    "idle": "Click here to refresh quota",
+    "loading": "Loading quota...",
+    "load_failed": "Failed to load quota: {{message}}",
+    "missing_auth_index": "Credential missing auth_index",
+    "empty_data": "No Z.ai coding-plan quota data available",
+    "limit_credits": "Credits",
+    "limit_tools": "Tool calls",
+    "hour_credits": "{{count}}-hour credits",
+    "hour_tools": "{{count}}-hour tool calls",
+    "week_credits": "{{count}}-week credits",
+    "week_tools": "{{count}}-week tool calls",
+    "minute_credits": "{{count}}-minute credits",
+    "minute_tools": "{{count}}-minute tool calls"
+  },
   "xai_quota": {
     "title": "Grok Quota",
     "empty_title": "No xAI/Grok Auth Files",

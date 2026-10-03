@@ -611,6 +611,34 @@
     "limit_index": "Лимит #{{index}}",
     "reset_hint": "сброс через {{hint}}"
   },
+  "minimax_quota": {
+    "empty_title": "API-ключи MiniMax отсутствуют",
+    "empty_desc": "Настройте API-ключ MiniMax в разделе AI Providers, чтобы увидеть квоту плана для программирования.",
+    "idle": "Нажмите, чтобы обновить квоту",
+    "loading": "Загрузка квоты...",
+    "load_failed": "Не удалось загрузить квоту: {{message}}",
+    "missing_auth_index": "В учётных данных отсутствует auth_index",
+    "empty_data": "Данные о квоте плана MiniMax отсутствуют",
+    "window": "{{model}} · текущее окно",
+    "weekly": "{{model}} · неделя"
+  },
+  "zai_quota": {
+    "empty_title": "API-ключи Z.ai отсутствуют",
+    "empty_desc": "Настройте API-ключ Z.ai в разделе AI Providers, чтобы увидеть квоту плана для программирования.",
+    "idle": "Нажмите, чтобы обновить квоту",
+    "loading": "Загрузка квоты...",
+    "load_failed": "Не удалось загрузить квоту: {{message}}",
+    "missing_auth_index": "В учётных данных отсутствует auth_index",
+    "empty_data": "Данные о квоте плана Z.ai отсутствуют",
+    "limit_credits": "Кредиты",
+    "limit_tools": "Вызовы инструментов",
+    "hour_credits": "Кредиты за {{count}} ч.",
+    "hour_tools": "Вызовы инструментов за {{count}} ч.",
+    "week_credits": "Кредиты за {{count}} нед.",
+    "week_tools": "Вызовы инструментов за {{count}} нед.",
+    "minute_credits": "Кредиты за {{count}} мин.",
+    "minute_tools": "Вызовы инструментов за {{count}} мин."
+  },
   "xai_quota": {
     "title": "Квота Grok",
     "empty_title": "Файлы авторизации xAI/Grok отсутствуют",

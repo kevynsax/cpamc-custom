@@ -5,6 +5,12 @@ Go 1.26+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with 
 ## Repository
 - GitHub: https://github.com/router-for-me/CLIProxyAPI
 
+## Custom fork workflow
+- Work directly in `/Users/kevynklava/src/cpamc-custom` on branch `custom`. Do not create worktrees or task branches for this project unless the user explicitly requests them.
+- Push custom changes and release tags only to `fork` (`kevynsax/cpamc-custom`), never to upstream `origin`.
+- GitHub Actions is not used. Never enable GitHub Actions, activate or dispatch workflows, or add Actions-based build/release/deploy automation. Keep repository Actions disabled, including after upstream merges.
+- Build and deploy through the existing TeamCity pipeline and Kubernetes deployment. Verify rollout readiness and the live version before reporting a deployment complete.
+
 ## Commands
 ```bash
 gofmt -w . # Format (required after Go changes)

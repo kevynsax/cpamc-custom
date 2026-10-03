@@ -1,8 +1,8 @@
 /**
- * 额度提供商数据层契约。
+ * Quota provider data-layer contract.
  *
- * data.ts 模块只做「取数 + 状态构造」：不 import React、不 import SCSS，
- * 因此可以被 bun:test 纯逻辑测试直接消费。渲染由同目录的 *QuotaBody 组件承担。
+ * Data modules fetch and build states without importing React or SCSS, making
+ * them directly testable. Provider body components handle rendering separately.
  */
 
 import type { TFunction } from 'i18next';
@@ -20,16 +20,17 @@ import type {
 export type QuotaUpdater<T> = T | ((prev: T) => T);
 
 export type QuotaProviderType =
-  | 'antigravity' | 'claude' | 'codex' | 'devin' | 'kimi' | 'xai' | 'meta'
-  | 'minimax' | 'zai'; // CUSTOM (cpamc-custom): API-key quota cards
+  'antigravity' | 'claude' | 'codex' | 'devin' | 'kimi' | 'xai' | 'meta' | 'minimax' | 'zai'; // CUSTOM (cpamc-custom): API-key quota cards
 
-/** useQuotaStore 的结构契约（storeSelector/storeSetter 依赖）。 */
+/** Structural contract used by storeSelector and storeSetter. */
 export interface QuotaStore {
   antigravityQuota: Record<string, AntigravityQuotaState>;
   claudeQuota: Record<string, ClaudeQuotaState>;
   codexQuota: Record<string, CodexQuotaState>;
   devinQuota: Record<string, DevinQuotaState>;
   kimiQuota: Record<string, KimiQuotaState>;
+  minimaxQuota: Record<string, KimiQuotaState>; // CUSTOM (cpamc-custom)
+  zaiQuota: Record<string, KimiQuotaState>; // CUSTOM (cpamc-custom)
   metaQuota: Record<string, MetaQuotaState>;
   xaiQuota: Record<string, XaiQuotaState>;
   setAntigravityQuota: (updater: QuotaUpdater<Record<string, AntigravityQuotaState>>) => void;
@@ -37,6 +38,8 @@ export interface QuotaStore {
   setCodexQuota: (updater: QuotaUpdater<Record<string, CodexQuotaState>>) => void;
   setDevinQuota: (updater: QuotaUpdater<Record<string, DevinQuotaState>>) => void;
   setKimiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
+  setMinimaxQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
+  setZaiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
   setMetaQuota: (updater: QuotaUpdater<Record<string, MetaQuotaState>>) => void;
   setXaiQuota: (updater: QuotaUpdater<Record<string, XaiQuotaState>>) => void;
   clearQuotaCache: () => void;

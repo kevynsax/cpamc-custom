@@ -24,6 +24,8 @@ interface QuotaStoreState {
   codexQuota: Record<string, CodexQuotaState>;
   devinQuota: Record<string, DevinQuotaState>;
   kimiQuota: Record<string, KimiQuotaState>;
+  minimaxQuota: Record<string, KimiQuotaState>; // CUSTOM (cpamc-custom)
+  zaiQuota: Record<string, KimiQuotaState>; // CUSTOM (cpamc-custom)
   metaQuota: Record<string, MetaQuotaState>;
   xaiQuota: Record<string, XaiQuotaState>;
   setAntigravityQuota: (updater: QuotaUpdater<Record<string, AntigravityQuotaState>>) => void;
@@ -31,6 +33,8 @@ interface QuotaStoreState {
   setCodexQuota: (updater: QuotaUpdater<Record<string, CodexQuotaState>>) => void;
   setDevinQuota: (updater: QuotaUpdater<Record<string, DevinQuotaState>>) => void;
   setKimiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
+  setMinimaxQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
+  setZaiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
   setMetaQuota: (updater: QuotaUpdater<Record<string, MetaQuotaState>>) => void;
   setXaiQuota: (updater: QuotaUpdater<Record<string, XaiQuotaState>>) => void;
   clearQuotaCache: (names?: string[]) => void;
@@ -51,6 +55,8 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
   codexQuota: {},
   devinQuota: {},
   kimiQuota: {},
+  minimaxQuota: {},
+  zaiQuota: {},
   metaQuota: {},
   xaiQuota: {},
   setAntigravityQuota: (updater) =>
@@ -73,6 +79,9 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
     set((state) => ({
       kimiQuota: resolveUpdater(updater, state.kimiQuota),
     })),
+  setMinimaxQuota: (updater) =>
+    set((state) => ({ minimaxQuota: resolveUpdater(updater, state.minimaxQuota) })),
+  setZaiQuota: (updater) => set((state) => ({ zaiQuota: resolveUpdater(updater, state.zaiQuota) })),
   setMetaQuota: (updater) =>
     set((state) => ({ metaQuota: resolveUpdater(updater, state.metaQuota) })),
   setXaiQuota: (updater) =>
@@ -104,6 +113,8 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
           codexQuota: omitNames(state.codexQuota),
           devinQuota: omitNames(state.devinQuota),
           kimiQuota: omitNames(state.kimiQuota),
+          minimaxQuota: omitNames(state.minimaxQuota),
+          zaiQuota: omitNames(state.zaiQuota),
           metaQuota: omitNames(state.metaQuota),
           xaiQuota: omitNames(state.xaiQuota),
         };
@@ -116,6 +127,8 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
         codexQuota: {},
         devinQuota: {},
         kimiQuota: {},
+        minimaxQuota: {},
+        zaiQuota: {},
         metaQuota: {},
         xaiQuota: {},
       };

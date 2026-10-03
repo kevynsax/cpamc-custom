@@ -5,20 +5,20 @@ import { isDevinFile } from './validators';
 const QUOTA_IDENTITY_SEPARATOR = '\0';
 
 /**
- * Cache identity is filename-based for every existing provider. Devin alone can
- * expose multiple credential identities from one physical file, distinguished
- * by auth_index.
+ * Devin and config API keys can share a display name across credentials.
+ * CUSTOM (cpamc-custom): distinguish config keys using their public auth index.
  */
 export function getQuotaCacheKey(file: AuthFileItem): string {
-  if (!isDevinFile(file)) return file.name;
-  const authIndex = normalizeRecentRequestAuthIndex(file.authIndex);
+  if (!isDevinFile(file) && file.quota_source !== 'api-key') return file.name;
+  const authIndex = normalizeRecentRequestAuthIndex(file.authIndex ?? file.auth_index);
   return `${file.name}${QUOTA_IDENTITY_SEPARATOR}${authIndex ?? ''}`;
 }
 
-/** Disambiguate same-name Devin cards without ever falling back to account (a secret). */
+/** Disambiguate same-name cards without ever falling back to account (a secret). */
 export function getQuotaDisplayName(file: AuthFileItem): string {
-  if (!isDevinFile(file)) return file.name;
-  const identity = file.email?.trim() || normalizeRecentRequestAuthIndex(file.authIndex);
+  if (!isDevinFile(file) && file.quota_source !== 'api-key') return file.name;
+  const identity =
+    file.email?.trim() || normalizeRecentRequestAuthIndex(file.authIndex ?? file.auth_index);
   return identity ? `${file.name} · ${identity}` : file.name;
 }
 

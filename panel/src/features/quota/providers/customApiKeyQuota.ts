@@ -5,27 +5,32 @@
  * These credentials live in the backend config (api-keys.openai-compatibility),
  * not in auth files, so the backend lists them at GET /custom/quota/credentials.
  * Their usage maps onto the Kimi row shape (used/limit/reset), so the existing
- * Kimi state and card body are reused instead of adding new store slices.
+ * Kimi card body is reused, with independent provider cache slices.
  */
 
 import type { TFunction } from 'i18next';
 import type { AuthFileItem, KimiQuotaRow, KimiQuotaState } from '@/types';
 import { apiCallApi, getApiCallErrorMessage } from '@/services/api';
 import { apiClient } from '@/services/api/client';
+import { normalizeAuthFilesResponse } from '@/services/api/authFiles';
 import { createStatusError, isDisabledAuthFile, resolveAuthProvider } from '@/utils/quota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
 import type { QuotaProviderData } from './types';
 
 export const MINIMAX_QUOTA_URL = 'https://api.minimax.io/v1/api/openplatform/coding_plan/remains';
+export const MINIMAX_CN_QUOTA_URL =
+  'https://api.minimaxi.com/v1/api/openplatform/coding_plan/remains';
 export const ZAI_QUOTA_URL = 'https://api.z.ai/api/monitor/usage/quota/limit';
+export const ZAI_CN_QUOTA_URL = 'https://open.bigmodel.cn/api/monitor/usage/quota/limit';
 
 /** Backend-listed API-key credentials; empty on a stock backend (404). */
 export async function listApiKeyQuotaCredentials(): Promise<AuthFileItem[]> {
   try {
     const data = await apiClient.get<{ files?: AuthFileItem[] }>('/custom/quota/credentials');
-    return data?.files ?? [];
-  } catch {
-    return [];
+    return normalizeAuthFilesResponse({ files: data?.files ?? [] }).files;
+  } catch (error: unknown) {
+    if ((error as { status?: number })?.status === 404) return [];
+    throw error;
   }
 }
 
@@ -33,6 +38,7 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
 const asNumber = (v: unknown): number | null => {
+  if (typeof v === 'string' && !v.trim()) return null;
   const n = typeof v === 'string' ? Number(v) : v;
   return typeof n === 'number' && Number.isFinite(n) ? n : null;
 };
@@ -53,12 +59,19 @@ export function buildMinimaxQuotaRows(payload: unknown): KimiQuotaRow[] {
   const rows: KimiQuotaRow[] = [];
   models.forEach((raw, index) => {
     if (!isRecord(raw)) return;
-    const model = typeof raw.model_name === 'string' && raw.model_name ? raw.model_name : `#${index + 1}`;
-    const windows: [string, string, unknown, unknown, unknown, unknown][] = [
-      ['interval', 'window', raw.current_interval_remaining_percent, raw.end_time, raw.start_time, raw.current_interval_usage_count],
-      ['weekly', 'weekly', raw.current_weekly_remaining_percent, raw.weekly_end_time, raw.weekly_start_time, raw.current_weekly_usage_count],
+    const model =
+      typeof raw.model_name === 'string' && raw.model_name ? raw.model_name : `#${index + 1}`;
+    const windows: [string, string, unknown, unknown, unknown][] = [
+      ['interval', 'window', raw.current_interval_remaining_percent, raw.end_time, raw.start_time],
+      [
+        'weekly',
+        'weekly',
+        raw.current_weekly_remaining_percent,
+        raw.weekly_end_time,
+        raw.weekly_start_time,
+      ],
     ];
-    for (const [id, labelId, remainingPct, end, start, usedCount] of windows) {
+    for (const [id, labelId, remainingPct, end, start] of windows) {
       const remaining = asNumber(remainingPct);
       if (remaining === null) continue;
       const endMs = asNumber(end);
@@ -66,11 +79,15 @@ export function buildMinimaxQuotaRows(payload: unknown): KimiQuotaRow[] {
       rows.push({
         id: `${model}:${id}`,
         label: `${model} · ${labelId === 'weekly' ? 'weekly' : 'current window'}`,
+        labelKey: `minimax_quota.${labelId}`,
+        labelParams: { model },
         used: Math.max(0, Math.min(100, 100 - remaining)),
         limit: 100,
         resetAtMs: endMs,
-        periodHours: endMs !== null && startMs !== null && endMs > startMs ? (endMs - startMs) / 3_600_000 : null,
-        resetHint: asNumber(usedCount) !== null ? `${asNumber(usedCount)} requests used` : undefined,
+        periodHours:
+          endMs !== null && startMs !== null && endMs > startMs
+            ? (endMs - startMs) / 3_600_000
+            : null,
       });
     }
   });
@@ -104,11 +121,30 @@ export function buildZaiQuotaRows(payload: unknown): KimiQuotaRow[] {
       if (!isRecord(raw)) return null;
       const cap = asNumber(raw.usage);
       const used = asNumber(raw.currentValue);
-      if (cap === null || used === null) return null;
+      if (cap === null || used === null || cap < 0 || used < 0) return null;
       const hours = zaiWindowHours(asNumber(raw.unit), asNumber(raw.number));
+      const kind = raw.type === 'TIME_LIMIT' ? 'tools' : 'credits';
+      const period =
+        hours === null
+          ? 'limit'
+          : hours >= 168 && hours % 168 === 0
+            ? 'week'
+            : hours >= 1
+              ? 'hour'
+              : 'minute';
+      const count =
+        hours === null
+          ? 0
+          : period === 'week'
+            ? hours / 168
+            : period === 'hour'
+              ? hours
+              : Math.round(hours * 60);
       return {
         id: `zai:${index}`,
         label: zaiWindowLabel(hours, String(raw.type ?? '')),
+        labelKey: `zai_quota.${period}_${kind}`,
+        labelParams: { count },
         used,
         limit: cap,
         resetAtMs: asNumber(raw.nextResetTime),
@@ -124,25 +160,46 @@ const makeConfig = (
   header: Record<string, string>,
   build: (payload: unknown) => KimiQuotaRow[]
 ): QuotaProviderData<KimiQuotaState, KimiQuotaRow[]> => ({
-  type: type as never,
-  i18nPrefix: 'kimi_quota',
+  type,
+  i18nPrefix: `${type}_quota`,
   filterFn: (file) => resolveAuthProvider(file) === type && !isDisabledAuthFile(file),
   fetchQuota: async (file: AuthFileItem, t: TFunction) => {
     const authIndex = normalizeAuthIndex(file['auth_index'] ?? file.authIndex);
-    if (!authIndex) throw new Error(t('kimi_quota.missing_auth_index'));
-    const result = await apiCallApi.request({ authIndex, method: 'GET', url, header });
+    const prefix = `${type}_quota`;
+    if (!authIndex) throw new Error(t(`${prefix}.missing_auth_index`));
+    let quotaUrl = url;
+    if (typeof file.base_url === 'string') {
+      try {
+        const host = new URL(file.base_url).hostname.toLowerCase();
+        if (type === 'zai' && (host === 'bigmodel.cn' || host.endsWith('.bigmodel.cn')))
+          quotaUrl = ZAI_CN_QUOTA_URL;
+        if (type === 'minimax' && (host === 'minimaxi.com' || host.endsWith('.minimaxi.com')))
+          quotaUrl = MINIMAX_CN_QUOTA_URL;
+      } catch {
+        // Missing or invalid region hints keep the international endpoint.
+      }
+    }
+    const result = await apiCallApi.request({ authIndex, method: 'GET', url: quotaUrl, header });
     if (result.statusCode < 200 || result.statusCode >= 300) {
       throw createStatusError(getApiCallErrorMessage(result), result.statusCode);
     }
     const rows = build(result.body ?? result.bodyText);
-    if (rows.length === 0) throw new Error(t('kimi_quota.empty_data'));
-    return rows;
+    if (rows.length === 0) throw new Error(t(`${prefix}.empty_data`));
+    return rows.map((row) => ({
+      ...row,
+      label: row.labelKey ? t(row.labelKey, row.labelParams ?? {}) : row.label,
+    }));
   },
-  storeSelector: (state) => state.kimiQuota,
-  storeSetter: 'setKimiQuota',
+  storeSelector: (state) => (type === 'zai' ? state.zaiQuota : state.minimaxQuota),
+  storeSetter: type === 'zai' ? 'setZaiQuota' : 'setMinimaxQuota',
   buildLoadingState: () => ({ status: 'loading', rows: [] }),
   buildSuccessState: (rows) => ({ status: 'success', rows }),
-  buildErrorState: (message, status) => ({ status: 'error', rows: [], error: message, errorStatus: status }),
+  buildErrorState: (message, status) => ({
+    status: 'error',
+    rows: [],
+    error: message,
+    errorStatus: status,
+  }),
 });
 
 export const MINIMAX_CONFIG = makeConfig(

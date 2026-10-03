@@ -606,6 +606,34 @@
     "limit_index": "限额 #{{index}}",
     "reset_hint": "{{hint}} 后重置"
   },
+  "minimax_quota": {
+    "empty_title": "暂无 MiniMax API 密钥",
+    "empty_desc": "在 AI 提供商中配置 MiniMax API 密钥后即可查看编程套餐额度。",
+    "idle": "点击此处刷新额度",
+    "loading": "正在加载额度...",
+    "load_failed": "额度获取失败：{{message}}",
+    "missing_auth_index": "凭据缺少 auth_index",
+    "empty_data": "暂无 MiniMax 编程套餐额度数据",
+    "window": "{{model}} · 当前窗口",
+    "weekly": "{{model}} · 每周"
+  },
+  "zai_quota": {
+    "empty_title": "暂无 Z.ai API 密钥",
+    "empty_desc": "在 AI 提供商中配置 Z.ai API 密钥后即可查看编程套餐额度。",
+    "idle": "点击此处刷新额度",
+    "loading": "正在加载额度...",
+    "load_failed": "额度获取失败：{{message}}",
+    "missing_auth_index": "凭据缺少 auth_index",
+    "empty_data": "暂无 Z.ai 编程套餐额度数据",
+    "limit_credits": "积分",
+    "limit_tools": "工具调用",
+    "hour_credits": "{{count}} 小时积分",
+    "hour_tools": "{{count}} 小时工具调用",
+    "week_credits": "{{count}} 周积分",
+    "week_tools": "{{count}} 周工具调用",
+    "minute_credits": "{{count}} 分钟积分",
+    "minute_tools": "{{count}} 分钟工具调用"
+  },
   "xai_quota": {
     "title": "Grok 额度",
     "empty_title": "暂无 xAI/Grok 认证",
