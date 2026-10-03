@@ -163,7 +163,8 @@ routing:
     # Additional rounds apply to HTTP 403, 408, 429, 500, 502, 503, and 504 failures.
     # Individual credential/provider overrides take precedence; 0 disables additional
     # rounds, while an omitted or negative override inherits this global setting.
-    request-retry: 3
+    # CUSTOM (cpamc-custom): allow two bounded recovery rounds after transient failures.
+    request-retry: 2
 
     # Maximum number of different credentials to try in each credential retry round
     # after per-credential round filtering. Set to 0 to try all available
@@ -187,7 +188,8 @@ routing:
 
     # Cooldown duration in seconds for transient upstream errors (408/500/502/503/504/520-526).
     # Set to 0 to keep the legacy 60-second cooldown; set to -1 to disable transient error cooldowns.
-    transient-error-cooldown-seconds: 0
+    # CUSTOM (cpamc-custom): recover from transient failures without a 60-second blackout.
+    transient-error-cooldown-seconds: 5
 
 # Shared request/response behavior.
 requests:

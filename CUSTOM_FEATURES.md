@@ -93,11 +93,23 @@ git grep -n "CUSTOM (cpamc-custom)"
   (upstream subtree files) to avoid delete/modify conflicts on merges; they are
   simply not imported by `AuthFileCard` anymore.
 
+### 9. Transient failure recovery configuration
+
+- The custom config template uses `routing.retry.request-retry: 2` and
+  `routing.cooldown.transient-error-cooldown-seconds: 5` to recover from temporary
+  connection/server errors without a 60-second credential blackout.
+- Existing installations must apply these values to their persisted config; an
+  image upgrade does not overwrite that file. Cooldown waiting remains enabled
+  through `routing.retry.max-retry-interval: 30`.
+- Quota/rate-limit cooldowns, credential overrides, and WebSocket selection are
+  unchanged. These settings apply globally, not only to Codex.
+
 ## Files
 
 | File | Kind |
 |---|---|
 | `CUSTOM_FEATURES.md`, `Dockerfile.custom` | new |
+| `config.example.yaml` | custom transient cooldown + retry configuration |
 | `internal/api/handlers/management/custom_quota_cache.go` (+ `_test.go`) | new |
 | `internal/managementasset/custom_bundled.go` | new |
 | `sdk/cliproxy/auth/custom_reset_priority.go` (+ `_test.go`) | new |
