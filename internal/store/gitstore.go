@@ -520,6 +520,10 @@ func (s *GitTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error) {
 			return walkErr
 		}
 		if d.IsDir() {
+			// CUSTOM (cpamc-custom): quota state is not credential material.
+			if path != dir && d.Name() == ".cpamc-custom" {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		if !strings.HasSuffix(strings.ToLower(d.Name()), ".json") {

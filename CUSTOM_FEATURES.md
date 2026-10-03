@@ -22,6 +22,8 @@ git grep -n "CUSTOM (cpamc-custom)"
 - The backend stores each distinct request (credential + method + URL + body) and its
   last response. Cache file: `<auth-dir>/.cpamc-custom/quota-cache.json` (mode 0600).
   Tokens are never written; `$TOKEN$` stays a placeholder and is resolved per call.
+- File, git, and object credential stores skip `.cpamc-custom/` directories during
+  auth loading, so quota state never appears as a credential in Auth Files.
 - Page load reads from the cache. "Refresh all credentials" and per-card refresh send
   `force: true`, which does a live call and updates the cache.
 - Never cached or replayed: URLs matching `consume|claim|redeem|/chat/completions`
