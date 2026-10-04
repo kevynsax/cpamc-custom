@@ -1620,15 +1620,16 @@ func isConnectionLifecycleMessage(message string) bool {
 	return false
 }
 
-// isTransientTransportError reports pre-HTTP dial/TLS/DNS/reset failures that
-// should retry under request-retry without cooling the selected credential.
+// isTransientTransportError reports dial/TLS/DNS/reset failures, including
+// proxy-reported pre-header failures, that should retry without cooling credentials.
 func isTransientTransportError(err error) bool {
 	if err == nil {
 		return false
 	}
-	// HTTP-status failures stay on the credential/status retry path.
-	if statusCodeFromError(err) != 0 {
-		return false
+	// Only the explicit proxy pre-header failure is transport-neutral when an
+	// HTTP status is present. Provider auth, quota and generic 5xx errors still cool.
+	if status := statusCodeFromError(err); status != 0 {
+		return isProxyConnectionFailure(status, err.Error())
 	}
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return false
@@ -1661,10 +1662,36 @@ func isTransientTransportResultError(err *Error) bool {
 	if err.Code == transientTransportErrorCode {
 		return true
 	}
-	if statusCodeFromResult(err) != 0 {
-		return false
+	if status := statusCodeFromResult(err); status != 0 {
+		return isProxyConnectionFailure(status, err.Message)
 	}
 	return isTransientTransportMessage(err.Message)
+}
+
+// isProxyConnectionFailure recognizes a proxy's failure to establish the upstream
+// connection. The proxy's 503 describes transport health, not credential health.
+func isProxyConnectionFailure(status int, message string) bool {
+	if status != http.StatusServiceUnavailable {
+		return false
+	}
+	message = strings.TrimSpace(message)
+	if strings.HasPrefix(message, "{") {
+		var body struct {
+			Message string `json:"message"`
+			Error   struct {
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		if errJSON := json.Unmarshal([]byte(message), &body); errJSON != nil {
+			return false
+		}
+		message = strings.TrimSpace(body.Error.Message)
+		if message == "" {
+			message = strings.TrimSpace(body.Message)
+		}
+	}
+	const prefix = "upstream connect error or disconnect/reset before headers. reset reason: "
+	return strings.HasPrefix(message, prefix) && strings.TrimSpace(strings.TrimPrefix(message, prefix)) != ""
 }
 
 func isTransientSyscallError(err error) bool {
