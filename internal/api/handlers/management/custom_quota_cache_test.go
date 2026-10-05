@@ -3,9 +3,16 @@ package management
 // CUSTOM (cpamc-custom): tests for the quota cache helpers and reset extraction.
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 )
 
 func TestCustomQuotaInWindow(t *testing.T) {
@@ -86,5 +93,81 @@ func TestCustomQuotaUnsafeURLs(t *testing.T) {
 	}
 	if customQuotaUnsafeURL.MatchString("https://cli-chat-proxy.grok.com/v1/billing") {
 		t.Error("billing must be cacheable")
+	}
+}
+
+func TestUsageSnapshotMasksRawKeys(t *testing.T) {
+	payload := map[string]map[string]apiKeyUsageEntry{
+		"codex": {"https://codex.example.com|secret-key": {Success: 3, Failed: 1}},
+	}
+	maskUsageSnapshotKeys(payload)
+	for key := range payload["codex"] {
+		if key == "https://codex.example.com|secret-key" {
+			t.Fatal("snapshot must not contain the raw key")
+		}
+		if got := key; len(got) == 0 || got[:len("https://codex.example.com|sha256:")] != "https://codex.example.com|sha256:" {
+			t.Fatalf("unexpected masked key %q", got)
+		}
+	}
+}
+
+func TestGetUsageSnapshotReadOnly(t *testing.T) {
+	t.Setenv("MANAGEMENT_PASSWORD", "")
+
+	manager := coreauth.NewManager(nil, nil, nil)
+	if _, err := manager.Register(context.Background(), &coreauth.Auth{
+		ID:       "codex-auth",
+		Provider: "codex",
+		Attributes: map[string]string{
+			"api_key":  "secret-key",
+			"base_url": "https://codex.example.com",
+		},
+	}); err != nil {
+		t.Fatalf("register codex auth: %v", err)
+	}
+	manager.MarkResult(context.Background(), coreauth.Result{AuthID: "codex-auth", Provider: "codex", Model: "gpt-5", Success: true})
+
+	h := NewHandlerWithoutConfigFilePath(&config.Config{AuthDir: t.TempDir()}, manager)
+	h.refreshUsageSnapshot()
+
+	first := func() (string, int64) {
+		rec := httptest.NewRecorder()
+		ginCtx, _ := gin.CreateTestContext(rec)
+		ginCtx.Request = httptest.NewRequest(http.MethodGet, "/v0/management/usage-snapshot", nil)
+		h.GetUsageSnapshot(ginCtx)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want %d body=%s", rec.Code, http.StatusOK, rec.Body.String())
+		}
+		var out struct {
+			FetchedAt time.Time                              `json:"fetched_at"`
+			Usage     map[string]map[string]apiKeyUsageEntry `json:"usage"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+			t.Fatalf("decode payload: %v", err)
+		}
+		for key := range out.Usage["codex"] {
+			if key == "https://codex.example.com|secret-key" {
+				t.Fatal("snapshot response must not contain the raw key")
+			}
+			return key, out.Usage["codex"][key].Success
+		}
+		t.Fatal("missing codex bucket")
+		return "", 0
+	}
+	key1, success1 := first()
+
+	manager.MarkResult(context.Background(), coreauth.Result{AuthID: "codex-auth", Provider: "codex", Model: "gpt-5", Success: true})
+	rec := httptest.NewRecorder()
+	ginCtx, _ := gin.CreateTestContext(rec)
+	ginCtx.Request = httptest.NewRequest(http.MethodGet, "/v0/management/usage-snapshot", nil)
+	h.GetUsageSnapshot(ginCtx)
+	var out struct {
+		Usage map[string]map[string]apiKeyUsageEntry `json:"usage"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("decode payload: %v", err)
+	}
+	if got := out.Usage["codex"][key1].Success; got != success1 {
+		t.Fatalf("endpoint refreshed data: success=%d, want stale %d", got, success1)
 	}
 }

@@ -69,8 +69,16 @@ func (h *Handler) GetAPIKeyUsage(c *gin.Context) {
 		return
 	}
 
-	now := time.Now()
+	c.JSON(http.StatusOK, buildAPIKeyUsagePayload(manager, time.Now()))
+}
+
+// buildAPIKeyUsagePayload returns recent request buckets for all in-memory api_key auths,
+// grouped by provider and keyed by "base_url|api_key".
+func buildAPIKeyUsagePayload(manager *coreauth.Manager, now time.Time) map[string]map[string]apiKeyUsageEntry {
 	out := make(map[string]map[string]apiKeyUsageEntry)
+	if manager == nil {
+		return out
+	}
 	for _, auth := range manager.List() {
 		if auth == nil {
 			continue
@@ -113,5 +121,5 @@ func (h *Handler) GetAPIKeyUsage(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, out)
+	return out
 }

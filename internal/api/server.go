@@ -217,7 +217,8 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 	}
 	logDir := logging.ResolveLogDirectory(cfg)
 	s.mgmt.SetLogDirectory(logDir)
-	s.mgmt.StartCustomQuotaCache(context.Background()) // CUSTOM (cpamc-custom): quota cache + reset-priority
+	s.mgmt.StartCustomQuotaCache(context.Background())   // CUSTOM (cpamc-custom): quota cache + reset-priority
+	s.mgmt.StartUsageSnapshotCache(context.Background()) // CUSTOM (cpamc-custom): quarterly-hour usage snapshot
 	if optionState.postAuthHook != nil {
 		s.mgmt.SetPostAuthHook(optionState.postAuthHook)
 	}

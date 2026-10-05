@@ -26,6 +26,16 @@ import (
 	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 )
 
+// customQuotaView serves the cached quota snapshot to client access keys.
+// CUSTOM (cpamc-custom): no management key, never refreshes upstream.
+func (s *Server) customQuotaView(c *gin.Context) {
+	if s == nil || s.mgmt == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "quota view unavailable"})
+		return
+	}
+	s.mgmt.CustomQuotaView(c)
+}
+
 const (
 	customSpeechURL          = "https://api.minimax.io/v1/t2a_v2"
 	customSpeechDefaultModel = "speech-2.8-hd"
