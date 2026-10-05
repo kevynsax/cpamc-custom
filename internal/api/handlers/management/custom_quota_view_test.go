@@ -58,6 +58,10 @@ func TestCustomQuotaViewReadOnlyAndSanitized(t *testing.T) {
 	if _, err := manager.Register(nil, &coreauth.Auth{ID: "codex-auth", Provider: "codex"}); err != nil {
 		t.Fatalf("register: %v", err)
 	}
+	if _, err := manager.Register(nil, &coreauth.Auth{ID: "minimax-auth", Provider: "openai-compatibility",
+		Attributes: map[string]string{"compat_name": "MiniMax"}}); err != nil {
+		t.Fatalf("register minimax: %v", err)
+	}
 	h := NewHandlerWithoutConfigFilePath(&config.Config{AuthDir: t.TempDir()}, manager)
 
 	customQuota.mu.Lock()
@@ -68,6 +72,8 @@ func TestCustomQuotaViewReadOnlyAndSanitized(t *testing.T) {
 			StatusCode: 200, Body: `{"plan_type":"plus","email":"ada@example.com","rate_limit":{"primary_window":{"used_percent":40}}}`, FetchedAt: time.Now().UTC()},
 		"b": {Recipe: customQuotaRecipe{AuthID: "codex-auth", Provider: "codex", URL: "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits/consume"},
 			StatusCode: 200, Body: `{"consumed":true}`, FetchedAt: time.Now().UTC()},
+		"c": {Recipe: customQuotaRecipe{AuthID: "minimax-auth", Provider: "openai-compatibility", URL: "https://api.minimax.io/v1/api/openplatform/coding_plan/remains"},
+			StatusCode: 200, Body: `{"model_remains":[{"current_interval_remaining_percent":70}]}`, FetchedAt: time.Now().UTC()},
 	}
 	customQuota.mu.Unlock()
 	t.Cleanup(func() {
@@ -94,8 +100,20 @@ func TestCustomQuotaViewReadOnlyAndSanitized(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if len(out.Credentials) != 1 || len(out.Credentials[0].Entries) != 1 {
+	if len(out.Credentials) != 2 {
 		t.Fatalf("credentials = %+v", out.Credentials)
+	}
+	var sawMinimax bool
+	for _, cred := range out.Credentials {
+		if cred.Provider == "minimax" {
+			sawMinimax = true
+		}
+		if strings.Contains(cred.Provider, "compatib") {
+			t.Fatalf("compat provider leaked: %+v", cred)
+		}
+	}
+	if !sawMinimax {
+		t.Fatalf("minimax credential missing: %+v", out.Credentials)
 	}
 	if out.Credentials[0].ID == "" || out.Credentials[0].Provider != "codex" {
 		t.Fatalf("credential = %+v", out.Credentials[0])

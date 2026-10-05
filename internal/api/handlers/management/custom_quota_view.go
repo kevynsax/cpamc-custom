@@ -101,7 +101,7 @@ func (h *Handler) CustomQuotaView(c *gin.Context) {
 		if view == nil {
 			view = &quotaViewCredential{ID: quotaViewID(row.authID), Provider: row.provider}
 			if auth := authsByID[row.authID]; auth != nil {
-				view.Provider = strings.ToLower(strings.TrimSpace(auth.Provider))
+				view.Provider = quotaViewProvider(auth)
 				view.Disabled = auth.Disabled || auth.Status == coreauth.StatusDisabled
 			}
 			grouped[row.authID] = view
@@ -144,6 +144,22 @@ func (h *Handler) CustomQuotaView(c *gin.Context) {
 		"refresh_every": customQuotaRefreshEvery.String(),
 		"window":        "09:30-21:30 UTC-3",
 	})
+}
+
+// quotaViewProvider reports the provider a quota client understands. API-key
+// providers such as MiniMax and Z.ai are registered as openai-compatibility,
+// so their compat name is what distinguishes them.
+func quotaViewProvider(auth *coreauth.Auth) string {
+	provider := strings.ToLower(strings.TrimSpace(auth.Provider))
+	if !strings.HasPrefix(provider, "openai-compatib") {
+		return provider
+	}
+	if auth.Attributes != nil {
+		if name := strings.ToLower(strings.TrimSpace(auth.Attributes["compat_name"])); name != "" {
+			return name
+		}
+	}
+	return provider
 }
 
 // quotaViewID is a stable opaque handle for a credential. Auth ids can be file
