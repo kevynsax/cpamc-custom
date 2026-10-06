@@ -1690,8 +1690,17 @@ func isProxyConnectionFailure(status int, message string) bool {
 			message = strings.TrimSpace(body.Message)
 		}
 	}
-	const prefix = "upstream connect error or disconnect/reset before headers. reset reason: "
-	return strings.HasPrefix(message, prefix) && strings.TrimSpace(strings.TrimPrefix(message, prefix)) != ""
+	// CUSTOM (cpamc-custom): Envoy also reports "... retried and the latest reset reason: ..."
+	// after its own retries; observed live from the ChatGPT edge, it is equally transport-only.
+	for _, prefix := range []string{
+		"upstream connect error or disconnect/reset before headers. reset reason: ",
+		"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: ",
+	} {
+		if strings.HasPrefix(message, prefix) && strings.TrimSpace(strings.TrimPrefix(message, prefix)) != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func isTransientSyscallError(err error) bool {

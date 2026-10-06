@@ -109,6 +109,22 @@ git grep -n "CUSTOM (cpamc-custom)"
 - Quota/rate-limit cooldowns, credential overrides, and WebSocket selection are
   unchanged. These settings apply globally, not only to Codex.
 
+### 10. Codex-parity transient retry (edge outages)
+
+- Root cause of "pi gets 503 while Codex CLI keeps working" on the same account: when the
+  ChatGPT edge returns Envoy's `upstream connect error ... before headers` 503, the credential
+  is deliberately not cooled, so all `request-retry` rounds fired within ~100 ms and the client
+  got the 503. Native Codex backs off (200 ms doubling, 5 retries, then WS→HTTPS fallback).
+- `sdk/cliproxy/auth/custom_transient_backoff.go`: transient 408/500/502/503/504 and transport
+  failures wait 1s, 2s, 4s, 8s, 8s between rounds (capped by `max-retry-interval`). Hooked in
+  `shouldRetryAfterErrorWithAttempted` (`conductor_selection.go`). Quota/auth errors unchanged.
+- `isProxyConnectionFailure` (`conductor_cooldown.go`) also accepts Envoy's
+  `... retried and the latest reset reason: ...` body (seen live), so it no longer cools the
+  credential and blacks out every other client for the cooldown window.
+- Config: `routing.retry.request-retry: 5`, `upstream.codex.stream-bootstrap-buffering: true`,
+  `stream-bootstrap-timeout: "20s"` (in-stream `server_is_overloaded` before the first token
+  is retried instead of delivered). Persisted configs must be updated by hand.
+
 ## Files
 
 | File | Kind |
@@ -125,6 +141,9 @@ git grep -n "CUSTOM (cpamc-custom)"
 | `internal/api/server.go` | +1 line (start refresher) |
 | `internal/managementasset/updater.go` | +2 small guards |
 | `sdk/cliproxy/auth/selector.go` | `authPriority` adds the boost |
+| `sdk/cliproxy/auth/custom_transient_backoff.go` (+ `_test.go`) | new (transient retry backoff) |
+| `sdk/cliproxy/auth/conductor_selection.go` | +1 line (backoff hook) |
+| `sdk/cliproxy/auth/conductor_cooldown.go` | Envoy "retried" body is transport-only |
 | `.dockerignore` | +2 lines |
 | `internal/api/custom_speech.go` | new (TTS endpoint) |
 | `internal/api/server_routes.go` | +1 route line |

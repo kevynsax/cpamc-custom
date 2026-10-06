@@ -24,7 +24,8 @@ func TestV8ExampleLoadsAndRoundTrips(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load active v8 example: %v", err)
 	}
-	if active.Port != 8317 || len(active.APIKeys) != 3 || active.RequestRetry != 3 || !active.QuotaExceeded.AntigravityCredits {
+	if active.Port != 8317 || len(active.APIKeys) != 3 || active.RequestRetry != 5 || // CUSTOM (cpamc-custom): template uses request-retry 5
+		!active.QuotaExceeded.AntigravityCredits {
 		t.Fatal("v8 template lost its default configuration")
 	}
 	if err = ValidateV8Config(example); err != nil {

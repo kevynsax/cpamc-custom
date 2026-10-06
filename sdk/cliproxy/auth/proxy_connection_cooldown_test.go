@@ -28,6 +28,8 @@ func TestProxyConnectionFailureCooldown(t *testing.T) {
 	}{
 		{name: "plain reset", status: 503, message: proxyConnectionFailure},
 		{name: "plain timeout", status: 503, message: "upstream connect error or disconnect/reset before headers. reset reason: connection timeout"},
+		// CUSTOM (cpamc-custom): body observed live from the ChatGPT edge after Envoy's own retries.
+		{name: "envoy retried", status: 503, message: "upstream connect error or disconnect/reset before headers. retried and the latest reset reason: remote connection failure, transport failure reason: delayed connect error: Connection refused"},
 		{name: "JSON reset", status: 503, message: `{"error":{"message":"` + proxyConnectionFailure + `","type":"server_error","code":"internal_server_error"}}`},
 		{name: "JSON top level", status: 503, message: `{"message":"` + proxyConnectionFailure + `"}`},
 		{name: "unauthorized", status: 401, message: proxyConnectionFailure, cool: true},

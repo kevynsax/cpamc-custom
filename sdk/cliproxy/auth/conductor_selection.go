@@ -1396,7 +1396,8 @@ func (m *Manager) shouldRetryAfterErrorWithAttempted(ctx context.Context, opts c
 		if wait > 0 && (maxWait <= 0 || wait > maxWait) {
 			return 0, false
 		}
-		return wait, true
+		// CUSTOM (cpamc-custom): back off between transient retry rounds; see custom_transient_backoff.go.
+		return customTransientRetryWait(err, attempt, wait, maxWait), true
 	}
 	if retryAfter := retryAfterFromError(err); retryAfter != nil {
 		if *retryAfter < 0 || (*retryAfter > 0 && (maxWait <= 0 || *retryAfter > maxWait)) {
