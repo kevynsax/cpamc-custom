@@ -134,7 +134,10 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 - The ChatGPT edge returns Envoy 503 for uncompressed request bodies above 1 MiB, so long
   Codex sessions through cpamc reconnected forever. Native Codex sends zstd bodies.
 - `helps/custom_codex_request_compression.go` compresses `/responses` HTTP bodies ≥ 128 KiB
-  for ChatGPT OAuth credentials. Details and tests: `docs/custom-fork-maintenance.md`.
+  for ChatGPT OAuth credentials.
+- Requests ≥ 1.5 MiB (mostly incompressible encrypted reasoning) go over the Responses
+  WebSocket instead, which has no body limit: `customCodexLargeRequestUsesWebsocket` in
+  `codex_websockets_executor.go`. Details and tests: `docs/custom-fork-maintenance.md`.
 
 ### 11. No GitHub Actions
 
@@ -165,6 +168,7 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 | `sdk/cliproxy/auth/conductor_cooldown.go` | Envoy "retried" body is transport-only |
 | `internal/runtime/executor/helps/custom_codex_request_compression.go`, `custom_codex_request_compression_test.go` | new (zstd request bodies) |
 | `internal/runtime/executor/codex_executor_stream.go`, `codex_executor_execute.go` | +4 lines each (compression hook) |
+| `internal/runtime/executor/codex_websockets_executor.go` | large requests → WebSocket (`customCodexLargeRequestUsesWebsocket`) |
 | `.dockerignore` | +2 lines |
 | `internal/api/custom_speech.go` | new (TTS endpoint) |
 | `internal/api/server_routes.go` | +1 route line |

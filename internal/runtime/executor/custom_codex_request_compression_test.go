@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/gorilla/websocket"
 	"github.com/klauspost/compress/zstd"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
@@ -166,5 +167,78 @@ func TestCompressCodexRequestBodyRoundTrips(t *testing.T) {
 	}
 	if helps.CompressCodexRequestBody(req, body) {
 		t.Fatal("already-encoded request was compressed twice")
+	}
+}
+
+func TestCustomCodexLargeRequestUsesWebsocket(t *testing.T) {
+	big := largeResponsesPayload(helps.CodexHTTPWebsocketThreshold + 1024)
+	small := largeResponsesPayload(512 << 10)
+	oauth := codexOAuthTestAuth("https://chatgpt.com/backend-api/codex")
+	apiKey := codexAPIKeyTestAuth("https://api.openai.com/v1")
+	resp := cliproxyexecutor.Options{SourceFormat: sdktranslator.FromString("openai-response")}
+	cases := []struct {
+		name string
+		got  bool
+		want bool
+	}{
+		{"oauth large", customCodexLargeRequestUsesWebsocket(oauth, cliproxyexecutor.Request{Payload: big}, resp), true},
+		{"oauth large original request", customCodexLargeRequestUsesWebsocket(oauth, cliproxyexecutor.Request{Payload: small}, cliproxyexecutor.Options{OriginalRequest: big}), true},
+		{"oauth small", customCodexLargeRequestUsesWebsocket(oauth, cliproxyexecutor.Request{Payload: small}, resp), false},
+		{"api key large", customCodexLargeRequestUsesWebsocket(apiKey, cliproxyexecutor.Request{Payload: big}, resp), false},
+		{"compact large", customCodexLargeRequestUsesWebsocket(oauth, cliproxyexecutor.Request{Payload: big}, cliproxyexecutor.Options{Alt: "responses/compact"}), false},
+		{"nil auth", customCodexLargeRequestUsesWebsocket(nil, cliproxyexecutor.Request{Payload: big}, resp), false},
+	}
+	for _, tc := range cases {
+		if tc.got != tc.want {
+			t.Errorf("%s: got %v, want %v", tc.name, tc.got, tc.want)
+		}
+	}
+}
+
+// A >1.5 MiB session routed to the auto executor over HTTP must reach the edge as a WebSocket
+// response.create, which carries no 1 MiB body limit.
+func TestCodexAutoExecutorSendsLargeRequestOverWebsocket(t *testing.T) {
+	var gotHTTPPost, gotWSFrame bool
+	var frameLen int
+	upgrader := websocket.Upgrader{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.EqualFold(r.Header.Get("Upgrade"), "websocket") {
+			gotHTTPPost = true
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		gotWSFrame = gjson.GetBytes(msg, "type").String() == "response.create"
+		frameLen = len(msg)
+		_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.completed","response":{"id":"resp_1","object":"response","status":"completed","model":"gpt-5.5","output":[{"type":"message","role":"assistant","content":[{"type":"output_text","text":"ok"}]}],"usage":{"input_tokens":1,"output_tokens":1,"total_tokens":2}}}`))
+	}))
+	defer server.Close()
+
+	exec := NewCodexAutoExecutor(&config.Config{})
+	payload := largeResponsesPayload(helps.CodexHTTPWebsocketThreshold + 64<<10)
+	res, err := exec.ExecuteStream(context.Background(), codexOAuthTestAuth(server.URL),
+		cliproxyexecutor.Request{Model: "gpt-5.5", Payload: payload},
+		cliproxyexecutor.Options{SourceFormat: sdktranslator.FromString("openai-response"), Stream: true})
+	if err != nil {
+		t.Fatalf("ExecuteStream: %v", err)
+	}
+	for chunk := range res.Chunks {
+		if chunk.Err != nil {
+			t.Fatalf("stream error: %v", chunk.Err)
+		}
+	}
+	if gotHTTPPost || !gotWSFrame {
+		t.Fatalf("http post=%v ws frame=%v, want WebSocket only", gotHTTPPost, gotWSFrame)
+	}
+	if frameLen < len(payload)/2 {
+		t.Fatalf("frame %d bytes, payload not forwarded", frameLen)
 	}
 }

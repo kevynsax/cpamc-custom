@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
 )
@@ -74,6 +75,10 @@ func (e *CodexAutoExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth
 	if cliproxyexecutor.RequiredUpstreamWebsocket(ctx) {
 		return cliproxyexecutor.Response{}, cliproxyexecutor.NewUpstreamWebsocketReplayRequiredError()
 	}
+	// CUSTOM (cpamc-custom): oversized bodies go over WebSocket; see helps/custom_codex_request_compression.go.
+	if customCodexLargeRequestUsesWebsocket(auth, req, opts) {
+		return e.wsExec.Execute(ctx, auth, req, opts)
+	}
 	return e.httpExec.Execute(ctx, auth, req, opts)
 }
 
@@ -86,6 +91,10 @@ func (e *CodexAutoExecutor) ExecuteStream(ctx context.Context, auth *cliproxyaut
 	}
 	if cliproxyexecutor.RequiredUpstreamWebsocket(ctx) {
 		return nil, cliproxyexecutor.NewUpstreamWebsocketReplayRequiredError()
+	}
+	// CUSTOM (cpamc-custom): oversized bodies go over WebSocket; see helps/custom_codex_request_compression.go.
+	if customCodexLargeRequestUsesWebsocket(auth, req, opts) {
+		return e.wsExec.ExecuteStream(ctx, auth, req, opts)
 	}
 	return e.httpExec.ExecuteStream(ctx, auth, req, opts)
 }
@@ -153,4 +162,15 @@ func codexWebsocketsEnabled(auth *cliproxyauth.Auth) bool {
 // SupportsApplyPatch requires both selectable transports to support the tool.
 func (e *CodexAutoExecutor) SupportsApplyPatch() bool {
 	return e != nil && e.httpExec != nil && e.wsExec != nil && e.httpExec.SupportsApplyPatch() && e.wsExec.SupportsApplyPatch()
+}
+
+// customCodexLargeRequestUsesWebsocket reports whether an HTTP-routed request must use the
+// Responses WebSocket instead. CUSTOM (cpamc-custom): the ChatGPT edge rejects HTTP request
+// bodies above 1 MiB even zstd-compressed, while a WebSocket frame has no such limit (native
+// Codex uses the WebSocket). Only ChatGPT OAuth credentials, and not compact or image calls.
+func customCodexLargeRequestUsesWebsocket(auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) bool {
+	if auth == nil || codexAuthUsesAPIKey(auth) || opts.Alt != "" || isCodexOpenAIImageRequest(opts) {
+		return false
+	}
+	return helps.CodexRequestNeedsWebsocket(req.Payload, opts.OriginalRequest)
 }

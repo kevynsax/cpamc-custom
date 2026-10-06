@@ -143,10 +143,30 @@ items) kept showing "Reconnecting..." forever. Every attempt got the Envoy 503
 |---|---|---|
 | zstd request bodies | `internal/runtime/executor/helps/custom_codex_request_compression.go`, hooks in `codex_executor_stream.go` and `codex_executor_execute.go` (`/responses` only) | Bodies ≥ 128 KiB on ChatGPT OAuth credentials are sent zstd-compressed (level 3) with `Content-Encoding: zstd`. Smaller bodies, API-key credentials and `/responses/compact` are unchanged. Compression is transport framing applied after payload rules and request logging. |
 
+### Compression is not enough: very large requests go over WebSocket
+
+The next day, a T3 Code session on jorginho reached 2,037 KB (400 items). Half of that was
+encrypted reasoning, which does not compress: zstd level 3 gave 1,022–1,030 KB, still at the
+limit, and even the best level gave 991 KB. The 503s came back.
+
+The edge has no such limit for WebSocket frames: the same 2 MB request and a 6 MB one were
+accepted over `wss://chatgpt.com/backend-api/codex/responses`, which native Codex uses by
+default. So `CodexAutoExecutor` (`codex_websockets_executor.go`) now sends any HTTP-routed
+request with a client payload ≥ 1.5 MiB (`helps.CodexHTTPWebsocketThreshold`) over an
+ephemeral upstream WebSocket. This applies to ChatGPT OAuth only, never to compact or image
+calls; smaller requests keep the zstd HTTP path. The WebSocket executor already falls back to
+HTTP when the upgrade is refused (426).
+
+Long turns on such sessions are slow because of the model, not cpamc: the 2 MB request at
+`reasoning: high` took 348 s direct to chatgpt.com and 7–10 min through cpamc (each run
+reasons ~8k tokens).
+
 ### Tests that guard it
 
 | Test | Guards |
 |---|---|
+| `TestCustomCodexLargeRequestUsesWebsocket` | the ≥ 1.5 MiB WebSocket rule: OAuth only, not API key, compact or nil auth |
+| `TestCodexAutoExecutorSendsLargeRequestOverWebsocket` | a large HTTP-routed request reaches the edge as a WebSocket `response.create` with no HTTP POST (fails without the routing) |
 | `TestCodexExecutorCompressesLargeResponsesBody` | stream and non-stream: a >1 MiB body reaches a mock edge (enforcing the real 1 MiB limit) as zstd and decodes to the same payload |
 | `TestCodexExecutorSmallAndAPIKeyBodiesStayUncompressed` | small bodies and API-key credentials are sent as before |
 | `TestCompressCodexRequestBodyRoundTrips` | lossless, replayable `GetBody`, never compressed twice |

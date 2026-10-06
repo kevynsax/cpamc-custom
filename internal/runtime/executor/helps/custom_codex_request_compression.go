@@ -59,3 +59,20 @@ func CompressCodexRequestBody(req *http.Request, body []byte) bool {
 	req.Header.Set("Content-Encoding", "zstd")
 	return true
 }
+
+// CodexHTTPWebsocketThreshold is the client payload size above which a Codex request is sent
+// over the Responses WebSocket. Translated upstream bodies stay close to the client payload
+// size; zstd shrinks long sessions only about 2x (encrypted reasoning is incompressible), so
+// beyond ~1.5 MiB the compressed HTTP body can cross the edge's 1 MiB limit.
+const CodexHTTPWebsocketThreshold = 1536 << 10
+
+// CodexRequestNeedsWebsocket reports whether any of the client payloads is large enough that
+// the HTTP path could exceed the ChatGPT edge body limit.
+func CodexRequestNeedsWebsocket(payloads ...[]byte) bool {
+	for _, p := range payloads {
+		if len(p) >= CodexHTTPWebsocketThreshold {
+			return true
+		}
+	}
+	return false
+}
