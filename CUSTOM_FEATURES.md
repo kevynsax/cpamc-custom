@@ -11,6 +11,9 @@ Every custom line is marked `CUSTOM (cpamc-custom)`. List them all with:
 git grep -n "CUSTOM (cpamc-custom)"
 ```
 
+Merge rules, the transient-failure fixes in detail, and the split between this repository
+and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-fork-maintenance.md).
+
 ## Features
 
 ### 1. Backend quota cache (all providers)
@@ -124,12 +127,21 @@ git grep -n "CUSTOM (cpamc-custom)"
 - Config: `routing.retry.request-retry: 5`, `upstream.codex.stream-bootstrap-buffering: true`,
   `stream-bootstrap-timeout: "20s"` (in-stream `server_is_overloaded` before the first token
   is retried instead of delivered). Persisted configs must be updated by hand.
+- Evidence, guarding tests and the end-to-end reproduction: `docs/custom-fork-maintenance.md`.
+
+### 11. No GitHub Actions
+
+- Upstream and the panel subtree ship `.github/workflows/` and `panel/.github/workflows/`.
+  We delete them after every merge; builds run in TeamCity, deploys in Kubernetes.
+  Repository Actions stay disabled on `kevynsax/cpamc-custom`.
 
 ## Files
 
 | File | Kind |
 |---|---|
-| `CUSTOM_FEATURES.md`, `Dockerfile.custom` | new |
+| `CUSTOM_FEATURES.md`, `Dockerfile.custom`, `docs/custom-fork-maintenance.md` | new |
+| `.github/workflows/`, `panel/.github/workflows/` | deleted (re-delete after every merge) |
+| `internal/config/config_v8_test.go` | expects `request-retry: 5` |
 | `config.example.yaml` | custom transient cooldown + retry configuration |
 | `internal/api/handlers/management/custom_quota_cache.go` (+ `_test.go`) | new |
 | `internal/managementasset/custom_bundled.go` | new |

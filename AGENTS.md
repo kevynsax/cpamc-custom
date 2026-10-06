@@ -9,6 +9,8 @@ Go 1.26+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with 
 - Work directly in `/Users/kevynklava/src/cpamc-custom` on branch `custom`. Do not create worktrees or task branches for this project unless the user explicitly requests them.
 - Push custom changes and release tags only to `fork` (`kevynsax/cpamc-custom`), never to upstream `origin`.
 - GitHub Actions is not used. Never enable GitHub Actions, activate or dispatch workflows, or add Actions-based build/release/deploy automation. Keep repository Actions disabled, including after upstream merges.
+- After every upstream merge, delete `.github/workflows/` and `panel/.github/workflows/` (`git rm -r --ignore-unmatch .github/workflows panel/.github/workflows`), resolving modify/delete conflicts by deleting.
+- Before changing retry, cooldown, or Codex executor code, read `docs/custom-fork-maintenance.md`. The transient-failure fixes there must survive every merge, and their tests must pass.
 - Build and deploy through the existing TeamCity pipeline and Kubernetes deployment. Verify rollout readiness and the live version before reporting a deployment complete.
 
 ## Commands
