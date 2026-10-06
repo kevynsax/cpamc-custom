@@ -99,6 +99,10 @@ func (e *CodexExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, re
 		AuthType:  authType,
 		AuthValue: authValue,
 	})
+	// CUSTOM (cpamc-custom): zstd transport framing, as native Codex sends; see helps/custom_codex_request_compression.go.
+	if !codexAuthUsesAPIKey(auth) {
+		helps.CompressCodexRequestBody(httpReq, upstreamBody)
+	}
 	httpClient := helps.NewUtlsHTTPClient(ctx, e.cfg, auth, 0)
 	httpClient = reporter.TrackHTTPClient(httpClient)
 	httpResp, err := httpClient.Do(httpReq)

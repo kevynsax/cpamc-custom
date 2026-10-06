@@ -129,6 +129,13 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
   is retried instead of delivered). Persisted configs must be updated by hand.
 - Evidence, guarding tests and the end-to-end reproduction: `docs/custom-fork-maintenance.md`.
 
+### 12. zstd request bodies for Codex (1 MiB edge limit)
+
+- The ChatGPT edge returns Envoy 503 for uncompressed request bodies above 1 MiB, so long
+  Codex sessions through cpamc reconnected forever. Native Codex sends zstd bodies.
+- `helps/custom_codex_request_compression.go` compresses `/responses` HTTP bodies ≥ 128 KiB
+  for ChatGPT OAuth credentials. Details and tests: `docs/custom-fork-maintenance.md`.
+
 ### 11. No GitHub Actions
 
 - Upstream and the panel subtree ship `.github/workflows/` and `panel/.github/workflows/`.
@@ -156,6 +163,8 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 | `sdk/cliproxy/auth/custom_transient_backoff.go` (+ `_test.go`) | new (transient retry backoff) |
 | `sdk/cliproxy/auth/conductor_selection.go` | +1 line (backoff hook) |
 | `sdk/cliproxy/auth/conductor_cooldown.go` | Envoy "retried" body is transport-only |
+| `internal/runtime/executor/helps/custom_codex_request_compression.go`, `custom_codex_request_compression_test.go` | new (zstd request bodies) |
+| `internal/runtime/executor/codex_executor_stream.go`, `codex_executor_execute.go` | +4 lines each (compression hook) |
 | `.dockerignore` | +2 lines |
 | `internal/api/custom_speech.go` | new (TTS endpoint) |
 | `internal/api/server_routes.go` | +1 route line |

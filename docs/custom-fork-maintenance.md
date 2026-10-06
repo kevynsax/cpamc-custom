@@ -121,10 +121,45 @@ Expected result: Codex and pi both answer. Before the fix, pi failed at ~15 s in
 window. Reference results from 2026-10-06: before the fix 0/6 at 20–30 s; after the fix 8/8;
 with the config change alone 0/4.
 
+## Request-body compression (must survive merges)
+
+### Problem it solves
+
+A long Codex CLI session through cpamc (`codex --profile cpamc`, ~230k tokens, 188 input
+items) kept showing "Reconnecting..." forever. Every attempt got the Envoy 503
+`upstream connect error ... before headers`, while small requests worked.
+
+- **The ChatGPT edge rejects uncompressed HTTP request bodies above 1 MiB** with that 503.
+  Replaying padded bodies straight to chatgpt.com: 1024 KB → 200, 1026 KB → 503.
+- **Native Codex never hits the limit.** It sends Responses HTTP bodies with
+  `Content-Encoding: zstd` (level 3; feature `enable_request_compression`, default on, ChatGPT
+  auth only) and uses a WebSocket otherwise. The failing 1044 KB body compresses to 327 KB.
+- **cpamc sent the body raw**, so once a session crossed 1 MiB, every request failed until the
+  context shrank. The retry backoff can't help: the request itself is rejected.
+
+### What the fork changes
+
+| Change | File | Behaviour |
+|---|---|---|
+| zstd request bodies | `internal/runtime/executor/helps/custom_codex_request_compression.go`, hooks in `codex_executor_stream.go` and `codex_executor_execute.go` (`/responses` only) | Bodies ≥ 128 KiB on ChatGPT OAuth credentials are sent zstd-compressed (level 3) with `Content-Encoding: zstd`. Smaller bodies, API-key credentials and `/responses/compact` are unchanged. Compression is transport framing applied after payload rules and request logging. |
+
+### Tests that guard it
+
+| Test | Guards |
+|---|---|
+| `TestCodexExecutorCompressesLargeResponsesBody` | stream and non-stream: a >1 MiB body reaches a mock edge (enforcing the real 1 MiB limit) as zstd and decodes to the same payload |
+| `TestCodexExecutorSmallAndAPIKeyBodiesStayUncompressed` | small bodies and API-key credentials are sent as before |
+| `TestCompressCodexRequestBodyRoundTrips` | lossless, replayable `GetBody`, never compressed twice |
+
+Evidence from 2026-10-06, using the exact 1044 KB request captured from the stuck session:
+production `v8.0.16-custom.2` returned 503 after ~40 s of retries; the fixed build returned
+`response.completed` in 7 s. A realistic 3 MB session body also completed (17 s).
+
 ## How Codex and cpamc reach ChatGPT (reference)
 
 | | Codex CLI 0.160.1 | cpamc |
 |---|---|---|
+| Request body | HTTP: zstd-compressed (`Content-Encoding: zstd`); WebSocket: permessage-deflate | zstd for bodies ≥ 128 KiB (fork change); raw before |
 | Transport | WebSocket `wss://chatgpt.com/backend-api/codex/responses`, `OpenAI-Beta: responses_websockets=2026-02-06`, `response.create` frames, `previous_response_id` between turns; falls back to HTTPS after 5 failed retries | HTTP POST SSE to `https://chatgpt.com/backend-api/codex/responses` (WebSocket only when the credential sets `websockets: true` and the client connects by WebSocket) |
 | Identity headers | `originator: codex_exec`/`codex-tui`, `User-Agent: codex_exec/0.160.1 ...`, `version`, `session-id`, `thread-id`, `x-client-request-id`, `x-codex-window-id`, `x-codex-turn-metadata`, `x-codex-routing-hint`, `x-codex-beta-features` | `Originator: codex-tui`, fixed `User-Agent: codex-tui/0.154.0 ...` (cloaking), `Session-Id`, `X-Codex-Routing-Hint`, `Chatgpt-Account-Id` |
 | Body extras | `client_metadata` (installation id, timing), `text.verbosity`, `generate:false` prewarm | adds the `image_generation` tool, `parallel_tool_calls: true` |
