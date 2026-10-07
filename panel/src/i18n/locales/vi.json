@@ -296,6 +296,8 @@
     "filter_codex": "Codex",
     "filter_antigravity": "Antigravity",
     "filter_xai": "xAI",
+    "filter_minimax": "MiniMax",
+    "filter_zai": "Z.ai",
     "filter_iflow": "iFlow",
     "filter_vertex": "Vertex",
     "filter_empty": "Trống",
@@ -562,6 +564,34 @@
     "domain_unavailable": "Không thể đọc miền của credential Kimi. Cần có file xác thực hợp lệ và có thể tải xuống.",
     "stale_request": "Kết nối hoặc credential đã thay đổi. Vui lòng thử lại.",
     "monthly_limit": "Giới hạn tháng"
+  },
+  "minimax_quota": {
+    "empty_title": "Không có API key MiniMax",
+    "empty_desc": "Cấu hình API key MiniMax trong AI Providers để xem quota coding-plan.",
+    "idle": "Nhấn vào đây để làm mới quota",
+    "loading": "Đang tải quota...",
+    "load_failed": "Không thể tải quota: {{message}}",
+    "missing_auth_index": "Credential thiếu auth_index",
+    "empty_data": "Chưa có dữ liệu quota coding-plan MiniMax",
+    "window": "{{model}} · cửa sổ hiện tại",
+    "weekly": "{{model}} · hàng tuần"
+  },
+  "zai_quota": {
+    "empty_title": "Không có API key Z.ai",
+    "empty_desc": "Cấu hình API key Z.ai trong AI Providers để xem quota coding-plan.",
+    "idle": "Nhấn vào đây để làm mới quota",
+    "loading": "Đang tải quota...",
+    "load_failed": "Không thể tải quota: {{message}}",
+    "missing_auth_index": "Credential thiếu auth_index",
+    "empty_data": "Chưa có dữ liệu quota coding-plan Z.ai",
+    "limit_credits": "Credits",
+    "limit_tools": "Lượt gọi tool",
+    "hour_credits": "Credits {{count}} giờ",
+    "hour_tools": "Lượt gọi tool {{count}} giờ",
+    "week_credits": "Credits {{count}} tuần",
+    "week_tools": "Lượt gọi tool {{count}} tuần",
+    "minute_credits": "Credits {{count}} phút",
+    "minute_tools": "Lượt gọi tool {{count}} phút"
   },
   "xai_quota": {
     "title": "Quota Grok",

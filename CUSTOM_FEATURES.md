@@ -90,6 +90,8 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 - `POST /v1/audio/speech` (client API key) takes OpenAI-style `{input, voice, speed}`
   and returns mp3 from MiniMax T2A (`speech-2.8-hd`, max 10,000 chars). The MiniMax
   key is read from the openai-compatibility entry and never leaves the server.
+  Requests with a Grok TTS model (`grok-tts`, `grok-voice-tts-1.0`) dispatch to
+  the upstream xAI speech handler instead (`customSpeechDispatch`).
 - Used by the pi `speak` extension (`~/.pi/agent/extensions/speak`).
 
 ### 8. Quota cards removed from the Auth Files page

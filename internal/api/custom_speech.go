@@ -70,6 +70,35 @@ func (s *Server) customMinimaxKey() string {
 	return ""
 }
 
+func customSpeechUpstreamModel(model string) bool {
+	base := strings.ToLower(strings.TrimSpace(model))
+	for _, prefix := range []string{"xai/", "x-ai/", "grok/"} {
+		if strings.HasPrefix(base, prefix) {
+			base = strings.TrimSpace(base[len(prefix):])
+			break
+		}
+	}
+	return base == "grok-tts" || base == "grok-voice-tts-1.0"
+}
+
+func (s *Server) customSpeechDispatch(upstream gin.HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		raw, err := io.ReadAll(c.Request.Body)
+		_ = c.Request.Body.Close()
+		c.Request.Body = io.NopCloser(bytes.NewReader(raw))
+		if err == nil {
+			var peek struct {
+				Model string `json:"model"`
+			}
+			if json.Unmarshal(raw, &peek) == nil && customSpeechUpstreamModel(peek.Model) {
+				upstream(c)
+				return
+			}
+		}
+		s.customSpeech(c)
+	}
+}
+
 func (s *Server) customSpeech(c *gin.Context) {
 	var req customSpeechRequest
 	if err := c.ShouldBindJSON(&req); err != nil || strings.TrimSpace(req.Input) == "" {
