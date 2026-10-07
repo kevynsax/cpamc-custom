@@ -143,10 +143,12 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 
 ### 13. Early model registry entries (upstream not yet released)
 
-- `internal/registry/models/models.json`: `claude-haiku-5-5` added ahead of upstream
-  (Anthropic API id `claude-haiku-5-5`, 1M context, 5.5-family thinking levels).
-- Drop this entry once upstream's registry includes the same id; until then keep it
-  on every merge.
+- `internal/registry/custom_claude_builtins.go`: `claude-haiku-5-5` upserted ahead of
+  upstream (Anthropic API id `claude-haiku-5-5`, 1M context, 5.5-family thinking
+  levels). A hardcoded builtin, not `models.json`: the registry refreshes from the
+  remote catalog at runtime, which would wipe an embedded-only entry.
+- Drop this builtin once upstream's catalog includes the same id; until then keep
+  it (and the `WithClaudeBuiltins` hook in `GetClaudeModels`) on every merge.
 
 ### 11. No GitHub Actions
 
