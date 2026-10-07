@@ -141,6 +141,13 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
   WebSocket instead, which has no body limit: `customCodexLargeRequestUsesWebsocket` in
   `codex_websockets_executor.go`. Details and tests: `docs/custom-fork-maintenance.md`.
 
+### 13. Early model registry entries (upstream not yet released)
+
+- `internal/registry/models/models.json`: `claude-haiku-5-5` added ahead of upstream
+  (Anthropic API id `claude-haiku-5-5`, 1M context, 5.5-family thinking levels).
+- Drop this entry once upstream's registry includes the same id; until then keep it
+  on every merge.
+
 ### 11. No GitHub Actions
 
 - Upstream and the panel subtree ship `.github/workflows/` and `panel/.github/workflows/`.
