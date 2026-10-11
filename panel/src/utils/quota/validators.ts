@@ -37,6 +37,29 @@ export function isXaiFile(file: AuthFileItem): boolean {
   return resolveAuthProvider(file) === 'xai';
 }
 
+/** Providers rendered by a dedicated built-in quota card. */
+export const BUILT_IN_QUOTA_PROVIDERS: ReadonlySet<string> = new Set([
+  'antigravity',
+  'claude',
+  'codex',
+  'devin',
+  'kimi',
+  'meta',
+  'xai',
+  'minimax', // CUSTOM (cpamc-custom): API-key quota cards
+  'zai', // CUSTOM (cpamc-custom)
+]);
+
+/**
+ * Generic plugin quota card for providers without a built-in card. Built-in cards win even
+ * when a plugin also advertises quota for the same provider.
+ */
+export function isPluginQuotaFile(file: AuthFileItem): boolean {
+  if (BUILT_IN_QUOTA_PROVIDERS.has(resolveAuthProvider(file))) return false;
+  const supported = file.supportsQuota ?? file['supports_quota'];
+  return supported === true || supported === 'true' || supported === '1';
+}
+
 export function isDisabledAuthFile(file: AuthFileItem): boolean {
   const raw = (file as { disabled?: unknown }).disabled;
   if (typeof raw === 'boolean') return raw;

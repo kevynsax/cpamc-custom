@@ -490,6 +490,7 @@
     "seven_day_cowork": "7 天 Cowork",
     "iguana_necktie": "Iguana Necktie",
     "seven_day_fable": "7 天 Fable 5",
+    "cloud_session_credits": "雲端工作階段額度",
     "extra_usage_label": "額外用量",
     "plan_label": "方案",
     "plan_unknown": "未知",
@@ -535,6 +536,9 @@
     "reset_confirm_title": "重置 Codex 配額",
     "reset_confirm_message": "將消耗 1 次主動重置次數來重置「{{name}}」的 Codex 配額。是否繼續？",
     "reset_confirm_button": "確認重置",
+    "reset_not_confirmed": "尚未確認額度重置成功，請重新整理額度後再決定是否重試。",
+    "reset_cooldown_failed": "額度已重置，但代理冷卻清除失敗。請在原連線的認證檔案頁面使用「清除冷卻」，不要再次消耗重置卡。",
+
     "reset_success": "已重置「{{name}}」的 Codex 配額",
     "reset_failed": "重置「{{name}}」的 Codex 配額失敗：{{message}}",
     "plan_plus": "Plus",
@@ -586,6 +590,19 @@
     "weekly": "每週額度",
     "unknown": "未知",
     "remaining": "剩餘 {{percent}}%"
+  },
+  "plugin_quota": {
+    "empty_title": "暫無插件憑證",
+    "empty_desc": "連接插件帳戶後即可查看剩餘額度。",
+    "idle": "點擊此處重新整理配額",
+    "loading": "正在載入配額…",
+    "load_failed": "配額取得失敗：{{message}}",
+    "missing_auth_index": "驗證檔案缺少 auth_index",
+    "probe_unsupported": "v8 管理介面暫不支援宣告式配額探測（quota_probe）",
+    "plugin_not_found": "找不到為 {{provider}} 提供配額查詢的已啟用插件",
+    "empty_data": "暫無可用配額資料",
+    "plan_label": "方案",
+    "remaining_percent": "剩餘 {{percent}}%"
   },
   "kimi_quota": {
     "title": "Kimi 配額",
@@ -651,6 +668,7 @@
     "usage_unavailable": "xAI 用量暫不可用",
     "reset_at": "重置 {{time}}",
     "product_usage": "{{product}} 使用",
+    "usage_breakdown": "用量明細（共用配額）",
     "plan_label": "方案",
     "resets_label": "重置",
     "prepaid": "預付",
@@ -670,7 +688,6 @@
     "location_hint": "留空表示使用預設區域 us-central1。",
     "file_label": "服務帳號金鑰 JSON",
     "file_hint": "僅支援 Google Cloud service account key JSON 檔案，私鑰會自動規範化。",
-    "file_placeholder": "尚未選擇檔案",
     "choose_file": "選擇檔案",
     "import_button": "匯入 Vertex 憑證",
     "file_required": "請先選擇 .json 憑證檔案",
@@ -679,7 +696,9 @@
     "result_project": "專案 ID",
     "result_email": "服務帳號",
     "result_location": "區域",
-    "result_file": "儲存檔案"
+    "result_file": "儲存檔案",
+    "drop_hint": "選擇或拖入 JSON 檔案",
+    "import_another": "再匯入一個"
   },
   "oauth_excluded": {
     "editor_description": "為供應商設定不對外顯示的模型，支援精確選取和萬用字元規則。",
@@ -815,7 +834,6 @@
     "devin_oauth_title": "Devin OAuth",
     "devin_oauth_button": "開始 Devin 登入",
     "devin_oauth_hint": "透過瀏覽器 OAuth 登入 Devin / Cognition，自動儲存認證檔案。需要 CLI Proxy API v7.3.1 或更新版本，請在五分鐘內完成授權。",
-    "devin_oauth_url_label": "授權連結：",
     "devin_copy_link": "複製連結",
     "devin_open_link": "開啟連結",
     "devin_oauth_status_waiting": "等待 Devin 認證中...",
@@ -833,7 +851,6 @@
     "codex_oauth_title": "Codex OAuth",
     "codex_oauth_button": "開始 Codex 登入",
     "codex_oauth_hint": "透過 OAuth 流程登入 Codex 服務，自動取得並儲存驗證檔案。",
-    "codex_oauth_url_label": "授權連結:",
     "codex_open_link": "開啟連結",
     "codex_copy_link": "複製連結",
     "codex_oauth_status_waiting": "等待驗證中...",
@@ -844,7 +861,6 @@
     "anthropic_oauth_title": "Anthropic OAuth",
     "anthropic_oauth_button": "開始 Anthropic 登入",
     "anthropic_oauth_hint": "透過 OAuth 流程登入 Anthropic（Claude）服務，自動取得並儲存驗證檔案。",
-    "anthropic_oauth_url_label": "授權連結:",
     "anthropic_open_link": "開啟連結",
     "anthropic_copy_link": "複製連結",
     "anthropic_oauth_status_waiting": "等待驗證中...",
@@ -855,7 +871,6 @@
     "antigravity_oauth_title": "Antigravity OAuth",
     "antigravity_oauth_button": "開始 Antigravity 登入",
     "antigravity_oauth_hint": "透過 OAuth 流程登入 Antigravity（Google 帳號）服務，自動取得並儲存驗證檔案。",
-    "antigravity_oauth_url_label": "授權連結:",
     "antigravity_open_link": "開啟連結",
     "antigravity_copy_link": "複製連結",
     "antigravity_oauth_status_waiting": "等待驗證中...",
@@ -866,7 +881,6 @@
     "meta_oauth_title": "Muse (Meta) OAuth",
     "meta_oauth_button": "使用 Muse 登入",
     "meta_oauth_hint": "開啟授權連結，如有提示請輸入裝置碼。授權完成後將自動取得並儲存驗證檔案。",
-    "meta_oauth_url_label": "授權連結:",
     "meta_open_link": "開啟連結",
     "meta_copy_link": "複製連結",
     "meta_oauth_status_waiting": "等待驗證中...",
@@ -879,7 +893,6 @@
     "kimi_ai_oauth_title": "Kimi 國際站（kimi.ai）",
     "kimi_ai_oauth_button": "登入 Kimi 國際站",
     "kimi_ai_oauth_hint": "透過裝置授權登入 kimi.ai 國際站，自動儲存獨立的 kimi-ai 驗證檔案。中國站與國際站帳號不互通。",
-    "kimi_ai_oauth_url_label": "授權連結:",
     "kimi_ai_open_link": "開啟連結",
     "kimi_ai_copy_link": "複製連結",
     "kimi_ai_oauth_status_waiting": "等待驗證中...",
@@ -891,7 +904,6 @@
     "kimi_oauth_button": "登入 Kimi 中國站",
     "kimi_sign_up_button": "立即註冊",
     "kimi_oauth_hint": "透過裝置授權登入 kimi.com 中國站，自動取得並儲存驗證檔案。國際站帳號請使用獨立的 kimi.ai 登入入口。",
-    "kimi_oauth_url_label": "授權連結:",
     "kimi_open_link": "開啟連結",
     "kimi_copy_link": "複製連結",
     "kimi_oauth_status_waiting": "等待驗證中...",
@@ -902,7 +914,6 @@
     "xai_oauth_title": "xAI OAuth",
     "xai_oauth_button": "開始 xAI 登入",
     "xai_oauth_hint": "透過 OAuth 流程登入 xAI Grok 服務，自動取得並儲存驗證檔案。",
-    "xai_oauth_url_label": "授權連結:",
     "xai_open_link": "開啟連結",
     "xai_copy_link": "複製連結",
     "xai_oauth_status_waiting": "等待驗證中...",
@@ -913,7 +924,6 @@
     "plugin_oauth_title": "{{name}} OAuth",
     "plugin_oauth_button": "開始 {{name}} 登入",
     "plugin_oauth_hint": "透過插件提供的 OAuth 流程登入 {{name}}，自動取得並儲存驗證檔案。",
-    "plugin_oauth_url_label": "授權連結:",
     "plugin_open_link": "開啟連結",
     "plugin_copy_link": "複製連結",
     "plugin_oauth_status_waiting": "等待驗證中...",
@@ -975,7 +985,29 @@
     "iflow_cookie_result_expired": "到期時間",
     "iflow_cookie_result_path": "儲存路徑",
     "iflow_cookie_result_type": "類型",
-    "remote_access_disabled": "遠端存取不支援此登入方式，請從本地（localhost）存取"
+    "remote_access_disabled": "遠端存取不支援此登入方式，請從本地（localhost）存取",
+    "kimi_oauth_name": "Kimi 中國站",
+    "kimi_ai_oauth_name": "Kimi 國際站",
+    "method_device": "裝置碼",
+    "method_browser": "瀏覽器授權",
+    "method_plugin": "外掛",
+    "tile_waiting": "等待授權",
+    "tile_success": "已新增憑證",
+    "tile_error": "授權失敗",
+    "meta_providers": "{{count}} 個提供商",
+    "meta_waiting": "{{count}} 個等待授權",
+    "meta_added": "本次新增 {{count}} 個憑證",
+    "step_open_auth_page": "開啟授權頁並完成登入",
+    "step_enter_device_code": "在授權頁輸入裝置碼",
+    "optional_step": "選填",
+    "generating_link": "正在產生授權連結…",
+    "waiting_background_hint": "關閉視窗不會中斷授權",
+    "restart_login": "重新開始",
+    "success_saved_hint": "憑證已儲存，可在驗證檔案頁管理。",
+    "sign_up_prompt": "還沒有帳號？",
+    "copied": "已複製",
+    "login_another_account": "登入另一個帳號",
+    "view_auth_files": "查看驗證檔案"
   },
   "stats": {
     "success": "成功",
@@ -1306,6 +1338,7 @@
           "description": "除錯、日誌輸出與使用統計"
         },
         "advanced": {
+          "antigravity_credits": "使用Antigravity Credits",
           "title": "進階與實驗",
           "description": "請求標頭偽裝、簽章快取、外掛來源等不常修改的設定",
           "plugins_title": "外掛",
@@ -1314,6 +1347,8 @@
           "signature_title": "簽章驗證"
         },
         "server": {
+          "github_token": "全域 GitHub 權杖",
+          "github_token_hint": "用於面板更新、外掛下載等伺服器端 GitHub 請求。優先於 GITHUB_TOKEN；留空時使用環境變數憑證，未設定憑證則匿名請求。外掛商店符合的驗證規則優先。",
           "host": "主機位址",
           "port": "連接埠"
         },
@@ -1451,15 +1486,6 @@
           "session_affinity": "會話黏性路由",
           "ws_auth": "WebSocket 驗證",
           "ws_auth_desc": "啟用 AI Studio WebSocket 連線驗證（oauth.providers.aistudio.ws-auth）"
-        },
-        "quota": {
-          "title": "配額回退",
-          "description": "配額耗盡時的回退策略",
-          "switch_project": "切換專案",
-          "switch_project_desc": "配額耗盡時自動切換到其他專案",
-          "switch_preview_model": "切換預覽模型",
-          "switch_preview_model_desc": "配額耗盡時切換到預覽版本模型",
-          "antigravity_credits": "使用Antigravity Credits"
         },
         "streaming": {
           "title": "串流傳輸設定",
@@ -1860,7 +1886,8 @@
     "chinese_tw": "繁體中文（台灣）",
     "english": "英文",
     "russian": "俄文",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "korean": "한국어"
   },
   "theme": {
     "switch": "主題",
@@ -2137,7 +2164,7 @@
       "disabledHint": "停用後不會被閘道使用",
       "websockets": "啟用 WebSockets",
       "testModel": "測試模型",
-      "testModelClaudeHint": "僅用於連通性測試,不會被儲存",
+      "testModelHint": "僅用於連通性測試,不會被儲存",
       "testModelAutoWith": "自動 · {{name}}",
       "testModelAutoEmpty": "自動(尚未新增模型)",
       "testModelCustom": "{{name}}(自訂)",
@@ -2256,6 +2283,9 @@
     }
   },
   "claude_reset": {
+    "expiry_title": "主動重置過期時間（{{timezone}}）",
+    "grant_number": "第 {{index}} 批",
+    "expiry_unknown": "到期時間未知",
     "retry_confirm": "使用原請求 ID 重試「{{name}}」結果未知的重置？可能已消耗一次重置。請在 10 分鐘內重試；請勿重新載入頁面或在其他分頁發起新請求。",
     "remaining": "剩餘重置次數",
     "title": "儲備重置次數",

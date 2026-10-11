@@ -139,6 +139,7 @@ export function QuotaPage() {
   const minimaxQuota = useQuotaStore((state) => state.minimaxQuota); // CUSTOM (cpamc-custom)
   const zaiQuota = useQuotaStore((state) => state.zaiQuota); // CUSTOM (cpamc-custom)
   const metaQuota = useQuotaStore((state) => state.metaQuota);
+  const pluginQuota = useQuotaStore((state) => state.pluginQuota);
   const xaiQuota = useQuotaStore((state) => state.xaiQuota);
 
   const quotaByType = useMemo<Record<QuotaProviderType, Record<string, QuotaCardState>>>(
@@ -150,6 +151,7 @@ export function QuotaPage() {
         devin: devinQuota,
         kimi: kimiQuota,
         meta: metaQuota,
+        plugin: pluginQuota,
         xai: xaiQuota,
         minimax: minimaxQuota, // CUSTOM (cpamc-custom): independent provider caches
         zai: zaiQuota, // CUSTOM (cpamc-custom)
@@ -163,6 +165,7 @@ export function QuotaPage() {
       minimaxQuota,
       zaiQuota,
       metaQuota,
+      pluginQuota,
       xaiQuota,
     ]
   );

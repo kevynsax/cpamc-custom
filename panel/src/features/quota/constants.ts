@@ -11,6 +11,7 @@ export const QUOTA_TAB_ORDER: readonly QuotaProviderType[] = [
   'meta',
   'minimax', // CUSTOM (cpamc-custom)
   'zai', // CUSTOM (cpamc-custom)
+  'plugin',
 ];
 
 export type QuotaTabId = 'all' | QuotaProviderType;
