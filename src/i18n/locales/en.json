@@ -471,6 +471,19 @@
     "refresh_button": "Refresh Quota",
     "fetch_all": "Fetch All"
   },
+  "plugin_quota": {
+    "empty_title": "No Plugin Auth Files",
+    "empty_desc": "Connect a plugin account to view its remaining quota.",
+    "idle": "Click here to refresh quota",
+    "loading": "Loading quota...",
+    "load_failed": "Failed to load quota: {{message}}",
+    "missing_auth_index": "Auth file missing auth_index",
+    "probe_unsupported": "Declarative quota probes are not available through the v8 management API",
+    "plugin_not_found": "No enabled plugin provides quota for {{provider}}",
+    "empty_data": "No quota data available",
+    "plan_label": "Plan",
+    "remaining_percent": "{{percent}}% remaining"
+  },
   "claude_quota": {
     "title": "Claude Quota",
     "empty_title": "No Claude OAuth Files",
@@ -490,6 +503,7 @@
     "seven_day_cowork": "7-day Cowork",
     "iguana_necktie": "Iguana Necktie",
     "seven_day_fable": "7-day Fable 5",
+    "cloud_session_credits": "Cloud session credits",
     "extra_usage_label": "Extra Usage",
     "plan_label": "Plan",
     "plan_unknown": "Unknown",
@@ -535,6 +549,8 @@
     "reset_confirm_title": "Reset Codex quota",
     "reset_confirm_message": "This will consume 1 manual reset to reset the Codex quota for \"{{name}}\". Continue?",
     "reset_confirm_button": "Reset quota",
+    "reset_not_confirmed": "Quota reset was not confirmed. Refresh the quota before trying again.",
+    "reset_cooldown_failed": "Quota was reset, but the gateway cooldown could not be cleared. On the original connection, use Clear cooldown on the credential page; do not redeem another reset.",
     "reset_success": "Reset Codex quota for \"{{name}}\"",
     "reset_failed": "Failed to reset Codex quota for \"{{name}}\": {{message}}",
     "plan_plus": "Plus",
@@ -623,6 +639,7 @@
     "usage_unavailable": "Usage unavailable from xAI",
     "reset_at": "Resets {{time}}",
     "product_usage": "{{product}} usage",
+    "usage_breakdown": "Usage breakdown (shared quota)",
     "plan_label": "Plan",
     "resets_label": "Resets",
     "prepaid": "Prepaid",
@@ -642,7 +659,6 @@
     "location_hint": "Leave empty to use the default region us-central1.",
     "file_label": "Service account key JSON",
     "file_hint": "Only Google Cloud service account key JSON files are accepted.",
-    "file_placeholder": "No file selected",
     "choose_file": "Choose File",
     "import_button": "Import Vertex Credential",
     "file_required": "Select a .json credential file first",
@@ -651,7 +667,9 @@
     "result_project": "Project ID",
     "result_email": "Service account",
     "result_location": "Region",
-    "result_file": "Persisted file"
+    "result_file": "Persisted file",
+    "drop_hint": "Choose or drop a JSON file",
+    "import_another": "Import another"
   },
   "oauth_excluded": {
     "editor_description": "Choose which models a provider exposes using individual selections or wildcard rules.",
@@ -787,7 +805,6 @@
     "devin_oauth_title": "Devin OAuth",
     "devin_oauth_button": "Start Devin Login",
     "devin_oauth_hint": "Sign in to Devin / Cognition through browser OAuth to save an authentication file. Requires CLI Proxy API v7.3.1 or later; complete authorization within five minutes.",
-    "devin_oauth_url_label": "Authorization URL:",
     "devin_copy_link": "Copy Link",
     "devin_open_link": "Open Link",
     "devin_oauth_status_waiting": "Waiting for Devin authentication...",
@@ -805,7 +822,6 @@
     "codex_oauth_title": "Codex OAuth",
     "codex_oauth_button": "Start Codex Login",
     "codex_oauth_hint": "Login to Codex service through OAuth flow, automatically obtain and save authentication files.",
-    "codex_oauth_url_label": "Authorization URL:",
     "codex_open_link": "Open Link",
     "codex_copy_link": "Copy Link",
     "codex_oauth_status_waiting": "Waiting for authentication...",
@@ -816,7 +832,6 @@
     "anthropic_oauth_title": "Anthropic OAuth",
     "anthropic_oauth_button": "Start Anthropic Login",
     "anthropic_oauth_hint": "Login to Anthropic (Claude) service through OAuth flow, automatically obtain and save authentication files.",
-    "anthropic_oauth_url_label": "Authorization URL:",
     "anthropic_open_link": "Open Link",
     "anthropic_copy_link": "Copy Link",
     "anthropic_oauth_status_waiting": "Waiting for authentication...",
@@ -827,7 +842,6 @@
     "antigravity_oauth_title": "Antigravity OAuth",
     "antigravity_oauth_button": "Start Antigravity Login",
     "antigravity_oauth_hint": "Login to Antigravity service (Google account) through OAuth flow, automatically obtain and save authentication files.",
-    "antigravity_oauth_url_label": "Authorization URL:",
     "antigravity_open_link": "Open Link",
     "antigravity_copy_link": "Copy Link",
     "antigravity_oauth_status_waiting": "Waiting for authentication...",
@@ -838,7 +852,6 @@
     "meta_oauth_title": "Muse (Meta) OAuth",
     "meta_oauth_button": "Log in with Muse",
     "meta_oauth_hint": "Open the authorization link and enter the device code if requested. Authentication files are saved automatically after authorization.",
-    "meta_oauth_url_label": "Authorization URL:",
     "meta_open_link": "Open Link",
     "meta_copy_link": "Copy Link",
     "meta_oauth_status_waiting": "Waiting for authentication...",
@@ -851,7 +864,6 @@
     "kimi_ai_oauth_title": "Kimi International (kimi.ai)",
     "kimi_ai_oauth_button": "Log in to Kimi International",
     "kimi_ai_oauth_hint": "Authorize your kimi.ai international account via device login. A separate kimi-ai authentication file is saved automatically. China and international accounts are not interchangeable.",
-    "kimi_ai_oauth_url_label": "Authorization URL:",
     "kimi_ai_open_link": "Open link",
     "kimi_ai_copy_link": "Copy link",
     "kimi_ai_oauth_status_waiting": "Waiting for authentication...",
@@ -863,7 +875,6 @@
     "kimi_oauth_button": "Log in to Kimi China",
     "kimi_sign_up_button": "Sign Up Now",
     "kimi_oauth_hint": "Authorize your kimi.com China account via device login. Authentication files are saved automatically. International accounts must use the separate kimi.ai login.",
-    "kimi_oauth_url_label": "Authorization URL:",
     "kimi_open_link": "Open Link",
     "kimi_copy_link": "Copy Link",
     "kimi_oauth_status_waiting": "Waiting for authentication...",
@@ -874,7 +885,6 @@
     "xai_oauth_title": "xAI OAuth",
     "xai_oauth_button": "Start xAI Login",
     "xai_oauth_hint": "Login to xAI Grok through OAuth flow, automatically obtain and save authentication files.",
-    "xai_oauth_url_label": "Authorization URL:",
     "xai_open_link": "Open Link",
     "xai_copy_link": "Copy Link",
     "xai_oauth_status_waiting": "Waiting for authentication...",
@@ -885,7 +895,6 @@
     "plugin_oauth_title": "{{name}} OAuth",
     "plugin_oauth_button": "Start {{name}} Login",
     "plugin_oauth_hint": "Log in to {{name}} through the plugin OAuth flow, automatically obtain and save authentication files.",
-    "plugin_oauth_url_label": "Authorization URL:",
     "plugin_open_link": "Open Link",
     "plugin_copy_link": "Copy Link",
     "plugin_oauth_status_waiting": "Waiting for authentication...",
@@ -921,7 +930,27 @@
     "iflow_oauth_status_error": "Authentication failed:",
     "iflow_oauth_start_error": "Failed to start iFlow OAuth:",
     "iflow_oauth_polling_error": "Failed to check authentication status:",
-    "remote_access_disabled": "This login method is not available for remote access. Please access from localhost."
+    "remote_access_disabled": "This login method is not available for remote access. Please access from localhost.",
+    "kimi_oauth_name": "Kimi China",
+    "kimi_ai_oauth_name": "Kimi International",
+    "method_device": "Device code",
+    "method_browser": "Browser sign-in",
+    "method_plugin": "Plugin",
+    "tile_waiting": "Awaiting authorization",
+    "tile_success": "Credential added",
+    "tile_error": "Authorization failed",
+    "meta_providers": "{{count}} providers",
+    "meta_waiting": "{{count}} awaiting authorization",
+    "meta_added": "{{count}} added this session",
+    "step_open_auth_page": "Open the sign-in page and authorize",
+    "step_enter_device_code": "Enter this code on the sign-in page",
+    "optional_step": "Optional",
+    "generating_link": "Generating sign-in link…",
+    "waiting_background_hint": "Closing this window won't stop sign-in",
+    "restart_login": "Start over",
+    "success_saved_hint": "The credential is saved — manage it in Auth Files.",
+    "sign_up_prompt": "No account yet?",
+    "copied": "Copied"
   },
   "stats": {
     "success": "Success",
@@ -1252,6 +1281,7 @@
           "description": "Debug, log output, and usage statistics"
         },
         "advanced": {
+          "antigravity_credits": "Use Antigravity Credits",
           "title": "Advanced & Experimental",
           "description": "Header spoofing, signature cache, plugin sources, and other rarely changed settings",
           "plugins_title": "Plugins",
@@ -1260,6 +1290,8 @@
           "signature_title": "Signature Validation"
         },
         "server": {
+          "github_token": "Global GitHub Token",
+          "github_token_hint": "Used for server-side GitHub requests, such as panel updates and plugin downloads. Takes precedence over GITHUB_TOKEN; leave empty to use environment credentials, or unauthenticated requests if none are set. Matching plugin store authentication rules take precedence.",
           "host": "Host Address",
           "port": "Port"
         },
@@ -1397,15 +1429,6 @@
           "session_affinity": "Session Affinity Routing",
           "ws_auth": "WebSocket Authentication",
           "ws_auth_desc": "Require authentication for AI Studio WebSocket connections (oauth.providers.aistudio.ws-auth)"
-        },
-        "quota": {
-          "title": "Quota Fallback",
-          "description": "Fallback strategy when quota is exceeded",
-          "switch_project": "Switch Project",
-          "switch_project_desc": "Automatically switch to another project when quota is exceeded",
-          "switch_preview_model": "Switch to Preview Model",
-          "switch_preview_model_desc": "Switch to preview model version when quota is exceeded",
-          "antigravity_credits": "Use Antigravity Credits"
         },
         "streaming": {
           "title": "Streaming Configuration",
@@ -1806,7 +1829,8 @@
     "chinese_tw": "Traditional Chinese (Taiwan)",
     "english": "English",
     "russian": "Русский",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "korean": "한국어"
   },
   "theme": {
     "switch": "Theme",
@@ -2083,7 +2107,7 @@
       "disabledHint": "Disabled entries won't be used by the gateway",
       "websockets": "Enable WebSockets",
       "testModel": "Test model",
-      "testModelClaudeHint": "Used for connectivity testing only; not saved",
+      "testModelHint": "Used for connectivity testing only; not saved",
       "testModelAutoWith": "Auto · {{name}}",
       "testModelAutoEmpty": "Auto (no models added yet)",
       "testModelCustom": "{{name}} (custom)",
@@ -2202,6 +2226,9 @@
     }
   },
   "claude_reset": {
+    "expiry_title": "Manual reset expiry ({{timezone}})",
+    "grant_number": "Grant {{index}}",
+    "expiry_unknown": "Expiry unknown",
     "retry_confirm": "Retry the unknown reset for “{{name}}” with its original request ID? A reset may already have been spent. Retry within 10 minutes; do not reload or start another claim in another tab.",
     "remaining": "Resets remaining",
     "title": "Banked resets",
