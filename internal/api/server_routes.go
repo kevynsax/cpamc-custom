@@ -70,7 +70,8 @@ func (s *Server) setupRoutes() {
 		})
 		v1.POST("/chat/completions", openaiHandlers.ChatCompletions)
 		v1.POST("/completions", openaiHandlers.Completions)
-		v1.POST("/images/generations", openaiHandlers.ImagesGenerations)
+		// CUSTOM (cpamc-custom): minimax/image-01* to MiniMax, every other model upstream
+		v1.POST("/images/generations", s.customImagesDispatch(openaiHandlers.ImagesGenerations))
 		v1.POST("/audio/speech", s.customSpeechDispatch(openaiHandlers.AudioSpeech)) // CUSTOM (cpamc-custom): MiniMax TTS default, grok-tts* to upstream
 		v1.POST("/images/edits", openaiHandlers.ImagesEdits)
 		v1.POST("/videos", openaiHandlers.XAIVideosGenerations)

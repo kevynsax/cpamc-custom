@@ -150,6 +150,17 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 - Drop this builtin once upstream's catalog includes the same id; until then keep
   it (and the `WithClaudeBuiltins` hook in `GetClaudeModels`) on every merge.
 
+### 14. Image generation endpoint (MiniMax image-01)
+
+- `POST /v1/images/generations` with `model: "minimax/image-01"` (or `minimax/image-01-live`)
+  is translated to MiniMax's native `/v1/image_generation` and returned in OpenAI shape
+  (`data[].b64_json`, or `data[].url` with `response_format: "url"`). `size` `WxH` maps to
+  `width`/`height` (clamped 512–2048, multiple of 8); prompt max 1500 chars; `n` max 9.
+- Every other model falls through to the upstream images handler (`customImagesDispatch`).
+  The `minimax/` prefix is required so a future upstream `image-01` is never hijacked.
+- Key: same MiniMax openai-compatibility entry as TTS (`customMinimaxKey`); never leaves the server.
+- Used by the `image-gen` skill (`--model minimax`).
+
 ### 11. No GitHub Actions
 
 - Upstream and the panel subtree ship `.github/workflows/` and `panel/.github/workflows/`.
@@ -182,7 +193,8 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 | `internal/runtime/executor/codex_websockets_executor.go` | large requests → WebSocket (`customCodexLargeRequestUsesWebsocket`) |
 | `.dockerignore` | +2 lines |
 | `internal/api/custom_speech.go` | new (TTS endpoint) |
-| `internal/api/server_routes.go` | +1 route line |
+| `internal/api/custom_images.go` (+ `_test.go`) | new (MiniMax image endpoint) |
+| `internal/api/server_routes.go` | +1 route line (speech), +1 route line + comment (images) |
 | `internal/api/handlers/management/custom_quota_providers.go` | new (MiniMax/Z.ai credential list) |
 | `panel/src/features/quota/providers/customApiKeyQuota.ts` (+ `tests/customApiKeyQuota.test.ts`) | new |
 | `panel/src/features/quota/{constants,logic}.ts`, `providers/{index,types}.ts`, `QuotaPage.tsx` | minimax/zai entries |
