@@ -69,6 +69,7 @@ func (s *Server) setupRoutes() {
 			s.unifiedModelsHandler(openaiHandlers, claudeCodeHandlers)(c)
 		})
 		v1.POST("/chat/completions", openaiHandlers.ChatCompletions)
+		v1.POST("/decisions", s.customDecisions) // CUSTOM (cpamc-custom): native Jev with gateway-owned OpenRouter credentials
 		v1.POST("/completions", openaiHandlers.Completions)
 		// CUSTOM (cpamc-custom): minimax/image-01* to MiniMax, every other model upstream
 		v1.POST("/images/generations", s.customImagesDispatch(openaiHandlers.ImagesGenerations))
