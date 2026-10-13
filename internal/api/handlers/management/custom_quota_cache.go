@@ -13,6 +13,9 @@ package management
 //   - Every 10 minutes, only between 09:30 and 21:30 (UTC-3), all recipes are replayed.
 //   - After every update the reset instants found in the cached bodies are used to boost
 //     the credential that resets soonest (per provider) to the highest priority tier.
+//     Credentials whose cached quota is used up drop below every credential with quota
+//     left, so a provider with 2+ credentials never sends traffic to an exhausted one
+//     while another one can still serve.
 
 import (
 	"bytes"
@@ -324,7 +327,8 @@ func (h *Handler) CustomQuotaStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"entries": rows, "last_run": lastRun, "in_window": customQuotaInWindow(time.Now()),
 		"refresh_every": customQuotaRefreshEvery.String(), "window": "09:30-21:30 UTC-3",
-		"reset_by_auth": resetOut, "priority_boosts": coreauth.CustomResetPriorityBoosts(),
+		"reset_by_auth": resetOut, "exhausted_by_auth": h.customQuotaExhaustedByAuth(time.Now()),
+		"priority_boosts": coreauth.CustomResetPriorityBoosts(),
 	})
 }
 
@@ -360,6 +364,10 @@ func (h *Handler) customQuotaLoop(ctx context.Context) {
 			customQuota.mu.Unlock()
 			if due && customQuotaInWindow(now) {
 				h.customQuotaRefreshAll(ctx)
+			} else {
+				// Re-rank without refreshing: a window that rolled over since the last
+				// refresh stops counting as used up (no-op when nothing changed).
+				h.customQuotaApplyResetPriority()
 			}
 		}
 	}
@@ -473,28 +481,184 @@ func (h *Handler) customQuotaResetByAuth(now time.Time) map[string]time.Time {
 	return out
 }
 
+// customQuotaExhaustedByAuth reports the credentials whose cached quota bodies say a
+// credential-wide window is used up. A body whose reset instants all lie in the past
+// is stale (its window already rolled over) and does not count.
+func (h *Handler) customQuotaExhaustedByAuth(now time.Time) map[string]bool {
+	customQuota.mu.Lock()
+	h.customQuotaEnsureLoaded()
+	out := map[string]bool{}
+	for _, e := range customQuota.entries {
+		if e.StatusCode < 200 || e.StatusCode >= 300 || e.Body == "" || out[e.Recipe.AuthID] {
+			continue
+		}
+		var payload any
+		if json.Unmarshal([]byte(e.Body), &payload) != nil || !customQuotaBodyExhausted(payload, "") {
+			continue
+		}
+		resets := customQuotaCollectResets(payload, "", e.FetchedAt)
+		current := len(resets) == 0
+		for _, t := range resets {
+			if t.After(now) {
+				current = true
+				break
+			}
+		}
+		if current {
+			out[e.Recipe.AuthID] = true
+		}
+	}
+	customQuota.mu.Unlock()
+	return out
+}
+
+// customQuotaBodyExhausted walks a quota body looking for a credential-wide window that
+// is used up: xAI creditUsagePercent, Codex rate_limit.limit_reached, used_percent
+// (Codex, Meta) and Claude five_hour / seven_day utilization. Per-model or per-product
+// buckets are ignored on purpose: one exhausted model does not exhaust the credential.
+func customQuotaBodyExhausted(v any, parentKey string) bool {
+	switch typed := v.(type) {
+	case map[string]any:
+		for k, child := range typed {
+			norm := strings.ToLower(strings.NewReplacer("_", "", "-", "").Replace(k))
+			if customQuotaPerModelKeys[norm] {
+				continue
+			}
+			switch child.(type) {
+			case map[string]any, []any:
+				if customQuotaBodyExhausted(child, norm) {
+					return true
+				}
+				continue
+			}
+			if customQuotaExhaustedValue(norm, parentKey, child) {
+				return true
+			}
+		}
+	case []any:
+		for _, child := range typed {
+			if customQuotaBodyExhausted(child, parentKey) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// customQuotaPerModelKeys are subtrees holding per-model or per-product limits.
+var customQuotaPerModelKeys = map[string]bool{
+	"additionalratelimits": true, // Codex per-model windows
+	"codereviewratelimit":  true,
+	"modelusage":           true,
+	"productusage":         true, // xAI per product
+	"modelremains":         true, // MiniMax per model
+}
+
+func customQuotaExhaustedValue(key, parentKey string, v any) bool {
+	switch key {
+	case "limitreached":
+		reached, ok := v.(bool)
+		return ok && reached && parentKey == "ratelimit"
+	case "creditusagepercent":
+		n, ok := customQuotaNumber(v)
+		return ok && n >= 100
+	case "usedpercent":
+		switch parentKey {
+		case "primarywindow", "secondarywindow", "window", "weekly":
+		default:
+			return false
+		}
+		n, ok := customQuotaNumber(v)
+		return ok && n >= 100
+	case "utilization":
+		if parentKey != "fivehour" && parentKey != "sevenday" {
+			return false
+		}
+		n, ok := customQuotaNumber(v)
+		return ok && n >= 100
+	}
+	return false
+}
+
+type customQuotaCandidate struct {
+	id        string
+	label     string
+	reset     time.Time // zero = unknown (e.g. just reset)
+	exhausted bool
+}
+
+// customQuotaRankProvider orders one provider's credentials and returns their boosts.
+// Credentials with quota left come first: soonest reset first, unknown resets after
+// them with no boost. Used-up credentials get a negative boost (soonest reset first),
+// so the scheduler reaches them only when no credential with quota left is ready.
+// ok is false when there is nothing to rank (fewer than 2 credentials, or neither a
+// known reset nor a used-up credential).
+func customQuotaRankProvider(list []customQuotaCandidate) (boosts map[string]int, summary string, ok bool) {
+	knownLeft, exhausted := 0, 0
+	for _, c := range list {
+		switch {
+		case c.exhausted:
+			exhausted++
+		case !c.reset.IsZero():
+			knownLeft++
+		}
+	}
+	if len(list) < 2 || (knownLeft == 0 && exhausted == 0) {
+		return nil, "", false
+	}
+	list = append([]customQuotaCandidate(nil), list...)
+	sort.SliceStable(list, func(i, j int) bool {
+		a, b := list[i], list[j]
+		if a.exhausted != b.exhausted {
+			return !a.exhausted
+		}
+		if a.reset.IsZero() != b.reset.IsZero() {
+			return !a.reset.IsZero()
+		}
+		if !a.reset.Equal(b.reset) {
+			return a.reset.Before(b.reset)
+		}
+		return a.id < b.id
+	})
+	boosts = map[string]int{}
+	parts := make([]string, 0, len(list))
+	exhaustedRank := 0
+	for rank, c := range list {
+		when := "unknown"
+		if !c.reset.IsZero() {
+			when = c.reset.In(customQuotaZone).Format("01/02 15:04")
+		}
+		switch {
+		case c.exhausted:
+			exhaustedRank++
+			boosts[c.id] = -customQuotaBoostStep * exhaustedRank
+			when += ", used up"
+		case !c.reset.IsZero():
+			boosts[c.id] = customQuotaBoostStep * (knownLeft - rank)
+		}
+		parts = append(parts, fmt.Sprintf("%s(%s)", c.label, when))
+	}
+	return boosts, strings.Join(parts, " > "), true
+}
+
 func (h *Handler) customQuotaApplyResetPriority() {
 	if h == nil || h.authManager == nil {
 		return
 	}
-	resets := h.customQuotaResetByAuth(time.Now())
-	type cand struct {
-		id    string
-		label string
-		reset time.Time
-	}
-	groups := map[string][]cand{}
+	now := time.Now()
+	resets := h.customQuotaResetByAuth(now)
+	exhausted := h.customQuotaExhaustedByAuth(now)
+	groups := map[string][]customQuotaCandidate{}
 	for _, a := range h.authManager.List() {
 		if a == nil || a.Disabled || a.Status == coreauth.StatusDisabled {
 			continue
 		}
-		t := resets[a.ID] // zero = unknown (e.g. just reset): ranked last
 		label := a.Label
 		if label == "" {
 			label = a.ID
 		}
 		p := strings.ToLower(strings.TrimSpace(a.Provider))
-		groups[p] = append(groups[p], cand{a.ID, label, t})
+		groups[p] = append(groups[p], customQuotaCandidate{id: a.ID, label: label, reset: resets[a.ID], exhausted: exhausted[a.ID]})
 	}
 	boosts := map[string]int{}
 	var summary []string
@@ -504,32 +668,14 @@ func (h *Handler) customQuotaApplyResetPriority() {
 	}
 	sort.Strings(providers)
 	for _, p := range providers {
-		list := groups[p]
-		known := 0
-		for _, c := range list {
-			if !c.reset.IsZero() {
-				known++
-			}
-		}
-		if len(list) < 2 || known == 0 {
+		providerBoosts, line, ok := customQuotaRankProvider(groups[p])
+		if !ok {
 			continue
 		}
-		sort.SliceStable(list, func(i, j int) bool {
-			if list[i].reset.IsZero() != list[j].reset.IsZero() {
-				return !list[i].reset.IsZero()
-			}
-			return list[i].reset.Before(list[j].reset)
-		})
-		parts := make([]string, 0, len(list))
-		for rank, c := range list {
-			when := "unknown"
-			if !c.reset.IsZero() {
-				boosts[c.id] = customQuotaBoostStep * (known - rank)
-				when = c.reset.In(customQuotaZone).Format("01/02 15:04")
-			}
-			parts = append(parts, fmt.Sprintf("%s(%s)", c.label, when))
+		for id, boost := range providerBoosts {
+			boosts[id] = boost
 		}
-		summary = append(summary, p+": "+strings.Join(parts, " > "))
+		summary = append(summary, p+": "+line)
 	}
 	if customQuotaBoostsEqual(boosts, coreauth.CustomResetPriorityBoosts()) {
 		return

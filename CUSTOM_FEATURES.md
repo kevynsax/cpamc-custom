@@ -55,11 +55,23 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
   `currentPeriod.end`, `billingPeriodEnd`, ...).
 - A credential's reset time is its latest reset within 8 days (the binding window).
 - For each provider with 2+ credentials and at least one known reset, the one that
-  resets soonest gets the highest priority boost. Credentials with no known reset are ranked last.
+  resets soonest gets the highest priority boost. Credentials with no known reset rank
+  after them with no boost.
+- **Used-up credentials go last.** A credential whose cached quota says a credential-wide
+  window is used up (xAI `creditUsagePercent`, Codex `rate_limit.limit_reached`,
+  `used_percent` of a primary/secondary/weekly window, Claude `five_hour`/`seven_day`
+  `utilization`, all at 100%) gets a negative boost. Traffic goes to a credential with
+  quota left without first hitting the used-up one (no 402/429, no cooldown). Per-model
+  and per-product buckets are ignored. A credential that is used up is still served when
+  nothing else is ready, and a provider with one credential is never ranked.
+- A used-up body whose resets all lie in the past no longer counts. The ranking is
+  re-checked every minute, also outside the 09:30–21:30 refresh window.
 - The boost is added in `authPriority()` (`sdk/cliproxy/auth/selector.go`), so the
-  scheduler sends traffic to the soonest-reset credential. When that credential is
-  exhausted (quota/cooldown), normal failover moves to the next one.
-- Each change is logged as `custom reset-priority: xai: a(10/01 20:55) > b(10/08 13:48)`.
+  scheduler sends traffic to the top-ranked credential. When it hits a cooldown, normal
+  failover moves to the next one.
+- Each change is logged as
+  `custom reset-priority: xai: b(10/15 20:55) > a(10/15 13:48, used up)`.
+  `GET /v8/management/custom/quota/status` shows `exhausted_by_auth` and `priority_boosts`.
 
 ### 4. Bundled panel
 

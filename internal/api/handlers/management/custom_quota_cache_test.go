@@ -171,3 +171,105 @@ func TestGetUsageSnapshotReadOnly(t *testing.T) {
 		t.Fatalf("endpoint refreshed data: success=%d, want stale %d", got, success1)
 	}
 }
+
+func decodeBody(t *testing.T, body string) any {
+	t.Helper()
+	var v any
+	if err := json.Unmarshal([]byte(body), &v); err != nil {
+		t.Fatal(err)
+	}
+	return v
+}
+
+func TestCustomQuotaBodyExhausted(t *testing.T) {
+	cases := []struct {
+		name string
+		body string
+		want bool
+	}{
+		// Bodies captured from the live xAI billing endpoint on 2026-10-13.
+		{"xai used up", `{"config":{"currentPeriod":{"end":"2026-10-15T16:48:47Z"},"creditUsagePercent":100.0,"productUsage":[{"product":"GrokBuild","usagePercent":100.0}]}}`, true},
+		{"xai quota left", `{"config":{"currentPeriod":{"end":"2026-10-15T23:55:01Z"},"creditUsagePercent":41.0,"productUsage":[{"product":"GrokBuild","usagePercent":41.0}]}}`, false},
+		{"codex limit reached", `{"rate_limit":{"limit_reached":true,"primary_window":{"used_percent":100}}}`, true},
+		{"codex quota left", `{"rate_limit":{"limit_reached":false,"primary_window":{"used_percent":0}}}`, false},
+		{"codex per-model window ignored", `{"rate_limit":{"limit_reached":false},"additional_rate_limits":[{"limit_reached":true,"primary_window":{"used_percent":100}}]}`, false},
+		{"claude weekly used up", `{"five_hour":{"utilization":7.0},"seven_day":{"utilization":100.0}}`, true},
+		{"claude weekly nearly used", `{"five_hour":{"utilization":7.0},"seven_day":{"utilization":97.0}}`, false},
+		{"meta weekly used up", `{"subs_usage":{"window":{"used_percent":6},"weekly":{"used_percent":100}}}`, true},
+		{"minimax per-model ignored", `{"model_remains":[{"current_interval_remaining_percent":0}]}`, false},
+	}
+	for _, tc := range cases {
+		if got := customQuotaBodyExhausted(decodeBody(t, tc.body), ""); got != tc.want {
+			t.Errorf("%s: exhausted = %v, want %v", tc.name, got, tc.want)
+		}
+	}
+}
+
+func TestCustomQuotaRankProviderSkipsUsedUpCredential(t *testing.T) {
+	soon := time.Date(2026, 10, 15, 16, 48, 0, 0, time.UTC)
+	later := time.Date(2026, 10, 15, 23, 55, 0, 0, time.UTC)
+
+	// The live incident: the soonest-reset xAI account is used up, the other has 59% left.
+	boosts, _, ok := customQuotaRankProvider([]customQuotaCandidate{
+		{id: "xai-kevynsax", label: "kevynsax", reset: soon, exhausted: true},
+		{id: "xai-kirschner", label: "kirschner", reset: later},
+	})
+	if !ok {
+		t.Fatal("two xAI credentials must be ranked")
+	}
+	if boosts["xai-kirschner"] <= boosts["xai-kevynsax"] {
+		t.Fatalf("credential with quota left must outrank the used-up one: %v", boosts)
+	}
+	if boosts["xai-kevynsax"] >= 0 {
+		t.Fatalf("used-up credential must sit below unboosted credentials: %v", boosts)
+	}
+
+	// With quota left on both, the soonest reset still wins.
+	boosts, _, _ = customQuotaRankProvider([]customQuotaCandidate{
+		{id: "a", label: "a", reset: soon},
+		{id: "b", label: "b", reset: later},
+	})
+	if boosts["a"] <= boosts["b"] {
+		t.Fatalf("soonest reset must win when both have quota: %v", boosts)
+	}
+
+	// An unknown reset with quota left beats a used-up credential.
+	boosts, _, ok = customQuotaRankProvider([]customQuotaCandidate{
+		{id: "used", label: "used", reset: soon, exhausted: true},
+		{id: "fresh", label: "fresh"},
+	})
+	if !ok || boosts["fresh"] <= boosts["used"] {
+		t.Fatalf("fresh credential must outrank used-up one: ok=%v %v", ok, boosts)
+	}
+
+	// A single credential is never ranked: it keeps serving and takes its cooldown.
+	if _, _, ok = customQuotaRankProvider([]customQuotaCandidate{{id: "only", reset: soon, exhausted: true}}); ok {
+		t.Fatal("a single credential must not be ranked")
+	}
+}
+
+func TestCustomQuotaExhaustedByAuthIgnoresRolledOverWindow(t *testing.T) {
+	customQuota.mu.Lock()
+	saved, savedLoaded := customQuota.entries, customQuota.loaded
+	customQuota.entries = map[string]*customQuotaEntry{
+		"used": {Recipe: customQuotaRecipe{AuthID: "used"}, StatusCode: 200,
+			Body: `{"config":{"currentPeriod":{"end":"2026-10-15T16:48:47Z"},"creditUsagePercent":100}}`},
+		"rolled": {Recipe: customQuotaRecipe{AuthID: "rolled"}, StatusCode: 200,
+			Body: `{"config":{"currentPeriod":{"end":"2026-10-12T16:48:47Z"},"creditUsagePercent":100}}`},
+		"left": {Recipe: customQuotaRecipe{AuthID: "left"}, StatusCode: 200,
+			Body: `{"config":{"currentPeriod":{"end":"2026-10-15T23:55:01Z"},"creditUsagePercent":41}}`},
+	}
+	customQuota.loaded = true
+	customQuota.mu.Unlock()
+	t.Cleanup(func() {
+		customQuota.mu.Lock()
+		customQuota.entries, customQuota.loaded = saved, savedLoaded
+		customQuota.mu.Unlock()
+	})
+
+	now := time.Date(2026, 10, 13, 8, 0, 0, 0, time.UTC)
+	got := (&Handler{}).customQuotaExhaustedByAuth(now)
+	if !got["used"] || got["rolled"] || got["left"] {
+		t.Fatalf("exhausted = %v, want only \"used\"", got)
+	}
+}
