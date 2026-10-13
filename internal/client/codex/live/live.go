@@ -206,6 +206,10 @@ func (h *Handler) Handle(c *gin.Context) {
 		writeLiveError(c, http.StatusBadRequest, errPayload.Error())
 		return
 	}
+	if isAPIKeyLiveModel(model) { // CUSTOM (cpamc-custom): GPT Live via API key
+		h.handleAPIKeyLive(c, upstreamBody)
+		return
+	}
 	runtimeConfig, mediaRelay, mediaRelayErr := h.currentRuntime()
 	if mediaRelayErr != nil {
 		writeLiveError(c, http.StatusServiceUnavailable, mediaRelayErr.Error())
