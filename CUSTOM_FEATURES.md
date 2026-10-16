@@ -167,8 +167,13 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
   upstream (Anthropic API id `claude-haiku-5-5`, 1M context, 5.5-family thinking
   levels). A hardcoded builtin, not `models.json`: the registry refreshes from the
   remote catalog at runtime, which would wipe an embedded-only entry.
-- Drop this builtin once upstream's catalog includes the same id; until then keep
-  it (and the `WithClaudeBuiltins` hook in `GetClaudeModels`) on every merge.
+- Same file: `claude-mythos-5-1`, the verification-gated id of Claude Fable 5.1
+  (1M context, 128K output, adaptive thinking). Upstream will not list it
+  (CLIProxyAPI #6428), so this builtin stays even after catalog refreshes. The
+  Claude executor already treats the id like Fable 5.1; only a credential whose
+  account has Mythos access can actually serve it.
+- Drop the haiku builtin once upstream's catalog includes the same id; until then
+  keep both (and the `WithClaudeBuiltins` hook in `GetClaudeModels`) on every merge.
 
 ### 14. Image generation endpoint (MiniMax image-01)
 
