@@ -192,16 +192,16 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
   We delete them after every merge; builds run in TeamCity, deploys in Kubernetes.
   Repository Actions stay disabled on `kevynsax/cpamc-custom`.
 
-### GPT Live over an OpenAI API key (`POST /v1/live`, model `gpt-live-1`)
+### GPT Live over an OpenAI API key (`POST /v1/live`, model `gpt-live-1.1`)
 
 The Codex Live route (chatgpt.com, OAuth) answers the SDP and then refuses the voice session
 (`Voice session access denied`) when the ChatGPT plan has no Voice entitlement. A `/v1/live` request whose model is
-`gpt-live-1` (not `gpt-live-1-codex`) is sent instead to the first Codex **API-key** credential:
+`gpt-live-1.1` (not `gpt-live-1-codex`) is sent instead to the first Codex **API-key** credential:
 `POST <base-url>/live/sessions` (default `https://api.openai.com/v1`) with
 `{session, transport:{type:"webrtc", sdp}}`. The answer is returned as `application/sdp` with
 `Location: /v1/live/<session id>`. The media relay and the sideband are not used (the peer talks to OpenAI directly).
 Live config (PVC, not in the image): an `api-keys.codex` group with `prefix: openai-live`, `base-url`
-`https://api.openai.com/v1`, `models: [gpt-live-1]` and the platform key, so the key is not picked for ordinary
+`https://api.openai.com/v1`, `models: [gpt-live-1.1]` and the platform key, so the key is not picked for ordinary
 chat traffic. Code: `internal/client/codex/live/custom_apikey_live.go` (+ test); hook in `live.go` `Handle`.
 
 ## Files

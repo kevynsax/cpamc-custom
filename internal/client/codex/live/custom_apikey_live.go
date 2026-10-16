@@ -3,7 +3,7 @@ package live
 // CUSTOM (cpamc-custom): GPT Live over an OpenAI platform API key.
 //
 // The Codex Live route (chatgpt.com, OAuth) needs a Voice entitlement the ChatGPT plan may lack.
-// A `/v1/live` request that names `gpt-live-1` (not the `-codex` model) is sent instead to the
+// A `/v1/live` request that names `gpt-live-1.1` (not the `-codex` model) is sent instead to the
 // GPT Live API of the first Codex API-key credential: POST <base-url>/live/sessions with
 // {session, transport:{type:"webrtc", sdp}}. The answer is returned the way the Codex route
 // returns it: the SDP answer as application/sdp plus a Location header ending in the session id.
@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	apiKeyLiveModel   = "gpt-live-1"
+	apiKeyLiveModel   = "gpt-live-1.1"
 	apiKeyLiveBaseURL = "https://api.openai.com/v1"
 )
 
@@ -84,7 +84,7 @@ func apiKeyLiveURL(selected *auth.Auth) string {
 	return strings.TrimRight(base, "/") + "/live/sessions"
 }
 
-// handleAPIKeyLive serves `/v1/live` for `gpt-live-1` through a Codex API-key credential.
+// handleAPIKeyLive serves `/v1/live` for `gpt-live-1.1` through a Codex API-key credential.
 func (h *Handler) handleAPIKeyLive(c *gin.Context, upstreamBody []byte) {
 	requestBody, errBody := apiKeyLiveRequest(upstreamBody)
 	if errBody != nil {

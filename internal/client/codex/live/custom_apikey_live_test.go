@@ -32,7 +32,7 @@ func TestHandlerRoutesGPTLiveToAPIKeyLiveSessions(t *testing.T) {
 	router := gin.New()
 	router.POST("/v1/live", handler.Handle)
 
-	body := `{"sdp":"v=0\r\na=offer\r\n","session":{"model":"gpt-live-1","instructions":"oi","audio":{"output":{"voice":"marin"}}}}`
+	body := `{"sdp":"v=0\r\na=offer\r\n","session":{"model":"gpt-live-1.1","instructions":"oi","audio":{"output":{"voice":"marin"}}}}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/live", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("OpenAI-Alpha", "quicksilver=v2")
@@ -55,7 +55,7 @@ func TestHandlerRoutesGPTLiveToAPIKeyLiveSessions(t *testing.T) {
 	if err := json.Unmarshal(executor.body, &sent); err != nil {
 		t.Fatal(err)
 	}
-	if sent.Session["model"] != "gpt-live-1" || sent.Transport["type"] != "webrtc" || !strings.HasPrefix(sent.Transport["sdp"].(string), "v=0") {
+	if sent.Session["model"] != "gpt-live-1.1" || sent.Transport["type"] != "webrtc" || !strings.HasPrefix(sent.Transport["sdp"].(string), "v=0") {
 		t.Fatalf("unexpected upstream body: %s", executor.body)
 	}
 	if recorder.Header().Get("Content-Type") != "application/sdp" || recorder.Body.String() != "v=0\r\na=answer\r\n" {
@@ -67,7 +67,7 @@ func TestHandlerRoutesGPTLiveToAPIKeyLiveSessions(t *testing.T) {
 }
 
 func TestHandlerKeepsCodexModelOnOAuthRoute(t *testing.T) {
-	if isAPIKeyLiveModel("gpt-live-1-codex") || isAPIKeyLiveModel("") || !isAPIKeyLiveModel(" GPT-Live-1 ") {
+	if isAPIKeyLiveModel("gpt-live-1-codex") || isAPIKeyLiveModel("gpt-live-1") || isAPIKeyLiveModel("") || !isAPIKeyLiveModel(" GPT-Live-1.1 ") {
 		t.Fatal("model routing is wrong")
 	}
 }
@@ -84,8 +84,8 @@ func TestAPIKeyLiveRejectsMissingCredentialAndOffer(t *testing.T) {
 	router := gin.New()
 	router.POST("/v1/live", handler.Handle)
 	for name, body := range map[string]string{
-		"no api key": `{"sdp":"v=0","session":{"model":"gpt-live-1"}}`,
-		"no sdp":     `{"session":{"model":"gpt-live-1"}}`,
+		"no api key": `{"sdp":"v=0","session":{"model":"gpt-live-1.1"}}`,
+		"no sdp":     `{"session":{"model":"gpt-live-1.1"}}`,
 	} {
 		req := httptest.NewRequest(http.MethodPost, "/v1/live", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
