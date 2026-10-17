@@ -392,6 +392,23 @@ func isKnownDefaultValue(path []string, node *yaml.Node) bool {
 		return false
 	}
 
+	// False is an opt-out, not the zero/default value, for default-on usage collection.
+	if node != nil {
+		switch strings.Join(path, ".") {
+		case "usage-statistics-enabled", "observability.usage.usage-statistics-enabled":
+			if node.Kind == yaml.ScalarNode && node.Tag == "!!bool" {
+				return node.Value == "true"
+			}
+		case "observability", "observability.usage":
+			key := "usage-statistics-enabled"
+			if len(path) == 1 {
+				key = "usage." + key
+			}
+			if value := yamlPath(node, key); value != nil && value.Kind == yaml.ScalarNode && value.Tag == "!!bool" && value.Value == "false" {
+				return false
+			}
+		}
+	}
 	// First check if it's a zero value
 	if isZeroValueNode(node) {
 		return true

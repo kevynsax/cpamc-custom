@@ -277,7 +277,7 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
   loggingToFile: false,
   logsMaxTotalSizeMb: '',
   errorLogsMaxFiles: '',
-  usageStatisticsEnabled: false,
+  usageStatisticsEnabled: true,
   redisUsageQueueRetentionSeconds: '',
   proxyUrl: '',
   forceModelPrefix: false,

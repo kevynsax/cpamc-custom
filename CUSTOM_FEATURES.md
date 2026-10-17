@@ -132,8 +132,11 @@ supports **one gateway process per data directory**, not shared replica aggregat
 Use a `Recreate` deployment strategy so releases never overlap history writers.
 Restart after changing `auth-dir`. Corrupt retained data fails initialization instead
 of being overwritten. Disk failures are reported and pending counters retry on later
-events. Collection follows `observability.usage.usage-statistics-enabled`; disabling it
-preserves history. There is no historical backfill or retrospective repricing of old
+events. Collection follows `observability.usage.usage-statistics-enabled` and defaults
+to **enabled** when that setting is omitted. The YAML loader, in-memory parser,
+configuration template and visual editor share this default. An explicit `false`
+remains an opt-out and survives saving/migration; changing the default does not
+rewrite an existing live configuration. Disabling collection preserves history. There is no historical backfill or retrospective repricing of old
 daily-only rows. The existing asynchronous usage dispatcher can briefly lag inference;
 a hard kill can lose events not yet dispatched.
 

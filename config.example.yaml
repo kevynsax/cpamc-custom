@@ -1160,8 +1160,8 @@ observability:
     request-log: false
 
   usage:
-    # When false, disable in-memory usage statistics aggregation
-    usage-statistics-enabled: false
+    # Enabled by default. Set false to explicitly disable usage collection.
+    usage-statistics-enabled: true
 
     # How long (in seconds) usage queue items are retained in memory for the Management API.
     # The local Redis RESP usage output is disabled.

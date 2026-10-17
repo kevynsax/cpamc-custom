@@ -1464,7 +1464,10 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
     loggingToFile: Boolean(v8ObservabilityLogs?.['logging-to-file']),
     logsMaxTotalSizeMb: String(v8ObservabilityLogs?.['logs-max-total-size-mb'] ?? ''),
     errorLogsMaxFiles: String(v8ObservabilityLogs?.['error-logs-max-files'] ?? ''),
-    usageStatisticsEnabled: Boolean(v8ObservabilityUsage?.['usage-statistics-enabled']),
+    usageStatisticsEnabled: Boolean(
+      v8ObservabilityUsage?.['usage-statistics-enabled'] ??
+      DEFAULT_VISUAL_VALUES.usageStatisticsEnabled
+    ),
     redisUsageQueueRetentionSeconds: String(
       v8ObservabilityUsage?.['redis-usage-queue-retention-seconds'] ?? ''
     ),
@@ -2116,7 +2119,7 @@ export function useVisualConfig() {
   return {
     visualValues,
     visualDirty,
-    /** 脏字段的叶值键集合（streaming 为点号叶），供 tab 脏点 / 头部计数消费。 */
+    /** Dirty leaf keys (dotted keys for streaming), used by tab indicators and the header count. */
     visualDirtyFields: dirtyFields as ReadonlySet<string>,
     visualParseError,
     visualValidationErrors,
