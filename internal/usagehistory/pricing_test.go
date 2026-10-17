@@ -87,6 +87,9 @@ func TestPricingSettingsAndHistoricalRatePersistence(t *testing.T) {
 	if errSave := store.UpdateSettings(settings); errSave != nil {
 		t.Fatal(errSave)
 	}
+	if errClose := store.Close(); errClose != nil {
+		t.Fatal(errClose)
+	}
 	reopened, errOpen := Open(dir, func() time.Time { return now })
 	if errOpen != nil {
 		t.Fatal(errOpen)

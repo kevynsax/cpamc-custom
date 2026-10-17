@@ -48,6 +48,9 @@ func TestInHouseReferenceEstimatesDoNotRewriteRecordedHistory(t *testing.T) {
 	if err := store.RecordPriced(record, nil); err != nil {
 		t.Fatal(err)
 	}
+	if err := store.Flush(); err != nil {
+		t.Fatal(err)
+	}
 	file := filepath.Join(dir, "2026-10-17.json")
 	before, err := os.ReadFile(file)
 	if err != nil {

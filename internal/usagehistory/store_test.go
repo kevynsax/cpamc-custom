@@ -1,6 +1,7 @@
 package usagehistory
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,6 +36,12 @@ func TestStoreAttributionPersistenceAndPrivacy(t *testing.T) {
 	record.AuthType = "api_key"
 	if errRecord := store.Record(record); errRecord != nil {
 		t.Fatal(errRecord)
+	}
+	if _, errStat := os.Stat(filepath.Join(dir, "2026-06-10.json")); !os.IsNotExist(errStat) {
+		t.Fatalf("usage written before the batched flush: %v", errStat)
+	}
+	if errClose := store.Close(); errClose != nil {
+		t.Fatal(errClose)
 	}
 	reopened, errOpen := Open(dir, func() time.Time { return now })
 	if errOpen != nil {
@@ -149,7 +156,10 @@ func TestStoreDiskFailureRetainsPendingCounters(t *testing.T) {
 		t.Fatal(errMkdir)
 	}
 	record := usage.Record{APIKey: "key", AuthID: "account", RequestedAt: now}
-	if errRecord := store.Record(record); errRecord == nil {
+	if errRecord := store.Record(record); errRecord != nil {
+		t.Fatal(errRecord)
+	}
+	if errFlush := store.Flush(); errFlush == nil {
 		t.Fatal("write failure not surfaced")
 	}
 	if _, errSnapshot := store.Snapshot("2026-06-10", "2026-06-10"); errSnapshot == nil {
@@ -161,6 +171,9 @@ func TestStoreDiskFailureRetainsPendingCounters(t *testing.T) {
 	if errRecord := store.Record(record); errRecord != nil {
 		t.Fatal(errRecord)
 	}
+	if errFlush := store.Flush(); errFlush != nil {
+		t.Fatal(errFlush)
+	}
 	reopened, errOpen := Open(dir, func() time.Time { return now })
 	if errOpen != nil {
 		t.Fatal(errOpen)
@@ -168,5 +181,91 @@ func TestStoreDiskFailureRetainsPendingCounters(t *testing.T) {
 	rows, _ := reopened.Snapshot("2026-06-10", "2026-06-10")
 	if len(rows) != 1 || rows[0].Requests != 2 {
 		t.Fatalf("pending usage lost: %+v", rows)
+	}
+}
+
+func TestStoreFoldsOldMinutesToHoursAndKeepsTotals(t *testing.T) {
+	now := time.Date(2026, 6, 20, 12, 0, 0, 0, time.UTC)
+	dir := t.TempDir()
+	old := time.Date(2026, 6, 10, 9, 5, 0, 0, time.UTC)
+	cost := 0.5
+	rows := []Row{
+		{At: old, Date: "2026-06-10", KeyID: "k", AccountID: "a", Model: "m", Requests: 2, Failed: 1, InputTokens: 10, TotalTokens: 10, CostUSD: &cost},
+		{At: old.Add(30 * time.Minute), Date: "2026-06-10", KeyID: "k", AccountID: "a", Model: "m", Requests: 3, UnpricedRequests: 3, OutputTokens: 7, TotalTokens: 7},
+		{At: old.Add(time.Hour), Date: "2026-06-10", KeyID: "k", AccountID: "a", Model: "m", Requests: 1, CostUSD: &cost},
+	}
+	data, _ := json.Marshal(rows)
+	if err := os.WriteFile(filepath.Join(dir, "2026-06-10.json"), data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	clock := now
+	store, err := Open(dir, func() time.Time { return clock })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if errClose := store.Close(); errClose != nil {
+		t.Fatal(errClose)
+	}
+	reopened, err := Open(dir, func() time.Time { return clock })
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _ := reopened.Snapshot("2026-06-10", "2026-06-10")
+	if len(got) != 2 {
+		t.Fatalf("rows not folded to hours: %+v", got)
+	}
+	first := got[0]
+	if !first.At.Equal(time.Date(2026, 6, 10, 9, 0, 0, 0, time.UTC)) || first.Requests != 5 || first.Failed != 1 || first.UnpricedRequests != 3 || first.TotalTokens != 17 || first.CostUSD == nil || *first.CostUSD != 0.5 {
+		t.Fatalf("wrong hourly totals: %+v", first)
+	}
+
+	recent := clock.Add(-time.Hour).Truncate(time.Minute).Add(17 * time.Minute)
+	if errRecord := reopened.Record(usage.Record{APIKey: "key", AuthID: "account", RequestedAt: recent}); errRecord != nil {
+		t.Fatal(errRecord)
+	}
+	clock = clock.AddDate(0, 0, minuteDetailDays)
+	if errFlush := reopened.Flush(); errFlush != nil {
+		t.Fatal(errFlush)
+	}
+	got, _ = reopened.Snapshot(recent.Format(DateLayout), recent.Format(DateLayout))
+	if len(got) != 1 || got[0].At.Minute() != 0 {
+		t.Fatalf("day that aged past %d days was not folded: %+v", minuteDetailDays, got)
+	}
+}
+
+func TestStoreReadsOldDaysFromDiskWithoutKeepingThem(t *testing.T) {
+	now := time.Date(2026, 6, 20, 12, 0, 0, 0, time.UTC)
+	dir := t.TempDir()
+	store, err := Open(dir, func() time.Time { return now })
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := now.AddDate(0, 0, -(residentDays + 9))
+	for i := 0; i < 2; i++ {
+		if errRecord := store.Record(usage.Record{APIKey: "key", AuthID: "account", RequestedAt: old}); errRecord != nil {
+			t.Fatal(errRecord)
+		}
+	}
+	if errFlush := store.Flush(); errFlush != nil {
+		t.Fatal(errFlush)
+	}
+	store.mu.Lock()
+	resident := len(store.days)
+	store.mu.Unlock()
+	if resident != 0 {
+		t.Fatalf("old day kept in memory after flush: %d days", resident)
+	}
+	rows, errSnapshot := store.Snapshot(old.Format(DateLayout), now.Format(DateLayout))
+	if errSnapshot != nil || len(rows) != 1 || rows[0].Requests != 2 {
+		t.Fatalf("old day not read from disk: rows=%+v err=%v", rows, errSnapshot)
+	}
+	store.mu.Lock()
+	resident = len(store.days)
+	store.mu.Unlock()
+	if resident != 0 {
+		t.Fatalf("snapshot cached an old day: %d days", resident)
+	}
+	if errClose := store.Close(); errClose != nil {
+		t.Fatal(errClose)
 	}
 }

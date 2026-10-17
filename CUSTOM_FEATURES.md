@@ -226,14 +226,18 @@ All endpoints use existing v8 management authentication:
 Data lives under `<auth-dir>/.cpamc-custom/usage-history/`: dated JSON usage buckets,
 one snapshot per account/reset pool under `cycles/`, `settings.json`, and a refreshed
 `prices.json`, plus independent `key-names.json` metadata. Each quota update rewrites only its own week, not the full year.
-Retention is 365 days;
+Retention is 365 days. Usage rows are per-minute for the last 7 days and are folded into
+hourly rows (same totals) at startup and once a day after that. Only the last 31 days stay
+in memory; older days are read from disk for each request and not cached. Requests update
+memory only; a background writer persists changed days every 10 seconds and on shutdown,
+so a hard kill (OOM, SIGKILL) can lose up to 10 seconds of counts. Usage
 files are atomically replaced with owner-only permissions and no raw API keys or
 upstream credentials. Keep the auth directory on persistent storage. This local store
 supports **one gateway process per data directory**, not shared replica aggregation.
 Use a `Recreate` deployment strategy so releases never overlap history writers.
 Restart after changing `auth-dir`. Corrupt retained data fails initialization instead
-of being overwritten. Disk failures are reported and pending counters retry on later
-events. Collection follows `observability.usage.usage-statistics-enabled` and defaults
+of being overwritten. Disk failures are reported and pending counters retry on the next
+flush. Collection follows `observability.usage.usage-statistics-enabled` and defaults
 to **enabled** when that setting is omitted. The YAML loader, in-memory parser,
 configuration template and visual editor share this default. An explicit `false`
 remains an opt-out and survives saving/migration; changing the default does not

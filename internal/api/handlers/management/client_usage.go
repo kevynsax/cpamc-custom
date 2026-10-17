@@ -34,6 +34,16 @@ func (h *Handler) StartClientUsageHistory() {
 	usage.RegisterNamedPlugin("cpamc-client-usage-history", clientUsagePlugin{handler: h, store: store})
 }
 
+// StopClientUsageHistory writes usage still waiting for the batched flush.
+func (h *Handler) StopClientUsageHistory() {
+	if h == nil || h.clientUsage == nil {
+		return
+	}
+	if err := h.clientUsage.Close(); err != nil {
+		log.WithError(err).Error("Flush client usage history")
+	}
+}
+
 type clientUsagePlugin struct {
 	handler *Handler
 	store   *usagehistory.Store
