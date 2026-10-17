@@ -32,7 +32,7 @@ func (s *Server) customDecisions(c *gin.Context) {
 		Questions map[string]json.RawMessage `json:"questions"`
 		Stream    bool                       `json:"stream"`
 	}
-	if json.Unmarshal(body, &req) != nil || !strings.HasPrefix(req.Model, "typesafe/jev-") || len(req.State) == 0 || len(req.Questions) == 0 || len(req.Questions) > 48 || req.Stream {
+	if json.Unmarshal(body, &req) != nil || !strings.Contains(req.Model, "jev-") || len(req.State) == 0 || len(req.Questions) == 0 || len(req.Questions) > 48 || req.Stream {
 		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "model, state and 1..48 questions are required; streaming is unsupported"}})
 		return
 	}

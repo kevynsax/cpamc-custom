@@ -20,16 +20,31 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+// isJevModel accepts upstream Jev ids: OpenRouter's "typesafe/jev-*" slugs and TypeSafe's own "jev-*" names.
+func isJevModel(model string) bool {
+	return strings.HasPrefix(model, "jev-") || strings.HasPrefix(model, "typesafe/jev-")
+}
+
+// jevDecisionsPath maps a configured ".../v1" base to the native endpoint:
+// TypeSafe direct (api.typesafe.ai) serves /v1/systemone; OpenRouter-style bases serve the sibling /alpha/decisions.
+func jevDecisionsPath(host, basePath string) string {
+	basePath = strings.TrimRight(basePath, "/")
+	if strings.EqualFold(host, "api.typesafe.ai") || strings.HasSuffix(strings.ToLower(host), ".typesafe.ai") {
+		return basePath + "/systemone"
+	}
+	return strings.TrimSuffix(basePath, "/v1") + "/alpha/decisions"
+}
+
 func (e *OpenAICompatExecutor) executeDecisions(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (resp cliproxyexecutor.Response, err error) {
 	model := thinking.ParseSuffix(req.Model).ModelName
 	reporter := helps.NewExecutorUsageReporter(ctx, e, model, auth)
 	defer reporter.TrackFailure(ctx, &err)
 	base, key := e.resolveCredentials(auth)
 	u, err := url.Parse(base)
-	if err != nil || u.Host == "" || (u.Scheme != "https" && u.Scheme != "http") || !strings.HasSuffix(strings.TrimRight(u.Path, "/"), "/v1") || key == "" || !strings.HasPrefix(model, "typesafe/jev-") {
-		return resp, statusErr{code: http.StatusServiceUnavailable, msg: "native Jev requires a configured OpenRouter-compatible provider and credential"}
+	if err != nil || u.Host == "" || (u.Scheme != "https" && u.Scheme != "http") || !strings.HasSuffix(strings.TrimRight(u.Path, "/"), "/v1") || key == "" || !isJevModel(model) {
+		return resp, statusErr{code: http.StatusServiceUnavailable, msg: "native Jev requires a configured TypeSafe or OpenRouter-compatible provider and credential"}
 	}
-	u.Path = strings.TrimSuffix(strings.TrimRight(u.Path, "/"), "/v1") + "/alpha/decisions"
+	u.Path = jevDecisionsPath(u.Host, u.Path)
 	u.RawPath = ""
 	u.RawQuery = ""
 	u.Fragment = ""

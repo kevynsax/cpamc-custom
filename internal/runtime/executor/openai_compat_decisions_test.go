@@ -96,3 +96,47 @@ func TestOpenAICompatDecisionsFailures(t *testing.T) {
 		t.Fatal("missing credential accepted")
 	}
 }
+
+func TestJevDecisionsPathByProvider(t *testing.T) {
+	cases := map[[2]string]string{
+		{"api.typesafe.ai", "/v1"}:     "/v1/systemone",
+		{"api.typesafe.ai", "/v1/"}:    "/v1/systemone",
+		{"openrouter.ai", "/api/v1"}:   "/api/alpha/decisions",
+		{"127.0.0.1:9", "/fixture/v1"}: "/fixture/alpha/decisions",
+	}
+	for in, want := range cases {
+		if got := jevDecisionsPath(in[0], in[1]); got != want {
+			t.Errorf("jevDecisionsPath(%q, %q) = %q, want %q", in[0], in[1], got, want)
+		}
+	}
+	for _, m := range []string{"jev-1.14.0", "jev-latest", "typesafe/jev-1.14"} {
+		if !isJevModel(m) {
+			t.Errorf("isJevModel(%q) = false", m)
+		}
+	}
+	if isJevModel("gpt-5") {
+		t.Error("isJevModel accepted a non-Jev model")
+	}
+}
+
+// TypeSafe direct speaks the same native contract on /v1/systemone and takes its own model ids (jev-1.14.0).
+func TestOpenAICompatDecisionsTypeSafeDirect(t *testing.T) {
+	called := false
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		body, _ := io.ReadAll(r.Body)
+		if r.Header.Get("Authorization") != "Bearer typesafe-fixture" || gjson.GetBytes(body, "model").String() != "jev-1.14.0" || !gjson.GetBytes(body, "questions.q").Exists() {
+			t.Errorf("unexpected upstream request: auth=%q body=%s", r.Header.Get("Authorization"), body)
+		}
+		_, _ = io.WriteString(w, `{"model":"jev-1.14.0","answers":{"q":{"type":"choice","choice":"yes","confidence":0.9}},"usage":{"input_tokens":2,"output_tokens":1}}`)
+	}))
+	defer upstream.Close()
+	e := NewOpenAICompatExecutor("typesafe", &config.Config{})
+	auth := &cliproxyauth.Auth{Provider: "typesafe", Attributes: map[string]string{"base_url": upstream.URL + "/v1", "api_key": "typesafe-fixture"}}
+	// The auth manager already resolved the client alias (typesafe/jev-1.14) to the upstream name.
+	req := cliproxyexecutor.Request{Model: "jev-1.14.0", Payload: []byte(`{"model":"typesafe/jev-1.14","state":{"fixture":true},"questions":{"q":{"type":"choice","criteria":{"yes":"yes"}}}}`)}
+	out, err := e.Execute(context.Background(), auth, req, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatOpenAI, Alt: "jev-decisions"})
+	if err != nil || !called || !gjson.GetBytes(out.Payload, "answers.q").Exists() {
+		t.Fatal(err, string(out.Payload))
+	}
+}

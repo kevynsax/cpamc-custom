@@ -276,7 +276,12 @@ production builds. See `panel/dev/usage/README.md`.
 
 `POST /v1/decisions` accepts the native Jev `{model, state, questions}` contract (1–48 questions, up to 1 MiB, no streaming). It uses the normal **client access key**, never a management key. Native payloads do not pass through chat translation: the usual auth manager still owns model routing, credential selection/rotation, proxy transport, payload overrides/filters and usage accounting.
 
-Configure an enabled OpenRouter-compatible provider with base URL `https://openrouter.ai/api/v1`, a server-side API key, and the `typesafe/jev-1.13` model (or another `typesafe/jev-*` model). The native executor sends to the configured base's sibling `/alpha/decisions`, for OpenRouter `https://openrouter.ai/api/alpha/decisions`. Clients use their same gateway URL/key for chat, images and Jev; no OpenRouter secret leaves cpamc. Missing provider/key fails explicitly, malformed native responses return 502, and upstream error bodies are never exposed. Native response usage (`input_tokens`, `output_tokens`) is counted normally. This endpoint introduces no new credential store or management settings.
+Two upstreams are supported, chosen by the provider base URL:
+
+- **TypeSafe direct**: base URL `https://api.typesafe.ai/v1`; the executor posts to `/v1/systemone`. TypeSafe model ids are `jev-latest`, `jev-1.14.0`, `jev-1.13.0`. Live config: openai-compatibility entry `typesafe`, prefix `typesafe`, model `jev-1.14.0` with alias `jev-1.14`, so clients call `typesafe/jev-1.14`.
+- **OpenRouter**: base URL `https://openrouter.ai/api/v1`; the executor posts to the sibling `/api/alpha/decisions`. Upstream ids are `typesafe/jev-*`. Live config: entry `openrouter`, prefix `openrouter`, models `typesafe/jev-1.14` / `typesafe/jev-1.13` aliased to `jev-1.14` / `jev-1.13`, so clients call `openrouter/jev-1.14`.
+
+The route accepts any model name containing `jev-`; the auth manager resolves prefix and alias to the upstream id before the executor runs. Clients use their same gateway URL/key for chat, images and Jev; no OpenRouter secret leaves cpamc. Missing provider/key fails explicitly, malformed native responses return 502, and upstream error bodies are never exposed. Native response usage (`input_tokens`, `output_tokens`) is counted normally. This endpoint introduces no new credential store or management settings.
 
 Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/openai_compat_decisions.go`. Tests cover client authentication, request limits, end-to-end auth-manager execution, native contract preservation, server-side credential substitution and upstream failures. No production rollout is implicit in adding the route.
 
