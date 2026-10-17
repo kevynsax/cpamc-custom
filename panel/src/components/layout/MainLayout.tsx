@@ -30,7 +30,7 @@ import {
   IconSidebarStore,
   IconSidebarSystem,
   IconChevronDown,
-  IconScrollText,
+  IconWallet,
 } from '@/components/ui/icons';
 import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
 import {
@@ -645,7 +645,7 @@ export function MainLayout() {
           path: '/usage',
           labelKey: 'client_usage.title',
           metaKey: 'client_usage.nav_hint',
-          icon: <IconScrollText size={18} />,
+          icon: <IconWallet size={18} />,
         },
         {
           path: '/quota',

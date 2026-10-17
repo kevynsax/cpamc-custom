@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { normalizeKeyKinds, type ApiKeyKind } from './keyNames';
 
 export interface ClientUsageRow {
   date: string;
@@ -63,15 +64,25 @@ export interface UsageWeek {
   allocationAvailable: boolean;
 }
 
+export interface CachedUsageQuota {
+  scope: string;
+  used: number;
+  reset: string;
+  observedAt: string;
+  periodSeconds: number;
+}
+
 export interface UsageAccount {
   id: string;
   email?: string;
   monthlyFeeUsd?: number | null;
+  cachedQuotas?: CachedUsageQuota[];
   provider: string;
   plan: string;
 }
 export interface UsageModelPrice {
   id: string;
+  displayName?: string;
   provider: string;
   kind: string;
   status: string;
@@ -88,6 +99,8 @@ export interface ClientUsageResponse {
   rows: ClientUsageRow[];
   accountLabels: Record<string, string>;
   keyLabels: Record<string, string>;
+  keyNames?: Record<string, string>;
+  keyKinds?: Record<string, ApiKeyKind>;
   accounts: UsageAccount[];
   weeks: UsageWeek[];
   settings: UsageSettings;
@@ -157,6 +170,8 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
     collectionEnabled: flag(data, 'collection_enabled'),
     accountLabels: labels(data.account_labels),
     keyLabels: labels(data.key_labels),
+    keyNames: labels(data.key_names ?? {}),
+    keyKinds: normalizeKeyKinds(data.key_kinds ?? {}),
     pricesAsOf: text(data, 'prices_as_of'),
     settings: {
       names: labels(settings.names),
@@ -178,6 +193,7 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
       const model = object(value);
       return {
         id: text(model, 'id'),
+        displayName: typeof model.display_name === 'string' ? model.display_name : undefined,
         provider: text(model, 'provider'),
         kind: text(model, 'kind'),
         status: text(model, 'status'),
@@ -198,6 +214,21 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
           id,
           email: typeof account.email === 'string' ? account.email : '',
           monthlyFeeUsd: nullableCount(account, 'monthly_fee_usd'),
+          cachedQuotas: (account.cached_quotas === undefined
+            ? []
+            : array(account, 'cached_quotas')
+          ).map((value) => {
+            const quota = object(value);
+            const used = count(quota, 'used');
+            if (used > 100) throw new Error('Invalid cached quota');
+            return {
+              scope: text(quota, 'scope'),
+              used,
+              reset: text(quota, 'reset'),
+              observedAt: text(quota, 'observed_at'),
+              periodSeconds: count(quota, 'period_seconds'),
+            };
+          }),
           provider: text(account, 'provider'),
           plan: typeof account.plan === 'string' ? account.plan : '',
         };

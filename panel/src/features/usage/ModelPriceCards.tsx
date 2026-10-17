@@ -10,6 +10,7 @@ import type {
 } from '@/services/api/clientUsage';
 import type { CrossQuote } from './currency';
 import { priceFields, settingsWithModelPrice } from './modelPrices';
+import { friendlyModelName } from './modelNames';
 import styles from './UsagePage.module.scss';
 
 function ModelPriceCard({
@@ -87,7 +88,7 @@ function ModelPriceCard({
   return (
     <article className={styles.modelCard} data-model-id={model.id}>
       <header>
-        <h3>{model.id}</h3>
+        <h3>{friendlyModelName(model.id, model.displayName)}</h3>
         {model.sources[0] && (
           <a
             href={model.sources[0]}
@@ -100,15 +101,11 @@ function ModelPriceCard({
           </a>
         )}
       </header>
-      <span className={styles.modelStatus}>
-        {t(`client_usage.price_status_${model.overridden ? 'manual' : model.status}`)}
-        {!model.overridden && model.checkedAt && (
-          <>
-            {' '}
-            · <time dateTime={model.checkedAt}>{model.checkedAt}</time>
-          </>
-        )}
-      </span>
+      {(model.overridden || model.status === 'openrouter') && (
+        <span className={styles.modelStatus}>
+          {model.overridden ? t('client_usage.price_status_manual') : 'OpenRouter'}
+        </span>
+      )}
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -118,17 +115,17 @@ function ModelPriceCard({
         {renderFields(fields.filter((key) => !key.startsWith('long_')))}
         {model.contextThreshold > 0 && (
           <details className={styles.contextPrices}>
-            <summary>
-              {model.contextInclusive ? '≥' : '>'} {model.contextThreshold.toLocaleString()} tokens
-            </summary>
+            <summary>{t('client_usage.long_context')}</summary>
             {renderFields(fields.filter((key) => key.startsWith('long_')))}
           </details>
         )}
         <footer>
-          <Button type="submit" disabled={!draft || busy || !live}>
-            <IconCheck size={15} />
-            {t('common.save')}
-          </Button>
+          {draft && (
+            <Button type="submit" disabled={busy || !live}>
+              <IconCheck size={15} />
+              {t('common.save')}
+            </Button>
+          )}
           {model.overridden && (
             <Button
               type="button"
@@ -155,17 +152,27 @@ export function ModelPriceCards({
   quote,
   busy,
   onSave,
+  spending = {},
 }: {
   data: ClientUsageResponse;
   quote: CrossQuote | null;
   busy: boolean;
+  spending?: Record<string, number>;
   onSave: (settings: UsageSettings) => Promise<boolean>;
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const models = (data.models ?? [])
-    .filter((model) => `${model.id} ${model.provider}`.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.provider.localeCompare(b.provider) || a.id.localeCompare(b.id));
+    .filter((model) =>
+      `${model.id} ${model.provider} ${friendlyModelName(model.id, model.displayName)}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    )
+    .sort(
+      (a, b) =>
+        (spending[b.id] ?? 0) - (spending[a.id] ?? 0) ||
+        friendlyModelName(a.id, a.displayName).localeCompare(friendlyModelName(b.id, b.displayName))
+    );
   return (
     <details className={styles.modelSettings}>
       <summary>

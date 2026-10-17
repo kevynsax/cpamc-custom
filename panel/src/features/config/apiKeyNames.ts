@@ -4,7 +4,12 @@ import { obfuscatedStorage } from '@/services/storage/secureStorage';
 
 const STORAGE_PREFIX = 'api-key-names:v1:';
 
-/** Names persist across sessions, but the credentials used to identify them must not. */
+/** Canonical server identity; raw keys never enter the name store. */
+export function clientKeyFingerprint(apiKey: string): string {
+  return bytesToHex(sha256(new TextEncoder().encode(apiKey)));
+}
+
+/** Legacy browser names are retained only as an import source. */
 export function apiKeyNameFingerprint(apiBase: string, apiKey: string): string {
   const input = JSON.stringify(['api-key-name', apiBase, apiKey]);
   // Pure JS hashing also works when the panel is served over non-localhost HTTP.

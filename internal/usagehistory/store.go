@@ -51,6 +51,8 @@ type Store struct {
 	days       map[string]map[string]Row
 	writeErr   error
 	settings   Settings
+	keyNames   map[string]string
+	keyKinds   map[string]string
 	cycles     map[string]Cycle
 	quotaErr   error
 	quotaDirty map[string]bool
@@ -86,6 +88,9 @@ func Open(dir string, now func() time.Time) (*Store, error) {
 		if s.settings.Names == nil || s.settings.Plans == nil || s.settings.Prices == nil {
 			return nil, fmt.Errorf("invalid usage metadata in %s", name)
 		}
+	}
+	if errLoad := s.loadKeyNames(); errLoad != nil {
+		return nil, errLoad
 	}
 	if errLoad := s.loadCycles(); errLoad != nil {
 		return nil, errLoad

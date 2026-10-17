@@ -137,13 +137,23 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 			}
 		}
 	}
+	for id, cached := range h.clientCachedQuotas() {
+		if info := accounts[id]; info != nil {
+			info["cached_quotas"] = cached.Quotas
+			if plan, _ := info["plan"].(string); plan == "" && cached.Plan != "" {
+				info["plan"] = cached.Plan
+			}
+		}
+	}
 	catalogDate := ""
 	if h.clientPricing != nil {
 		catalogDate = h.clientPricing.AsOf()
 	}
 	models := make([]usagehistory.ModelReference, 0)
 	for _, model := range registry.GetGlobalRegistry().GetAvailableModelInfos() {
-		models = append(models, h.clientPricing.ModelReference(model.ID, model.OwnedBy, model.MetadataModelID, settings))
+		reference := h.clientPricing.ModelReference(model.ID, model.OwnedBy, model.MetadataModelID, settings)
+		reference.DisplayName = model.DisplayName
+		models = append(models, reference)
 	}
-	c.JSON(http.StatusOK, gin.H{"models": models, "from": from, "to": to, "timezone": "UTC", "retention_days": usagehistory.RetentionDays, "collection_enabled": enabled, "rows": rows, "account_labels": labels, "key_labels": keyLabels, "weeks": weeks, "accounts": accounts, "settings": settings, "prices_as_of": catalogDate})
+	c.JSON(http.StatusOK, gin.H{"models": models, "from": from, "to": to, "timezone": "UTC", "retention_days": usagehistory.RetentionDays, "collection_enabled": enabled, "rows": rows, "account_labels": labels, "key_labels": keyLabels, "key_names": h.clientUsage.KeyNames(), "key_kinds": h.clientKeyMetadata().Kinds, "weeks": weeks, "accounts": accounts, "settings": settings, "prices_as_of": catalogDate})
 }

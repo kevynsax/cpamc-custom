@@ -70,7 +70,10 @@ export function usageDemoPlugin(): Plugin {
       return html.replace('/src/main.tsx', '/dev/usage/main.tsx');
     },
     configureServer(server) {
-      const fixture = createUsageFixture();
+      const fixture = createUsageFixture(new Date(), {
+        includeInHouse: true,
+        collectionEnabled: process.env.CPAMC_USAGE_DEMO_PAUSED !== '1',
+      });
       server.middlewares.use(async (request, response, next) => {
         const url = new URL(request.url ?? '/', 'http://localhost');
         const pathname = url.pathname;
@@ -91,6 +94,45 @@ export function usageDemoPlugin(): Plugin {
                 demoPeople.map((person) => [person.apiKey, person.name])
               ),
             });
+          if (pathname === '/v8/management/access/key-names') {
+            if (request.method === 'PATCH') {
+              const body = (await readBody(request)) as {
+                names: Record<string, string>;
+                import_only?: boolean;
+                kinds?: Record<string, 'person' | 'system'>;
+              };
+              if (
+                !body.names ||
+                !Object.entries(body.names).every(
+                  ([key, name]) => /^[a-f0-9]{64}$/.test(key) && typeof name === 'string'
+                )
+              )
+                return reply({ error: 'Invalid names' }, 400);
+              if (
+                body.kinds &&
+                !Object.entries(body.kinds).every(
+                  ([key, kind]) =>
+                    /^[a-f0-9]{64}$/.test(key) && (kind === 'person' || kind === 'system')
+                )
+              )
+                return reply({ error: 'Invalid kind' }, 400);
+              for (const [key, kind] of Object.entries(body.kinds ?? {})) {
+                if (
+                  !body.import_only ||
+                  !Object.prototype.hasOwnProperty.call(fixture.key_kinds, key)
+                )
+                  fixture.key_kinds[key] = kind;
+              }
+              for (const [key, name] of Object.entries(body.names)) {
+                if (
+                  !body.import_only ||
+                  !Object.prototype.hasOwnProperty.call(fixture.key_names, key)
+                )
+                  fixture.key_names[key] = name;
+              }
+            } else if (request.method !== 'GET') return reply({ error: 'Method not allowed' }, 405);
+            return reply({ names: fixture.key_names, kinds: fixture.key_kinds });
+          }
           if (
             pathname === '/v8/management/observability/usage/clients' &&
             request.method === 'GET'

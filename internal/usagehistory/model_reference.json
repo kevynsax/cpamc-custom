@@ -607,10 +607,10 @@
       "id": "gemma-4-31b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.2, "output": 0.4},
       "sources": [
-        "https://huggingface.co/google"
+        "https://openrouter.ai/google/gemma-4-31b-it"
       ],
       "checked_at": "2026-10-17"
     },
@@ -618,10 +618,10 @@
       "id": "gpt-oss-120b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.15, "output": 0.6, "cache_read": 0.075},
       "sources": [
-        "https://huggingface.co/openai/gpt-oss-120b"
+        "https://openrouter.ai/openai/gpt-oss-120b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -629,10 +629,10 @@
       "id": "muse-glimmer-30b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.3, "output": 1.2, "cache_read": 0.04},
       "sources": [
-        "https://dev.meta.ai/docs/models"
+        "https://openrouter.ai/meta/muse-glimmer-30b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -640,10 +640,10 @@
       "id": "nemotron-120b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.08, "output": 0.45},
       "sources": [
-        "https://huggingface.co/nvidia"
+        "https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -651,10 +651,10 @@
       "id": "nemotron-3.5-lightning",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.07, "output": 0.2, "cache_read": 0.04},
       "sources": [
-        "https://huggingface.co/nvidia"
+        "https://openrouter.ai/nvidia/nemotron-3.5-lightning"
       ],
       "checked_at": "2026-10-17"
     },
@@ -662,10 +662,10 @@
       "id": "qwen-coder",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.24, "output": 2.2, "cache_read": 0.05},
       "sources": [
-        "https://huggingface.co/Qwen"
+        "https://openrouter.ai/qwen/qwen3.8-27b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -673,10 +673,10 @@
       "id": "qwen-vl",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.15, "output": 0.6},
       "sources": [
-        "https://huggingface.co/Qwen"
+        "https://openrouter.ai/qwen/qwen3-vl-30b-a3b-instruct"
       ],
       "checked_at": "2026-10-17"
     },
@@ -684,10 +684,10 @@
       "id": "qwen3.5-122b-a10b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.26, "output": 2.08},
       "sources": [
-        "https://huggingface.co/Qwen"
+        "https://openrouter.ai/qwen/qwen3.5-122b-a10b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -695,10 +695,10 @@
       "id": "spark/gemma-4-31b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.2, "output": 0.4},
       "sources": [
-        "https://huggingface.co/google"
+        "https://openrouter.ai/google/gemma-4-31b-it"
       ],
       "checked_at": "2026-10-17"
     },
@@ -706,10 +706,10 @@
       "id": "spark/gpt-oss-120b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.15, "output": 0.6, "cache_read": 0.075},
       "sources": [
-        "https://huggingface.co/openai/gpt-oss-120b"
+        "https://openrouter.ai/openai/gpt-oss-120b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -717,10 +717,10 @@
       "id": "spark/muse-glimmer-30b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.3, "output": 1.2, "cache_read": 0.04},
       "sources": [
-        "https://dev.meta.ai/docs/models"
+        "https://openrouter.ai/meta/muse-glimmer-30b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -728,10 +728,10 @@
       "id": "spark/nemotron-120b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.08, "output": 0.45},
       "sources": [
-        "https://huggingface.co/nvidia"
+        "https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -739,10 +739,10 @@
       "id": "spark/nemotron-3.5-lightning",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.07, "output": 0.2, "cache_read": 0.04},
       "sources": [
-        "https://huggingface.co/nvidia"
+        "https://openrouter.ai/nvidia/nemotron-3.5-lightning"
       ],
       "checked_at": "2026-10-17"
     },
@@ -750,10 +750,10 @@
       "id": "spark/qwen-coder",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.24, "output": 2.2, "cache_read": 0.05},
       "sources": [
-        "https://huggingface.co/Qwen"
+        "https://openrouter.ai/qwen/qwen3.8-27b"
       ],
       "checked_at": "2026-10-17"
     },
@@ -761,10 +761,10 @@
       "id": "spark/qwen-vl",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.15, "output": 0.6},
       "sources": [
-        "https://huggingface.co/Qwen"
+        "https://openrouter.ai/qwen/qwen3-vl-30b-a3b-instruct"
       ],
       "checked_at": "2026-10-17"
     },
@@ -772,10 +772,10 @@
       "id": "spark/qwen3.5-122b-a10b",
       "provider": "spark",
       "kind": "tokens",
-      "status": "self_hosted",
-      "prices": {},
+      "status": "openrouter",
+      "prices": {"input": 0.26, "output": 2.08},
       "sources": [
-        "https://huggingface.co/Qwen"
+        "https://openrouter.ai/qwen/qwen3.5-122b-a10b"
       ],
       "checked_at": "2026-10-17"
     },

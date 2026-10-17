@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
-import { IconAlertTriangle, IconNetwork } from '@/components/ui/icons';
-import type { ClientUsageResponse } from '@/services/api/clientUsage';
+import { IconNetwork } from '@/components/ui/icons';
+import type { ClientUsageResponse, ClientUsageRow } from '@/services/api/clientUsage';
 import { COMPANY_NAMES, type CompanyUsage, type PiePart } from './companies';
 import { formatReais, type CrossQuote } from './currency';
 import { formatUsagePercent } from './utils';
@@ -10,8 +10,15 @@ import { PERSON_COLORS, personColor, donutPath, donutSegments } from './pie';
 import { CAPACITY_PARTS } from './spending';
 import { companyUnusedValue, personUnusedValue } from './fees';
 import { FeeTags } from './FeeTags';
+import { ModelValuePie } from './ModelValuePie';
+import { SubscriptionFacts } from './SubscriptionFacts';
+import type { PersonAllowances } from './personAllocation';
+import type { ApiKeyKind } from '@/services/api/keyNames';
 
 interface CompanyChartProps {
+  kinds: Record<string, ApiKeyKind>;
+  allowances?: PersonAllowances;
+  rows: ClientUsageRow[];
   company: CompanyUsage;
   icon: string | null;
   label: (id: string) => string;
@@ -21,12 +28,15 @@ interface CompanyChartProps {
   classes: Record<string, string>;
 }
 function CompanyChart({
+  rows,
   company,
   icon,
   label,
   color,
   price,
   quote,
+  kinds,
+  allowances,
   classes: styles,
 }: CompanyChartProps) {
   const { t, i18n } = useTranslation();
@@ -49,6 +59,20 @@ function CompanyChart({
     setPinned(null);
   };
   const segments = donutSegments(company.parts);
+  const fees = (part: PiePart) =>
+    kinds[part.id] === 'system' ? null : (
+      <FeeTags
+        value={
+          CAPACITY_PARTS.has(part.id)
+            ? companyUnusedValue(company)
+            : (allowances?.[part.id]?.[company.id] ?? personUnusedValue(company, part.id))
+        }
+        kind={part.id === 'wasted' ? 'wasted' : part.id === 'available' ? 'available' : undefined}
+        current={company.current}
+        quote={quote}
+        classes={styles}
+      />
+    );
   return (
     <article className={styles.companyCard} data-company={company.id}>
       <header>
@@ -56,15 +80,9 @@ function CompanyChart({
           {icon ? <img src={icon} alt="" /> : <IconNetwork size={22} />}
           <h3>{COMPANY_NAMES[company.id] ?? company.id}</h3>
         </div>
-        <span
-          title={t(
-            company.chartAvailable
-              ? 'client_usage.capacity_assumption'
-              : 'client_usage.chart_unavailable'
-          )}
-        >
-          ≈{(!company.chartAvailable || company.weightEstimated) && <IconAlertTriangle size={13} />}
-        </span>
+        {company.chartAvailable && (
+          <span aria-label={t('client_usage.capacity_assumption')}>≈</span>
+        )}
       </header>
       <div className={styles.companyPriceRow}>
         <strong className={styles.companyPrice}>{price(company.costUsd, company.unpriced)}</strong>
@@ -150,24 +168,20 @@ function CompanyChart({
                   ? percentage(active)
                   : formatUsagePercent(center?.value ?? 0, i18n.language)}
               </strong>
-              <span>{label(active?.id ?? centerId)}</span>
+              {(!active || CAPACITY_PARTS.has(active.id)) && (
+                <span>{label(active?.id ?? centerId)}</span>
+              )}
             </div>
             {active && (
               <div id={tooltipId} className={styles.chartTooltip} role="tooltip">
                 <span className={styles.tooltipDot} style={{ backgroundColor: color(active.id) }} />
-                <strong>{label(active.id)}</strong>
+                {CAPACITY_PARTS.has(active.id) && <strong>{label(active.id)}</strong>}
                 <b>{percentage(active)}</b>
-                {(active.costUsd > 0 || active.unpriced > 0) && (
-                  <small>
-                    {price(active.costUsd, active.unpriced)}
-                    <FeeTags
-                      value={personUnusedValue(company, active.id)}
-                      current={company.current}
-                      quote={quote}
-                      classes={styles}
-                    />
-                  </small>
-                )}
+                <small>
+                  {(active.costUsd > 0 || active.unpriced > 0) &&
+                    price(active.costUsd, active.unpriced)}
+                  {fees(active)}
+                </small>
               </div>
             )}
           </div>
@@ -196,85 +210,40 @@ function CompanyChart({
                   }}
                 >
                   <span className={styles.legendDot} style={{ backgroundColor: color(part.id) }} />
-                  <span title={label(part.id)}>{label(part.id)}</span>
+                  <span>{label(part.id)}</span>
                   <strong>{percentage(part)}</strong>
-                  {(part.costUsd > 0 || part.unpriced > 0) && (
-                    <small>
-                      {price(part.costUsd, part.unpriced)}
-                      <FeeTags
-                        value={personUnusedValue(company, part.id)}
-                        current={company.current}
-                        quote={quote}
-                        classes={styles}
-                      />
-                    </small>
-                  )}
+                  <small>
+                    {(part.costUsd > 0 || part.unpriced > 0) && price(part.costUsd, part.unpriced)}
+                    {fees(part)}
+                  </small>
                 </button>
               </li>
             ))}
           </ul>
         </div>
       )}
-      <div className={styles.accountBreakdowns}>
-        {company.accounts.map((account) => {
-          const measured = account.quotaMeasured;
-          const used = measured ? formatUsagePercent(account.used, i18n.language) : '—';
-          const available = measured ? formatUsagePercent(account.remaining, i18n.language) : '—';
-          const wasted = measured ? formatUsagePercent(account.expired, i18n.language) : '—';
-          const name = account.email || '—';
-          return (
+      <ModelValuePie rows={rows} company={company.id} quote={quote} classes={styles} />
+      {company.id !== 'in_house' && (
+        <div className={styles.accountBreakdowns}>
+          {company.accounts.map((account) => (
             <section
               key={account.id}
               className={styles.accountBreakdown}
               data-account-id={account.id}
-              aria-label={account.email || t('client_usage.email_unavailable')}
+              aria-label={
+                account.displayName || account.email || t('client_usage.email_unavailable')
+              }
             >
-              <header>
-                <strong title={account.email}>{name}</strong>
-                <div>
-                  <span>
-                    {t('client_usage.used_title')} <b>{used}</b>
-                  </span>
-                  <span>
-                    {t(
-                      company.current ? 'client_usage.available_title' : 'client_usage.wasted_title'
-                    )}{' '}
-                    <b>{company.current ? available : wasted}</b>
-                  </span>
-                </div>
-              </header>
-              {measured && (
-                <div
-                  className={styles.accountTrack}
-                  role="img"
-                  aria-label={`${name} · ${t('client_usage.used_title')} ${used} · ${t('client_usage.available_title')} ${available} · ${t('client_usage.wasted_title')} ${wasted}`}
-                >
-                  <span
-                    className={styles.accountUsed}
-                    style={{ width: `${account.used}%` }}
-                    title={`${t('client_usage.used_title')} ${used}`}
-                  />
-                  <span
-                    className={styles.accountUnused}
-                    style={{ width: `${account.remaining}%` }}
-                    title={`${t('client_usage.available_title')} ${available}`}
-                  />
-                  <span
-                    className={styles.accountWasted}
-                    style={{ width: `${account.expired}%` }}
-                    title={`${t('client_usage.wasted_title')} ${wasted}`}
-                  />
-                </div>
-              )}
-              {measured && company.current && account.expired > 1e-8 && (
-                <span className={styles.accountWastedLabel}>
-                  {t('client_usage.wasted_title')} {wasted}
-                </span>
-              )}
+              <SubscriptionFacts
+                account={account}
+                quote={quote}
+                current={company.current}
+                classes={styles}
+              />
             </section>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </article>
   );
 }
@@ -285,8 +254,14 @@ export function CompanyPies({
   names,
   quote,
   icons,
+  rows = [],
+  kinds = {},
+  allowances,
   classes: styles,
 }: {
+  rows?: ClientUsageRow[];
+  kinds?: Record<string, ApiKeyKind>;
+  allowances?: PersonAllowances;
   data: ClientUsageResponse;
   companies: CompanyUsage[];
   names: Record<string, string>;
@@ -323,18 +298,17 @@ export function CompanyPies({
     personColor(id);
   const price = (usd: number, missing: number) => {
     const value = formatReais(usd, quote);
-    return value === '—'
-      ? value
-      : missing > 0 && usd === 0
-        ? t('client_usage.unpriced')
-        : `${missing > 0 ? '≥ ' : ''}${value}`;
+    return value === '—' ? value : missing > 0 && usd === 0 ? '—' : value;
   };
   return (
-    <Card title={<h2>{t('client_usage.subscription_title')} · ≈</h2>}>
+    <Card title={<h2>{t('client_usage.subscription_title')}</h2>}>
       <div className={styles.companyGrid}>
         {companies.map((company) => (
           <CompanyChart
             key={company.id}
+            rows={rows}
+            kinds={kinds}
+            allowances={allowances}
             company={company}
             icon={icons[company.id]}
             label={label}

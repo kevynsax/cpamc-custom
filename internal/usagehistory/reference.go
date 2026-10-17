@@ -11,6 +11,7 @@ import (
 var referenceData []byte
 
 type ModelReference struct {
+	DisplayName      string             `json:"display_name,omitempty"`
 	ID               string             `json:"id"`
 	Provider         string             `json:"provider"`
 	Kind             string             `json:"kind"`
@@ -136,7 +137,7 @@ func (p *Pricing) ModelReference(id, provider, canonical string, settings Settin
 
 func researchedTokenRate(model string) *Rates {
 	info, ok := referenceModels()[model]
-	if !ok || info.Kind != "tokens" || info.Status != "published" {
+	if !ok || info.Kind != "tokens" || (info.Status != "published" && info.Status != "openrouter") {
 		return nil
 	}
 	input, okInput := info.Prices["input"]

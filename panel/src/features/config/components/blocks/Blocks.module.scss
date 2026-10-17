@@ -135,6 +135,43 @@
 /* ---------- API 密钥列表 ---------- */
 
 /* 与设置行同一副骨架：标题 + 说明在左、主操作在右；条目是发丝分隔的单行，不再套卡片。 */
+.keyKindCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.keyKindCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  &[aria-pressed='true'] {
+    border-color: var(--text-primary);
+    box-shadow: inset 0 0 0 1px var(--text-primary);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 3px;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  > strong {
+    font-size: 14px;
+  }
+}
+.apiKeyKind {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
 .apiKeys {
   display: flex;
   flex-direction: column;

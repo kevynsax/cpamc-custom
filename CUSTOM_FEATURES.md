@@ -26,7 +26,72 @@ focus provides the same detail, arrow keys move between slices, Enter/Space or t
 pins a slice, and Escape dismisses its tooltip. Legends and chart segments highlight
 together, and reduced-motion preferences disable transitions. Existing API-key names
 from the configuration key editor identify people; there is no separate naming or
-subscription-label editor. Account progress uses the authenticated account email,
+subscription-label editor. Names and Person/System classifications are shared server
+metadata in `<auth-dir>/.cpamc-custom/usage-history/key-names.json`, keyed by SHA-256 of the full
+client key (never the raw key). The key editor saves them immediately through the
+v8 management API, independently of the collection flag. Browser-only names from
+older panels are imported only for missing server entries. Explicit clears retain
+an empty tombstone so an old browser cannot resurrect a deleted name. Per-key
+atomic patches preserve concurrent edits to other names, and model-price saves
+cannot replace names or types. The version-2 metadata envelope saves names and
+classifications together atomically and reads the original names-only file without
+losing labels. Existing configured keys default to Person until explicitly changed;
+new keys require choosing one of the icon cards, Person or System, in the key editor.
+The distinction is accounting metadata only, not a different access permission.
+Keep the auth volume mounted across deployments; this does not synchronize
+independent gateway data directories.
+
+`macbook`, `home-gpu`, and `spark` are one **In house** company, retaining
+separate underlying accounts. Each company has a second donut showing known
+API-equivalent **price by model in reais**, weighted by recorded cost rather than
+token count. Its center and legend show reais, not token totals; unknown costs are
+not assigned invented slices. Estimate bounds (`≥`) are omitted from the UI. Empty/unavailable
+charts are omitted without an explanatory placeholder. Cached/input/output counters
+are not added together. Person-detail cards show only money and percentage changes, with company/model
+pie sections instead of token/request counters. When the two sections are equivalent
+because every priced company has exactly one uniquely owned model, they merge into
+one chart with combined company/model legend names; coincidentally equal totals do
+not trigger a merge. Friendly model names replace raw slugs and server file paths,
+and model cards/legends sort by the selected period's spending, highest first.
+Company, person and model-price card collections use responsive CSS-column masonry.
+Usage uses the standard Lucide Wallet icon in both navigation and its page heading. Current periods
+compare with the same elapsed duration in the previous period (calendar UTC
+months; each account's reset-aligned subscription week); completed periods compare
+full periods. Short prior months are clamped. Comparisons describe observed records,
+not complete billing history: paused/missing history is never backfilled, missing
+prices suppress value-change percentages, and a zero prior baseline is not an
+infinite percentage.
+
+Known monthly subscription fees and their selected-period prorations remain
+visible without request history or quota attribution. Current availability reads
+sanitized numeric quota windows from the existing quota cache even when tracking
+is paused, without polling providers or persisting a new history observation.
+Independent scopes/durations remain separate; only the newest observation for a
+pool is shown. Observations older than 30 minutes, with a passed reset, or with
+invalid timestamps show unknown availability, never a presumed reset to 100%.
+Unreported prices remain unknown, with explicit `monthly_fee_usd` metadata taking
+precedence over known published plan fees. Monetary UI values are reais only;
+missing conversion quotes never fall back to dollar amounts. Unknown/zero waste
+and available-fee tags are omitted. Waste and availability slices show only their
+own tag, and the tags use larger type. Each subscription shows email, plan and
+monthly price on one line; quota windows have slim 3px tracks and percentages.
+Chart and progress-bar tooltips omit the
+client token/key name. Repeated status labels, empty-state prose, observation rows
+and the period-comparison paragraph are removed; freshness and reset metadata
+remain accessible without those visible rows.
+
+Waste is attributed only to active Person keys, including people without requests.
+For each company, subtract System consumption from plan-weighted capacity, then
+split the remaining allowance equally among Person keys. Four identical Max plans,
+a System consuming 0.2 of one plan and three Person keys give `(4 - 0.2) / 3` plans
+per person. Each person's deficit is their allowance minus attributed consumption,
+clamped at zero. Actual expired unused fees and currently available fees are split
+in proportion to positive deficits, so overuse cannot inflate aggregate waste or
+create negative waste. System keys never receive a person's waste allocation.
+The person cards show the resulting money tags, including company-level waste on
+pie legends. Missing reliable quota/fee data remains unset; it is never invented.
+
+Account progress uses the authenticated account email,
 resolved at read time from auth/profile metadata and never persisted in usage files.
 Available and already-wasted capacity are shown separately on each account's bar.
 A company pie is omitted entirely if any included account/window has incomplete
@@ -97,8 +162,19 @@ are time-prorated estimates and must not be treated as an exact monthly token gr
 
 Model-price cards cover the configured registry inventory. The researched snapshot
 `internal/usagehistory/model_reference.json` contains all 68 model IDs advertised by
-the live gateway on 2026-10-17: 34 published API tariffs, four explicitly labeled family
-references, and 30 self-hosted, subscription-only or unpublished entries left unset.
+the live gateway on 2026-10-17: 34 published native API tariffs, four explicitly labeled
+family references, 16 OpenRouter reference entries (eight in-house models plus their
+`spark/` aliases), and 14 remaining unpriced entries. The OpenRouter snapshot comes
+from `https://openrouter.ai/api/v1/models`, using non-free, non-batch catalog entries
+and their published input/output/cache-read rates, in canonical USD per million
+before the normal Cross conversion to reais. The serving configuration was checked:
+`qwen-coder` is Qwen3.8-27B, not Coder Next; `qwen-vl` is Qwen3-VL-30B-A3B-Instruct;
+`nemotron-120b` is Nemotron-3-Super-120B-A12B. Missing exact OpenRouter models or cache
+rates remain unset, never replaced with a neighboring model's price. These are
+counterfactual hosted prices, not electricity costs or a local subscription bill.
+Future executions snapshot the chosen rates as usual; older usage is never repriced.
+The local panel can preview those sourced model-price cards against an older v8
+backend without changing its recorded usage or saved overrides.
 Each card links its public evidence. Image, video and voice rates retain their native
 units; they are never passed to token accounting without the corresponding metered
 quantities. Unknown prices do not mean free. Card edits preserve cache/context tiers;
@@ -113,7 +189,18 @@ All endpoints use existing v8 management authentication:
   returns minute/model rows for inclusive UTC dates (default last 30 days), summarized
   reset-cycle reports under the legacy `weeks` field, account/key labels, accounts,
   configured model-price references, settings, collection status and catalog date.
+  `key_names` carries shared names (including clear tombstones), and `key_kinds`
+  carries Person/System classifications. Models may include `display_name`. Each account may
+  include `cached_quotas` with numeric used percentage, scope, duration, reset and
+  observation timestamps; cache recipes, bodies and credentials are never returned.
   Cycle reports retain their actual `period_seconds`, not an assumed seven days.
+- `GET /v8/management/access/key-names` returns `{version: 2,
+  names: {fingerprint: name}, kinds: {fingerprint: "person" | "system"}}`.
+- `PATCH /v8/management/access/key-names` accepts optional `names` and `kinds` maps
+  (at least one is required), plus `import_only?: boolean`. Ordinary patches update
+  only supplied names/types and preserve the other metadata;
+  import-only patches never overwrite an existing server entry. Both routes use
+  the same management authentication and remain usable with collection disabled.
 - `PUT /v8/management/observability/usage/settings` preserves legacy `names`/`plans`
   compatibility and replaces `prices` and `unit_prices` maps. Token overrides use USD
   per million tokens, including optional context thresholds and long-context rates;
@@ -124,7 +211,7 @@ All endpoints use existing v8 management authentication:
 
 Data lives under `<auth-dir>/.cpamc-custom/usage-history/`: dated JSON usage buckets,
 one snapshot per account/reset pool under `cycles/`, `settings.json`, and a refreshed
-`prices.json`. Each quota update rewrites only its own week, not the full year.
+`prices.json`, plus independent `key-names.json` metadata. Each quota update rewrites only its own week, not the full year.
 Retention is 365 days;
 files are atomically replaced with owner-only permissions and no raw API keys or
 upstream credentials. Keep the auth directory on persistent storage. This local store

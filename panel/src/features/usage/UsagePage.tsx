@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
-import { IconChevronLeft, IconRefreshCw, IconScrollText, IconTimer } from '@/components/ui/icons';
+import {
+  IconAlertTriangle,
+  IconChevronLeft,
+  IconRefreshCw,
+  IconWallet,
+  IconTimer,
+} from '@/components/ui/icons';
 import { getAuthFileIcon, getTypeColor } from '@/features/authFiles/constants';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useAuthStore, useConfigStore, useThemeStore } from '@/stores';
@@ -9,7 +15,12 @@ import { buildCompanyUsage, companyId, usageRange, type UsagePeriod } from './co
 import { CompanyPies } from './CompanyPies';
 import { PeopleSpend } from './PeopleSpend';
 import { ModelPriceCards } from './ModelPriceCards';
+import { withInHousePrices } from './inHousePrices';
 import { resolveUsageKeyNames } from './keyNames';
+import { useApiKeyNames } from '@/features/config/useApiKeyNames';
+import { PersonDetails } from './PersonDetails';
+import { periodRows, valueByModel } from './reporting';
+import { allocatePersonFees } from './personAllocation';
 import { useClientUsage } from './useClientUsage';
 import { useCrossQuote } from './useCrossQuote';
 import styles from './UsagePage.module.scss';
@@ -20,7 +31,7 @@ export function UsagePage() {
   const [offset, setOffset] = useState(0);
   const range = usageRange(period, offset);
   const { data, catalog, connected, loading, error, saving, refresh, saveSettings } =
-    useClientUsage(range.from, range.to);
+    useClientUsage(period === 'month' ? usageRange(period, offset + 1).from : range.from, range.to);
   const quote = useCrossQuote();
   const theme = useThemeStore((state) => state.resolvedTheme);
   const apiBase = useAuthStore((state) => state.apiBase);
@@ -30,8 +41,20 @@ export function UsagePage() {
     if (connected && !config) void fetchConfig().catch(() => {});
   }, [connected, config, fetchConfig]);
   useHeaderRefresh(refresh, connected);
-  const names = resolveUsageKeyNames(apiBase, config?.apiKeys ?? []);
+  const keyNames = useApiKeyNames(config?.apiKeys ?? []);
+  const names = {
+    ...resolveUsageKeyNames(apiBase, config?.apiKeys ?? []),
+    ...data?.keyNames,
+    ...keyNames.names,
+  };
   const companies = data ? buildCompanyUsage(data, period, offset) : [];
+  const recorded = data ? periodRows(data, period, offset) : { current: [], previous: [] };
+  const kinds = { ...keyNames.kinds, ...data?.keyKinds };
+  const personIds = Object.keys(data?.keyLabels ?? {}).filter((id) => kinds[id] !== 'system');
+  const allowances = allocatePersonFees(companies, personIds, kinds);
+  const spending = Object.fromEntries(
+    valueByModel(recorded.current).map((part) => [part.id, part.value])
+  );
   const appearance = Object.fromEntries(
     (data?.accounts ?? []).map((account) => [
       companyId(account.provider),
@@ -53,7 +76,7 @@ export function UsagePage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1>
-          <IconScrollText />
+          <IconWallet />
           {t('client_usage.title')}
         </h1>
         <div className={styles.controls}>
@@ -125,6 +148,16 @@ export function UsagePage() {
           {t('common.loading')}
         </h2>
       )}
+      {keyNames.error && (
+        <span
+          role="status"
+          aria-label={t('client_usage.names_sync_unavailable')}
+          title={t('client_usage.names_sync_unavailable')}
+          className={styles.status}
+        >
+          <IconAlertTriangle size={16} />
+        </span>
+      )}
       {data && !data.collectionEnabled && (
         <h2 role="status" className={styles.status}>
           {t('client_usage.paused_title')}
@@ -137,6 +170,8 @@ export function UsagePage() {
           names={names}
           quote={quote}
           appearance={appearance}
+          kinds={kinds}
+          allowances={allowances}
           classes={styles}
         />
       )}
@@ -147,12 +182,28 @@ export function UsagePage() {
           names={names}
           quote={quote}
           icons={icons}
+          rows={recorded.current}
+          kinds={kinds}
+          allowances={allowances}
+          classes={styles}
+        />
+      )}
+      {data && (
+        <PersonDetails
+          current={recorded.current}
+          previous={recorded.previous}
+          names={{ ...data.keyLabels, ...names }}
+          quote={quote}
+          personIds={personIds}
+          allowances={allowances}
+          currentPeriod={offset === 0}
           classes={styles}
         />
       )}
       {catalog && (
         <ModelPriceCards
-          data={catalog}
+          data={withInHousePrices(catalog)}
+          spending={spending}
           quote={quote}
           busy={saving || loading}
           onSave={saveSettings}

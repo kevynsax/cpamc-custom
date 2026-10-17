@@ -8,6 +8,8 @@ import { PERSON_COLORS } from './pie';
 import { spendingByPerson } from './spending';
 import { FeeTags } from './FeeTags';
 import { companyUnusedValue, personUnusedValue, sumFeeValues } from './fees';
+import type { PersonAllowances } from './personAllocation';
+import type { ApiKeyKind } from '@/services/api/keyNames';
 
 export function PeopleSpend({
   data,
@@ -15,6 +17,8 @@ export function PeopleSpend({
   names,
   quote,
   appearance,
+  kinds = {},
+  allowances,
   classes: styles,
 }: {
   data: ClientUsageResponse;
@@ -22,11 +26,13 @@ export function PeopleSpend({
   names: Record<string, string>;
   quote: CrossQuote | null;
   appearance: Record<string, { icon: string | null; color: string }>;
+  kinds?: Record<string, ApiKeyKind>;
+  allowances?: PersonAllowances;
   classes: Record<string, string>;
 }) {
   const { t } = useTranslation();
   const id = useId();
-  const people = spendingByPerson(companies);
+  const people = spendingByPerson(companies).filter((person) => kinds[person.id] !== 'system');
   const [hovered, setHovered] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
   const selectedKey = hovered ?? focused;
@@ -39,11 +45,7 @@ export function PeopleSpend({
   const name = (key: string) => names[key] || data.keyLabels[key] || key.slice(0, 8);
   const price = (usd: number, missing: number) => {
     const value = formatReais(usd, quote);
-    return value === '—'
-      ? value
-      : missing > 0 && usd === 0
-        ? t('client_usage.unpriced')
-        : `${missing > 0 ? '≥ ' : ''}${value}`;
+    return value === '—' ? value : missing > 0 && usd === 0 ? '—' : value;
   };
   const total = people.reduce((sum, person) => sum + person.costUsd, 0);
   const missing = people.reduce((sum, person) => sum + person.unpriced, 0);
@@ -63,9 +65,11 @@ export function PeopleSpend({
           );
           const tooltipId = `${id}-${person.id}`;
           const feeValue = sumFeeValues(
-            companies
-              .filter((company) => company.parts.some((part) => part.id === person.id))
-              .map((company) => personUnusedValue(company, person.id))
+            allowances
+              ? Object.values(allowances[person.id] ?? {})
+              : companies
+                  .filter((company) => company.parts.some((part) => part.id === person.id))
+                  .map((company) => personUnusedValue(company, person.id))
           );
           const selectedCompany = selected
             ? companies.find((company) => company.id === selected.id)
@@ -95,7 +99,7 @@ export function PeopleSpend({
                     .filter((company) => company.costUsd > 0)
                     .map((company) => {
                       const key = `${person.id}:${company.id}`;
-                      const label = `${name(person.id)} · ${COMPANY_NAMES[company.id] ?? company.id} · ${price(company.costUsd, company.unpriced)}`;
+                      const label = `${COMPANY_NAMES[company.id] ?? company.id} · ${price(company.costUsd, company.unpriced)}`;
                       return (
                         <span
                           key={company.id}
@@ -126,12 +130,14 @@ export function PeopleSpend({
                 </div>
                 {selected && (
                   <div id={tooltipId} className={styles.spendTooltip} role="tooltip">
-                    <strong>{name(person.id)}</strong>
                     <span>{COMPANY_NAMES[selected.id] ?? selected.id}</span>
                     <b>{price(selected.costUsd, selected.unpriced)}</b>
                     {selectedCompany && (
                       <FeeTags
-                        value={personUnusedValue(selectedCompany, person.id)}
+                        value={
+                          allowances?.[person.id]?.[selectedCompany.id] ??
+                          personUnusedValue(selectedCompany, person.id)
+                        }
                         current={current}
                         quote={quote}
                         classes={styles}

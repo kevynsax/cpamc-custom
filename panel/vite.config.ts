@@ -42,21 +42,23 @@ function getVersion(): string {
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => ({
   server:
-    command === 'serve' && mode === 'usage-demo'
+    command === 'serve'
       ? {
-          host: '127.0.0.1',
-          port: 5190,
-          strictPort: true,
+          ...(mode === 'usage-demo' ? { host: '127.0.0.1', port: 5190, strictPort: true } : {}),
           fs: {
             allow: [
               __dirname,
               path.resolve(__dirname, '../internal/usagehistory/model_reference.json'),
             ],
           },
-          headers: {
-            'Content-Security-Policy':
-              "connect-src 'self' ws://127.0.0.1:* ws://localhost:* wss://cross-otc.com; form-action 'self'; base-uri 'self'",
-          },
+          ...(mode === 'usage-demo'
+            ? {
+                headers: {
+                  'Content-Security-Policy':
+                    "connect-src 'self' ws://127.0.0.1:* ws://localhost:* wss://cross-otc.com; form-action 'self'; base-uri 'self'",
+                },
+              }
+            : {}),
         }
       : undefined,
   plugins: [

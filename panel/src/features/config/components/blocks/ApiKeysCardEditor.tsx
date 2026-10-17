@@ -3,7 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useAuthStore, useNotificationStore } from '@/stores';
-import { apiKeyNameFingerprint, readApiKeyNames, saveApiKeyName } from '../../apiKeyNames';
+import { clientKeyFingerprint } from '../../apiKeyNames';
+import { useApiKeyNames } from '../../useApiKeyNames';
+import type { ApiKeyKind } from '@/services/api/keyNames';
+import { ApiKeyKindCards } from './ApiKeyKindCards';
 import { copyToClipboard } from '@/utils/clipboard';
 import { makeClientId } from '@/types/visualConfig';
 import { generateSecureApiKey } from '@/utils/apiKey';
@@ -25,12 +28,11 @@ export const ApiKeysCardEditor = memo(function ApiKeysCardEditor(props: ApiKeysC
 
 function ScopedApiKeysCardEditor({
   value,
-  disabled,
+  disabled: parentDisabled,
   onChange,
-  apiBase,
 }: ApiKeysCardEditorProps & { apiBase: string }) {
-  const [names, setNames] = useState(() => readApiKeyNames(apiBase));
   const [nameValue, setNameValue] = useState('');
+  const [kindValue, setKindValue] = useState<ApiKeyKind | null>(null);
   const { t } = useTranslation();
   const showNotification = useNotificationStore((state) => state.showNotification);
   const apiKeys = useMemo(
@@ -41,10 +43,15 @@ function ScopedApiKeysCardEditor({
         .filter(Boolean),
     [value]
   );
-  const nameFingerprints = useMemo(
-    () => apiKeys.map((key) => apiKeyNameFingerprint(apiBase, key)),
-    [apiBase, apiKeys]
-  );
+  const {
+    names,
+    kinds,
+    busy: namesBusy,
+    error: namesError,
+    save: saveName,
+  } = useApiKeyNames(apiKeys);
+  const disabled = parentDisabled || namesBusy;
+  const nameFingerprints = useMemo(() => apiKeys.map(clientKeyFingerprint), [apiKeys]);
   const [apiKeyIds, setApiKeyIds] = useState(() => apiKeys.map(() => makeClientId()));
   const renderApiKeyIds = useMemo(() => {
     if (apiKeyIds.length === apiKeys.length) return apiKeyIds;
@@ -66,6 +73,7 @@ function ScopedApiKeysCardEditor({
   const [formError, setFormError] = useState('');
 
   const openAddModal = () => {
+    setKindValue(null);
     setNameValue('');
     setEditingApiKeyId(null);
     setInputValue('');
@@ -75,9 +83,8 @@ function ScopedApiKeysCardEditor({
 
   const openEditModal = (apiKeyId: string) => {
     const editingIndex = renderApiKeyIds.findIndex((id) => id === apiKeyId);
-    const latestNames = readApiKeyNames(apiBase);
-    setNames(latestNames);
-    setNameValue(latestNames[nameFingerprints[editingIndex]] ?? '');
+    setNameValue(names[nameFingerprints[editingIndex]] ?? '');
+    setKindValue(kinds[nameFingerprints[editingIndex]] ?? 'person');
     setEditingApiKeyId(apiKeyId);
     setInputValue(apiKeys[editingIndex] ?? '');
     setFormError('');
@@ -102,7 +109,7 @@ function ScopedApiKeysCardEditor({
     updateApiKeys(apiKeys.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) {
       setFormError(t('config_management.visual.api_keys.error_empty'));
@@ -113,6 +120,10 @@ function ScopedApiKeysCardEditor({
       return;
     }
 
+    if (!kindValue) {
+      setFormError(t('config_management.visual.api_keys.kind_required'));
+      return;
+    }
     const editingIndex = editingApiKeyId
       ? renderApiKeyIds.findIndex((id) => id === editingApiKeyId)
       : -1;
@@ -120,11 +131,10 @@ function ScopedApiKeysCardEditor({
       editingApiKeyId === null
         ? [...apiKeys, trimmed]
         : apiKeys.map((key, idx) => (idx === editingIndex ? trimmed : key));
-    if (!saveApiKeyName(apiBase, trimmed, nameValue)) {
+    if (!(await saveName(trimmed, nameValue, kindValue))) {
       setFormError(t('config_management.visual.api_keys.name_save_error'));
       return;
     }
-    setNames(readApiKeyNames(apiBase));
     // Retain old fingerprints: configuration edits can still be discarded or fail to save.
     if (editingApiKeyId === null) {
       setApiKeyIds([...renderApiKeyIds, makeClientId()]);
@@ -160,6 +170,11 @@ function ScopedApiKeysCardEditor({
         </Button>
       </div>
 
+      {namesError && (
+        <div role="alert" className="error-box">
+          {t('config_management.visual.api_keys.name_save_error')}
+        </div>
+      )}
       {apiKeys.length === 0 ? (
         <div className={styles.emptyState}>{t('config_management.visual.api_keys.empty')}</div>
       ) : (
@@ -169,8 +184,13 @@ function ScopedApiKeysCardEditor({
               <span className={styles.apiKeyIndex}>#{index + 1}</span>
               <span className={styles.apiKeyMeta}>
                 <span className={styles.apiKeyName}>
-                  {names[nameFingerprints[index]] ??
+                  {names[nameFingerprints[index]] ||
                     t('config_management.visual.api_keys.input_label')}
+                </span>
+                <span className={styles.apiKeyKind}>
+                  {t(
+                    `config_management.visual.api_keys.kind_${kinds[nameFingerprints[index]] ?? 'person'}`
+                  )}
                 </span>
                 <span className={styles.apiKeyValue}>{maskApiKey(String(key || ''))}</span>
               </span>
@@ -208,7 +228,9 @@ function ScopedApiKeysCardEditor({
 
       <Modal
         open={modalOpen}
-        onClose={closeModal}
+        onClose={() => {
+          if (!namesBusy) closeModal();
+        }}
         title={
           editingApiKeyId !== null
             ? t('config_management.visual.api_keys.edit_title')
@@ -216,10 +238,10 @@ function ScopedApiKeysCardEditor({
         }
         footer={
           <>
-            <Button variant="secondary" onClick={closeModal} disabled={disabled}>
+            <Button variant="secondary" onClick={closeModal} disabled={disabled || namesBusy}>
               {t('config_management.visual.common.cancel')}
             </Button>
-            <Button onClick={handleSave} disabled={disabled}>
+            <Button onClick={() => void handleSave()} disabled={disabled || namesBusy}>
               {editingApiKeyId !== null
                 ? t('config_management.visual.common.update')
                 : t('config_management.visual.common.add')}
@@ -227,6 +249,7 @@ function ScopedApiKeysCardEditor({
           </>
         }
       >
+        <ApiKeyKindCards value={kindValue} onChange={setKindValue} disabled={disabled} />
         <div className="form-group">
           <label htmlFor={nameInputId}>{t('config_management.visual.api_keys.name_label')}</label>
           <input

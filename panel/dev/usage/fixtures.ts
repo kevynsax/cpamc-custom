@@ -73,7 +73,10 @@ interface RawWeek {
 }
 export type DemoSettings = ReturnType<typeof createUsageFixture>['settings'];
 
-export function createUsageFixture(now = new Date()) {
+export function createUsageFixture(
+  now = new Date(),
+  options: { includeInHouse?: boolean; collectionEnabled?: boolean } = {}
+) {
   const time = now.getTime(),
     today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   const settings = {
@@ -87,12 +90,14 @@ export function createUsageFixture(now = new Date()) {
     to: iso(today).slice(0, 10),
     timezone: 'UTC',
     retention_days: 365,
-    collection_enabled: true,
+    collection_enabled: options.collectionEnabled ?? true,
     prices_as_of: reference.checked_at,
     accounts: {} as Record<string, { id: string; provider: string; plan: string; email: string }>,
 
     account_labels: {} as Record<string, string>,
     key_labels: {} as Record<string, string>,
+    key_names: {} as Record<string, string>,
+    key_kinds: {} as Record<string, 'person' | 'system'>,
     models: reference.models.map((model) => ({ ...model, overridden: false })),
     settings,
     rows: [] as RawRow[],
@@ -100,6 +105,8 @@ export function createUsageFixture(now = new Date()) {
   };
   demoPeople.forEach((person, index) => {
     payload.key_labels[hash(person.name)] = `••••${1001 + index}`;
+    payload.key_kinds[hash(person.name)] =
+      options.includeInHouse && index === 3 ? 'system' : 'person';
   });
   subscriptionLineup.forEach((subscription, accountIndex) => {
     const accountId = hash(`account-${accountIndex}`);
@@ -229,6 +236,43 @@ export function createUsageFixture(now = new Date()) {
         last_observed: iso(index === 0 ? time - 60_000 : reset - 2 * 60_000),
       });
     }
+  }
+  if (options.includeInHouse) {
+    ['macbook', 'home-gpu', 'spark'].forEach((provider, index) => {
+      const id = hash(provider);
+      payload.accounts[id] = { id, provider, plan: '', email: '' };
+      const template = payload.rows[0];
+      const models =
+        provider === 'spark'
+          ? ['gpt-oss-120b', 'qwen-coder', 'qwen-vl']
+          : [provider === 'macbook' ? 'qwen2.5:3b' : 'qwen3-8b'];
+      for (const model of models)
+        for (const days of [1, 8, 32]) {
+          const at = iso(time - days * DAY);
+          const prices = reference.models.find((entry) => entry.id === model)?.prices as
+            Record<string, number> | undefined;
+          const input = 120000 * (index + 1),
+            output = 30000 * (index + 1);
+          const cost =
+            prices?.input !== undefined && prices.output !== undefined
+              ? (input * prices.input + output * prices.output) / 1e6
+              : null;
+          payload.rows.push({
+            ...template,
+            at,
+            date: at.slice(0, 10),
+            account_id: id,
+            provider: 'openai-compatibility',
+            model,
+            input_tokens: input,
+            output_tokens: output,
+            cached_tokens: 0,
+            total_tokens: input + output,
+            cost_usd: cost,
+            unpriced_requests: cost === null ? template.requests : 0,
+          });
+        }
+    });
   }
   payload.rows = payload.rows.filter((row) => Date.parse(row.at) <= time);
   return payload;

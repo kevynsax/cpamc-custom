@@ -248,6 +248,15 @@ func (p *Pricing) Resolve(record usage.Record, overrides map[string]Rates) *Rate
 	if tier != "" && tier != "auto" && tier != "default" && tier != "standard" {
 		return nil
 	}
+	// CUSTOM (cpamc-custom): exact in-house models use the sourced OpenRouter
+	// counterfactual, not a native-vendor tariff or a guessed neighboring model.
+	for _, candidate := range []string{record.Alias, model, record.Model} {
+		if info, ok := referenceModels()[candidate]; ok && info.Status == "openrouter" {
+			if rate := researchedTokenRate(candidate); rate != nil {
+				return effectiveRate(*rate, record)
+			}
+		}
+	}
 	if fallback := researchedTokenRate(model); fallback != nil {
 		if p == nil || p.AsOf() <= fallback.AsOf {
 			return effectiveRate(*fallback, record)

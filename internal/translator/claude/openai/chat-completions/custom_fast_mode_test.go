@@ -20,7 +20,10 @@ func TestCustomFastModeChatCompletionsMapping(t *testing.T) {
 		{"service_tier auto", `{"model":"claude-opus-5-5","service_tier":"auto","messages":[{"role":"user","content":"hi"}]}`, false},
 	}
 	for _, tc := range cases {
-		out := ConvertOpenAIRequestToClaude("claude-opus-5-5", []byte(tc.body), true)
+		out, err := ConvertOpenAIRequestToClaude("claude-opus-5-5", []byte(tc.body), true)
+		if err != nil {
+			t.Fatalf("%s: convert request: %v", tc.name, err)
+		}
 		got := gjson.GetBytes(out, "speed").String() == "fast"
 		if got != tc.fast {
 			t.Errorf("%s: speed=fast is %v, want %v (out=%s)", tc.name, got, tc.fast, gjson.GetBytes(out, "speed").Raw)

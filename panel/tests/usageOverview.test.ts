@@ -188,7 +188,7 @@ describe('company capacity pies', () => {
     expect(Object.keys(resolved).every((id) => fixture().keyLabels[id])).toBe(true);
     expect(Object.keys(fixture().settings.names)).toHaveLength(0);
   });
-  test('renders pies, names and reais without subscription labels, tables or paragraphs', () => {
+  test('renders compact subscription summaries, pies, names and reais without tables or paragraphs', () => {
     const data = fixture();
     const names = Object.fromEntries(
       Object.keys(data.keyLabels).map((id, i) => [id, demoPeople[i].name])
@@ -220,7 +220,8 @@ describe('company capacity pies', () => {
     expect(html).toContain('@example.test');
     expect(html).not.toContain('Account 1');
     expect(html).not.toContain('Claude Max');
-    expect(html).not.toContain('Grok Pro');
+    expect(html).toContain('Grok Pro');
+    expect(html).toContain('Max 20×');
     expect(html).not.toMatch(/<p(?:\s|>)|<table|<select/);
     expect(piePath(0, 100)).not.toContain('NaN');
     expect(piePath(0, 25)).toContain('A50 50');

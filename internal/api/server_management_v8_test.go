@@ -47,7 +47,7 @@ func TestManagementV8RoutesShareAccessControl(t *testing.T) {
 			s := &Server{cfg: cfg, engine: gin.New(), mgmt: h}
 			s.managementRoutesEnabled.Store(tc.enabled)
 			s.registerManagementRoutes()
-			for _, route := range []string{"/v0/management/config", "/v8/management/config", "/v0/management/plugins", "/v8/management/plugins", "/v8/management/observability/usage/clients"} {
+			for _, route := range []string{"/v0/management/config", "/v8/management/config", "/v0/management/plugins", "/v8/management/plugins", "/v8/management/observability/usage/clients", "/v8/management/access/key-names"} {
 				req := httptest.NewRequest(http.MethodGet, route, nil)
 				req.RemoteAddr = "127.0.0.1:1234"
 				if tc.authorized {
@@ -57,6 +57,13 @@ func TestManagementV8RoutesShareAccessControl(t *testing.T) {
 				s.engine.ServeHTTP(recorder, req)
 				if recorder.Code != tc.want {
 					t.Fatalf("%s: status=%d want=%d body=%s", route, recorder.Code, tc.want, recorder.Body.String())
+				}
+				if tc.want == http.StatusUnauthorized {
+					// Test each route independently of the failed-attempt IP ban.
+					probe := httptest.NewRequest(http.MethodGet, route, nil)
+					probe.RemoteAddr = "127.0.0.1:1234"
+					probe.Header.Set("Authorization", "Bearer test-password")
+					s.engine.ServeHTTP(httptest.NewRecorder(), probe)
 				}
 			}
 		})
@@ -92,6 +99,7 @@ func TestManagementV8IndependentContract(t *testing.T) {
 		"GET /v8/management/observability/logs", "GET /v8/management/observability/usage/queue",
 		"GET /v8/management/observability/usage/snapshot",
 		"GET /v8/management/observability/usage/clients",
+		"GET /v8/management/access/key-names", "PATCH /v8/management/access/key-names",
 		"PUT /v8/management/observability/usage/settings", "POST /v8/management/observability/usage/prices/refresh",
 		"GET /v8/management/credentials", "POST /v8/management/credentials",
 		"GET /v8/management/oauth/auth-url", "POST /v8/management/oauth/import", "POST /v8/management/oauth/callback",

@@ -1,4 +1,9 @@
-import type { ClientUsageResponse, UsageAccount, UsageWeek } from '@/services/api/clientUsage';
+import type {
+  CachedUsageQuota,
+  ClientUsageResponse,
+  UsageAccount,
+  UsageWeek,
+} from '@/services/api/clientUsage';
 import { monthlyPlanFee, proratedPlanFee } from './fees';
 
 export type UsagePeriod = 'week' | 'month';
@@ -11,7 +16,12 @@ export interface PiePart {
 export interface AccountCapacity {
   id: string;
   email: string;
+  displayName?: string;
+  plan?: string;
+  capacityWeight?: number;
   periodFeeUsd: number | null;
+  monthlyFeeUsd?: number | null;
+  cachedQuotas?: CachedUsageQuota[];
   quotaMeasured: boolean;
   chartAvailable: boolean;
   used: number;
@@ -45,6 +55,7 @@ export const COMPANY_NAMES: Record<string, string> = {
   meta: 'Meta',
   minimax: 'MiniMax',
   zai: 'Z.ai',
+  in_house: 'In house',
 };
 export function companyId(provider: string): string {
   const name = provider.toLowerCase().replace(/^openai-compatib(?:le|ility)-/, '');
@@ -56,6 +67,9 @@ export function companyId(provider: string): string {
         antigravity: 'google',
         gemini: 'google',
         grok: 'xai',
+        macbook: 'in_house',
+        'home-gpu': 'in_house',
+        spark: 'in_house',
       } as Record<string, string>
     )[name] ?? name
   );
@@ -95,7 +109,7 @@ export function usageRange(period: UsagePeriod, offset: number, now = new Date()
   };
 }
 
-function accountRange(
+export function accountRange(
   account: UsageAccount,
   weeks: UsageWeek[],
   period: UsagePeriod,
@@ -220,6 +234,22 @@ export function buildCompanyUsage(
     company.accounts.push({
       id: account.id,
       email: account.email ?? '',
+      displayName: id === 'in_house' ? account.provider : account.email,
+      plan,
+      capacityWeight: weight.weight,
+      monthlyFeeUsd: account.monthlyFeeUsd ?? monthlyPlanFee(id, plan),
+      cachedQuotas: account.cachedQuotas?.length
+        ? account.cachedQuotas
+        : data.weeks
+            .filter((cycle) => cycle.accountId === account.id && !cycle.closed)
+            .map((cycle) => ({
+              scope: cycle.scope,
+              used: cycle.used,
+              reset: cycle.reset,
+              observedAt: cycle.lastObserved,
+              periodSeconds:
+                cycle.periodSeconds ?? (Date.parse(cycle.reset) - Date.parse(cycle.start)) / 1000,
+            })),
       periodFeeUsd: proratedPlanFee(
         account.monthlyFeeUsd ?? monthlyPlanFee(id, plan),
         range.start,

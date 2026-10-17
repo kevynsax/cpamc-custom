@@ -42,6 +42,8 @@ func (s *Server) registerManagementV8Routes() {
 	v8.GET("/observability/logs/requests/:id", s.mgmt.GetRequestLogByID)
 	v8.GET("/observability/usage/api-keys", s.mgmt.GetAPIKeyUsage)
 	v8.GET("/observability/usage/clients", s.mgmt.GetClientUsage)
+	v8.GET("/access/key-names", s.mgmt.GetClientKeyNames) // CUSTOM (cpamc-custom)
+	v8.PATCH("/access/key-names", s.mgmt.PatchClientKeyNames)
 	v8.PUT("/observability/usage/settings", s.mgmt.PutClientUsageSettings)
 	v8.POST("/observability/usage/prices/refresh", s.mgmt.RefreshClientUsagePrices)
 	v8.GET("/observability/usage/snapshot", s.mgmt.GetUsageSnapshot) // CUSTOM (cpamc-custom): read-only quarterly-hour snapshot
