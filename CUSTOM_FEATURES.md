@@ -16,6 +16,73 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 
 ## Features
 
+### Weekly API value and subscription capacity
+
+The **Weekly usage** page (`#/usage`) is chart-first: choose an account, navigate its
+actual subscription reset weeks, and compare people by estimated API-equivalent
+USD cost and estimated share of that account's weekly quota. One client API key is
+one person; optional names replace masked keys. Each account's own weekly allowance
+is 100%, without assuming all Max/Pro/Plus plans have the same capacity. Detected plan
+labels have manual overrides. Accounts with no weekly reset show **cost only over the
+last seven days**, never a fabricated subscription percentage.
+
+Cost uses the canonical non-overlapping v2 token buckets (uncached input, cache reads,
+cache writes, and output including reasoning). A bundled native-vendor models.dev
+snapshot is available offline, refreshed every 24 hours while running; its date is
+visible. The public catalog can also be refreshed manually. Each minute/model/rate
+bucket records the rate and estimated cost at execution time, so later price changes
+never reprice history. Custom model rates override the catalog. Unknown/ambiguous
+models, incomplete accounting, missing cache rates and unsupported service tiers stay
+unpriced. This estimates standard token API value, not subscription billing, guaranteed
+savings, image/audio/tool fees or an API-dollar-to-subscription conversion.
+
+Successful quota cache reads/replays record numeric weekly observations for Claude,
+Codex, Meta, xAI, Kimi, Devin, MiniMax and Z.ai when their explicit weekly contracts are
+available. Claude uses only the account-wide `seven_day` pool, not model-specific or
+five-hour quotas. MiniMax's model pools stay separate. Other provider/plugin shapes
+remain explicitly unavailable rather than being guessed. Quota recipes must first be
+registered by opening Quota and refreshing the account; subsequently safe GET recipes
+are replayed around the clock every 10 minutes when usage collection is enabled.
+
+Between observations, measured quota increases are allocated by each key's share of
+priced API value in that interval. Usage is bucketed to UTC minutes, so attribution is
+an estimate, especially at observation/reset boundaries. Pre-tracking consumption,
+unpriced intervals, gaps over 30 minutes, and consumption with no gateway activity
+stay unattributed. Counter decreases invalidate that week's allocation rather than
+producing impossible percentages. Activity outside the gateway can still bias the
+shares and is disclosed. Missing observations and unsupported quotas are not zero.
+
+The unused-capacity chart follows each account/pool's reset weeks. Open weeks show
+**last observed remaining**, not waste. A completed week has an **unused upper bound**
+only if its final observation was within 15 minutes of reset; missing closing samples
+stay blank. No interpolation invents a final quota measurement.
+
+All endpoints use existing v8 management authentication:
+- `GET /v8/management/observability/usage/clients?from=YYYY-MM-DD&to=YYYY-MM-DD`
+  returns minute/model rows for inclusive UTC dates (default last 30 days), summarized
+  `weeks`, account/key labels, accounts, settings, collection status and catalog date.
+- `PUT /v8/management/observability/usage/settings` replaces `names`, `plans` and
+  `prices` maps. Name/plan keys are full SHA-256 identities. Model prices are USD per
+  million tokens (`input`, `output`, optional `cache_read`/`cache_write`).
+- `POST /v8/management/observability/usage/prices/refresh` fetches public prices only;
+  no usage or credentials are sent to models.dev.
+
+Data lives under `<auth-dir>/.cpamc-custom/usage-history/`: dated JSON usage buckets,
+one snapshot per account/reset pool under `cycles/`, `settings.json`, and a refreshed
+`prices.json`. Each quota update rewrites only its own week, not the full year.
+Retention is 365 days;
+files are atomically replaced with owner-only permissions and no raw API keys or
+upstream credentials. Keep the auth directory on persistent storage. This local store
+supports **one gateway process per data directory**, not shared replica aggregation.
+Use a `Recreate` deployment strategy so releases never overlap history writers.
+Restart after changing `auth-dir`. Corrupt retained data fails initialization instead
+of being overwritten. Disk failures are reported and pending counters retry on later
+events. Collection follows `observability.usage.usage-statistics-enabled`; disabling it
+preserves history. There is no historical backfill or retrospective repricing of old
+daily-only rows. The existing asynchronous usage dispatcher can briefly lag inference;
+a hard kill can lose events not yet dispatched.
+
+
 ### Native Jev decisions gateway
 
 `POST /v1/decisions` accepts the native Jev `{model, state, questions}` contract (1–48 questions, up to 1 MiB, no streaming). It uses the normal **client access key**, never a management key. Native payloads do not pass through chat translation: the usual auth manager still owns model routing, credential selection/rotation, proxy transport, payload overrides/filters and usage accounting.
@@ -43,8 +110,9 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 
 ### 2. Scheduled refresh
 
-- Every 10 minutes, only between 09:30 and 21:30 UTC-3, the backend replays every
-  cached request, for every provider, with no panel open.
+- Every 10 minutes between 09:30 and 21:30 UTC-3, the backend replays cached
+  requests with no panel open. With weekly usage collection enabled, safe GET quota
+  recipes also replay overnight so reset-week history does not depend on the UI.
 - Constants are at the top of `internal/api/handlers/management/custom_quota_cache.go`.
 - Status endpoint: `GET /v8/management/custom/quota/status` (no bodies, no tokens).
 

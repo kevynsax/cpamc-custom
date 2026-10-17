@@ -1,0 +1,4420 @@
+{
+  "as_of": "2026-10-17",
+  "models": {
+    "alibaba/deepseek-v4-flash-0731": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.04,
+      "input": 0.2,
+      "output": 0.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/glm-5.2": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.28,
+      "cache_write": 0,
+      "input": 1.4,
+      "output": 4.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/kimi-k3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qvq-max": {
+      "as_of": "2026-10-17",
+      "input": 1.2,
+      "output": 4.8,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-flash": {
+      "as_of": "2026-10-17",
+      "input": 0.05,
+      "output": 0.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-max": {
+      "as_of": "2026-10-17",
+      "input": 1.6,
+      "output": 6.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-mt-plus": {
+      "as_of": "2026-10-17",
+      "input": 2.46,
+      "output": 7.37,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-mt-turbo": {
+      "as_of": "2026-10-17",
+      "input": 0.16,
+      "output": 0.49,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-omni-turbo": {
+      "as_of": "2026-10-17",
+      "input": 0.07,
+      "output": 0.27,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-omni-turbo-realtime": {
+      "as_of": "2026-10-17",
+      "input": 0.27,
+      "output": 1.07,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-plus": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 1.2,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-plus-character-ja": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 1.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-turbo": {
+      "as_of": "2026-10-17",
+      "input": 0.05,
+      "output": 0.2,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-vl-max": {
+      "as_of": "2026-10-17",
+      "input": 0.8,
+      "output": 3.2,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-vl-ocr": {
+      "as_of": "2026-10-17",
+      "input": 0.07,
+      "output": 0.16,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen-vl-plus": {
+      "as_of": "2026-10-17",
+      "input": 0.21,
+      "output": 0.63,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen2-5-14b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.35,
+      "output": 1.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen2-5-32b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.7,
+      "output": 2.8,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen2-5-72b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 1.4,
+      "output": 5.6,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen2-5-7b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.175,
+      "output": 0.7,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen2-5-omni-7b": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen2-5-vl-72b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 2.8,
+      "output": 8.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen2-5-vl-7b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.35,
+      "output": 1.05,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-14b": {
+      "as_of": "2026-10-17",
+      "input": 0.35,
+      "output": 1.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-235b-a22b": {
+      "as_of": "2026-10-17",
+      "input": 0.7,
+      "output": 2.8,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-32b": {
+      "as_of": "2026-10-17",
+      "input": 0.7,
+      "output": 2.8,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-8b": {
+      "as_of": "2026-10-17",
+      "input": 0.18,
+      "output": 0.7,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-asr-flash": {
+      "as_of": "2026-10-17",
+      "input": 0.035,
+      "output": 0.035,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-coder-30b-a3b-instruct": {
+      "as_of": "2026-10-17",
+      "context_over": 32000,
+      "input": 0.45,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "input": 0.75,
+        "output": 3.75,
+        "source": "models.dev/alibaba"
+      },
+      "output": 2.25,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-coder-480b-a35b-instruct": {
+      "as_of": "2026-10-17",
+      "context_over": 32000,
+      "input": 1.5,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "input": 2.7,
+        "output": 13.5,
+        "source": "models.dev/alibaba"
+      },
+      "output": 7.5,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-coder-flash": {
+      "as_of": "2026-10-17",
+      "input": 0.3,
+      "output": 1.5,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-coder-plus": {
+      "as_of": "2026-10-17",
+      "input": 1,
+      "output": 5,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-livetranslate-flash-realtime": {
+      "as_of": "2026-10-17",
+      "input": 10,
+      "output": 10,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-max": {
+      "as_of": "2026-10-17",
+      "input": 1.2,
+      "output": 6,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-next-80b-a3b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 2,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-next-80b-a3b-thinking": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 6,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-omni-flash": {
+      "as_of": "2026-10-17",
+      "input": 0.43,
+      "output": 1.66,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-omni-flash-realtime": {
+      "as_of": "2026-10-17",
+      "input": 0.52,
+      "output": 1.99,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-vl-235b-a22b": {
+      "as_of": "2026-10-17",
+      "input": 0.7,
+      "output": 2.8,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-vl-30b-a3b": {
+      "as_of": "2026-10-17",
+      "input": 0.2,
+      "output": 0.8,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3-vl-plus": {
+      "as_of": "2026-10-17",
+      "input": 0.2,
+      "output": 1.6,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.5-122b-a10b": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 3.2,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.5-27b": {
+      "as_of": "2026-10-17",
+      "input": 0.3,
+      "output": 2.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.5-35b-a3b": {
+      "as_of": "2026-10-17",
+      "input": 0.25,
+      "output": 2,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.5-397b-a17b": {
+      "as_of": "2026-10-17",
+      "input": 0.6,
+      "output": 3.6,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.5-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "cache_write": 0.125,
+      "input": 0.1,
+      "output": 0.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.5-plus": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 2.4,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.6-27b": {
+      "as_of": "2026-10-17",
+      "input": 0.6,
+      "output": 3.6,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.6-35b-a3b": {
+      "as_of": "2026-10-17",
+      "input": 0.248,
+      "output": 1.485,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.6-flash": {
+      "as_of": "2026-10-17",
+      "cache_write": 0.234375,
+      "input": 0.1875,
+      "output": 1.125,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.6-max-preview": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.13,
+      "cache_write": 1.625,
+      "input": 1.3,
+      "output": 7.8,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.6-plus": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.05,
+      "cache_write": 0.625,
+      "context_over": 256000,
+      "input": 0.5,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.2,
+        "cache_write": 2.5,
+        "input": 2,
+        "output": 6,
+        "source": "models.dev/alibaba"
+      },
+      "output": 3,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.7-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.003,
+      "cache_write": 0.0375,
+      "context_over": 32000,
+      "input": 0.03,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.01,
+        "cache_write": 0.125,
+        "input": 0.1,
+        "output": 0.4,
+        "source": "models.dev/alibaba"
+      },
+      "output": 0.13,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.7-max": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 3.125,
+      "input": 2.5,
+      "output": 7.5,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.7-plus": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.04,
+      "cache_write": 0.5,
+      "context_over": 256000,
+      "input": 0.4,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.12,
+        "cache_write": 1.5,
+        "input": 1.2,
+        "output": 4.8,
+        "source": "models.dev/alibaba"
+      },
+      "output": 1.6,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.8-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.016,
+      "cache_write": 0.2,
+      "input": 0.15,
+      "output": 0.47,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.8-max": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.25,
+      "cache_write": 2.5,
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwen3.8-omni-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.016,
+      "input": 0.15,
+      "output": 0.47,
+      "source": "models.dev/alibaba"
+    },
+    "alibaba/qwq-plus": {
+      "as_of": "2026-10-17",
+      "input": 0.8,
+      "output": 2.4,
+      "source": "models.dev/alibaba"
+    },
+    "amazon-bedrock/amazon.nova-2-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.0825,
+      "cache_write": 0.33,
+      "input": 0.33,
+      "output": 2.75,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/amazon.nova-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.015,
+      "cache_write": 0.06,
+      "input": 0.06,
+      "output": 0.24,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/amazon.nova-micro-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.00875,
+      "cache_write": 0.035,
+      "input": 0.035,
+      "output": 0.14,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/amazon.nova-pro-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 0.8,
+      "input": 0.8,
+      "output": 3.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-fable-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 1,
+      "cache_write": 12.5,
+      "input": 10,
+      "output": 50,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-fable-5-1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.25,
+      "cache_write": 12.5,
+      "input": 10,
+      "output": 50,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 1.25,
+      "input": 1,
+      "output": 5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-haiku-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "cache_write": 0.125,
+      "context_over": 100000,
+      "input": 0.1,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.05,
+        "cache_write": 0.625,
+        "input": 0.5,
+        "output": 2.5,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-opus-4-1-20250805-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.5,
+      "cache_write": 18.75,
+      "input": 15,
+      "output": 75,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-opus-4-5-20251101-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-opus-4-6-v1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-opus-4-7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-opus-4-8": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-opus-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-opus-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 5,
+      "input": 4,
+      "output": 20,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-sonnet-4-6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-sonnet-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 2.5,
+      "input": 2,
+      "output": 10,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/anthropic.claude-sonnet-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 2.5,
+      "input": 2,
+      "output": 10,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/apac.amazon.nova-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01575,
+      "cache_write": 0.063,
+      "input": 0.063,
+      "output": 0.252,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/apac.amazon.nova-micro-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.00925,
+      "cache_write": 0.037,
+      "input": 0.037,
+      "output": 0.148,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/apac.amazon.nova-pro-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.21,
+      "cache_write": 0.84,
+      "input": 0.84,
+      "output": 3.36,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/apac.anthropic.claude-sonnet-4-20250514-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 1.375,
+      "input": 1.1,
+      "output": 5.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-haiku-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.011,
+      "cache_write": 0.1375,
+      "context_over": 100000,
+      "input": 0.11,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.055,
+        "cache_write": 0.6875,
+        "input": 0.55,
+        "output": 2.75,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-opus-4-6-v1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-opus-4-7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-opus-4-8": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-opus-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-opus-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 5.5,
+      "input": 4.4,
+      "output": 22,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-sonnet-4-5-20250929-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-sonnet-4-6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/au.anthropic.claude-sonnet-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "input": 2.2,
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/ca.amazon.nova-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.016,
+      "cache_write": 0.064,
+      "input": 0.064,
+      "output": 0.256,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/deepseek.r1-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 1.35,
+      "output": 5.4,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/deepseek.v3-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.58,
+      "output": 1.68,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/deepseek.v3.2": {
+      "as_of": "2026-10-17",
+      "input": 0.62,
+      "output": 1.85,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.amazon.nova-2-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.0935,
+      "cache_write": 0.374,
+      "input": 0.374,
+      "output": 3.157,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.amazon.nova-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01725,
+      "cache_write": 0.069,
+      "input": 0.069,
+      "output": 0.276,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.amazon.nova-micro-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "cache_write": 0.04,
+      "input": 0.04,
+      "output": 0.16,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.amazon.nova-pro-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.23,
+      "cache_write": 0.92,
+      "input": 0.92,
+      "output": 3.68,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-fable-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.1,
+      "cache_write": 13.75,
+      "input": 11,
+      "output": 55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 1.375,
+      "input": 1.1,
+      "output": 5.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-haiku-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.011,
+      "cache_write": 0.1375,
+      "context_over": 100000,
+      "input": 0.11,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.055,
+        "cache_write": 0.6875,
+        "input": 0.55,
+        "output": 2.75,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-opus-4-5-20251101-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-opus-4-6-v1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-opus-4-7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-opus-4-8": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-opus-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-opus-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 5.5,
+      "input": 4.4,
+      "output": 22,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-sonnet-4-20250514-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-sonnet-4-5-20250929-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-sonnet-4-6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-sonnet-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "input": 2.2,
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.anthropic.claude-sonnet-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 2.75,
+      "input": 2.2,
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/eu.mistral.pixtral-large-2502-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.amazon.nova-2-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "cache_write": 0.3,
+      "input": 0.3,
+      "output": 2.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-fable-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 1,
+      "cache_write": 12.5,
+      "input": 10,
+      "output": 50,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-fable-5-1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.25,
+      "cache_write": 12.5,
+      "input": 10,
+      "output": 50,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 1.25,
+      "input": 1,
+      "output": 5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-haiku-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "cache_write": 0.125,
+      "context_over": 100000,
+      "input": 0.1,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.05,
+        "cache_write": 0.625,
+        "input": 0.5,
+        "output": 2.5,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-opus-4-5-20251101-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-opus-4-6-v1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-opus-4-7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-opus-4-8": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-opus-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-opus-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 5,
+      "input": 4,
+      "output": 20,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-sonnet-4-20250514-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-sonnet-4-5-20250929-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-sonnet-4-6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-sonnet-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 2.5,
+      "input": 2,
+      "output": 10,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.anthropic.claude-sonnet-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 2.5,
+      "input": 2,
+      "output": 10,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.moonshotai.kimi-k3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.openai.gpt-5.6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.02,
+      "cache_write": 0.25,
+      "context_over": 272000,
+      "input": 0.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.04,
+        "cache_write": 0.5,
+        "input": 0.4,
+        "output": 1.8,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 1.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.openai.gpt-5.6-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.4,
+      "cache_write": 5,
+      "context_over": 272000,
+      "input": 4,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.8,
+        "cache_write": 10,
+        "input": 8,
+        "output": 30,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 20,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.openai.gpt-5.6-terra": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 2.5,
+      "context_over": 272000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "cache_write": 5,
+        "input": 4,
+        "output": 18,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 12,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.openai.gpt-6-astra": {
+      "as_of": "2026-10-17",
+      "cache_read": 1,
+      "cache_write": 12.5,
+      "context_over": 272000,
+      "input": 10,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 2,
+        "cache_write": 25,
+        "input": 20,
+        "output": 75,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 50,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.openai.gpt-6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "cache_write": 0.125,
+      "context_over": 272000,
+      "input": 0.1,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.02,
+        "cache_write": 0.25,
+        "input": 0.2,
+        "output": 0.75,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.openai.gpt-6-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 2.5,
+      "context_over": 272000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "cache_write": 5,
+        "input": 4,
+        "output": 15,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 10,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.openai.gpt-6.1-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 2.5,
+      "context_over": 272000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.2,
+        "cache_write": 5,
+        "input": 4,
+        "output": 15,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 10,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.xai.grok-4.6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.xai.grok-4.7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/global.zai.glm-5.3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.312,
+      "cache_write": 2.1,
+      "input": 1.68,
+      "output": 5.28,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/google.gemma-3-12b-it": {
+      "as_of": "2026-10-17",
+      "input": 0.09,
+      "output": 0.29,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/google.gemma-3-27b-it": {
+      "as_of": "2026-10-17",
+      "input": 0.23,
+      "output": 0.38,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/google.gemma-3-4b-it": {
+      "as_of": "2026-10-17",
+      "input": 0.04,
+      "output": 0.08,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/google.gemma-4-26b-a4b": {
+      "as_of": "2026-10-17",
+      "input": 0.13,
+      "output": 0.4,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/google.gemma-4-31b": {
+      "as_of": "2026-10-17",
+      "input": 0.14,
+      "output": 0.4,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/google.gemma-4-e2b": {
+      "as_of": "2026-10-17",
+      "input": 0.04,
+      "output": 0.08,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/in.anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 1.375,
+      "input": 1.1,
+      "output": 5.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/in.anthropic.claude-opus-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/in.anthropic.claude-sonnet-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "input": 2.2,
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/in.openai.gpt-5.6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.022,
+      "cache_write": 0.275,
+      "context_over": 272000,
+      "input": 0.22,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.044,
+        "cache_write": 0.55,
+        "input": 0.44,
+        "output": 1.98,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 1.32,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/in.openai.gpt-5.6-terra": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "context_over": 272000,
+      "input": 2.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.44,
+        "cache_write": 5.5,
+        "input": 4.4,
+        "output": 19.8,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 13.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.amazon.nova-2-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.099,
+      "cache_write": 0.396,
+      "input": 0.396,
+      "output": 3.311,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 1.375,
+      "input": 1.1,
+      "output": 5.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-haiku-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.011,
+      "cache_write": 0.1375,
+      "context_over": 100000,
+      "input": 0.11,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.055,
+        "cache_write": 0.6875,
+        "input": 0.55,
+        "output": 2.75,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-opus-4-7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-opus-4-8": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-opus-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-opus-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 5.5,
+      "input": 4.4,
+      "output": 22,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-sonnet-4-5-20250929-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-sonnet-4-6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/jp.anthropic.claude-sonnet-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "input": 2.2,
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/meta.llama3-1-70b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.72,
+      "output": 0.72,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/meta.llama3-1-8b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.22,
+      "output": 0.22,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/meta.llama3-3-70b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.72,
+      "output": 0.72,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/meta.llama4-maverick-17b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.24,
+      "output": 0.97,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/meta.llama4-scout-17b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.17,
+      "output": 0.66,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/minimax.minimax-m2": {
+      "as_of": "2026-10-17",
+      "input": 0.3,
+      "output": 1.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/minimax.minimax-m2.1": {
+      "as_of": "2026-10-17",
+      "input": 0.3,
+      "output": 1.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/minimax.minimax-m2.5": {
+      "as_of": "2026-10-17",
+      "input": 0.3,
+      "output": 1.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.devstral-2-123b": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.magistral-small-2509": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 1.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.ministral-3-14b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.2,
+      "output": 0.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.ministral-3-3b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.1,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.ministral-3-8b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.mistral-large-3-675b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 1.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.pixtral-large-2502-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.voxtral-mini-3b-2507": {
+      "as_of": "2026-10-17",
+      "input": 0.04,
+      "output": 0.04,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/mistral.voxtral-small-24b-2507": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.3,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/moonshot.kimi-k2-thinking": {
+      "as_of": "2026-10-17",
+      "input": 0.6,
+      "output": 2.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/moonshotai.kimi-k2.5": {
+      "as_of": "2026-10-17",
+      "input": 0.6,
+      "output": 3,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/nvidia.nemotron-nano-12b-v2": {
+      "as_of": "2026-10-17",
+      "input": 0.2,
+      "output": 0.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/nvidia.nemotron-nano-3-30b": {
+      "as_of": "2026-10-17",
+      "input": 0.06,
+      "output": 0.24,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/nvidia.nemotron-nano-9b-v2": {
+      "as_of": "2026-10-17",
+      "input": 0.06,
+      "output": 0.23,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/nvidia.nemotron-super-3-120b": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.65,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-5.4": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.275,
+      "input": 2.75,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-5.5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "input": 5.5,
+      "output": 33,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-5.6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.022,
+      "cache_write": 0.275,
+      "context_over": 272000,
+      "input": 0.22,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.044,
+        "cache_write": 0.55,
+        "input": 0.44,
+        "output": 1.98,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 1.32,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-5.6-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.44,
+      "cache_write": 5.5,
+      "context_over": 272000,
+      "input": 4.4,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.88,
+        "cache_write": 11,
+        "input": 8.8,
+        "output": 33,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 22,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-5.6-terra": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "context_over": 272000,
+      "input": 2.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.44,
+        "cache_write": 5.5,
+        "input": 4.4,
+        "output": 19.8,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 13.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-6-astra": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.1,
+      "cache_write": 13.75,
+      "context_over": 272000,
+      "input": 11,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 2.2,
+        "cache_write": 27.5,
+        "input": 22,
+        "output": 82.5,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.011,
+      "cache_write": 0.1375,
+      "context_over": 272000,
+      "input": 0.11,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.022,
+        "cache_write": 0.275,
+        "input": 0.22,
+        "output": 0.825,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-6-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "context_over": 272000,
+      "input": 2.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.44,
+        "cache_write": 5.5,
+        "input": 4.4,
+        "output": 16.5,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-6.1-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 2.75,
+      "context_over": 272000,
+      "input": 2.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.22,
+        "cache_write": 5.5,
+        "input": 4.4,
+        "output": 16.5,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-oss-120b": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-oss-120b-1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-oss-20b": {
+      "as_of": "2026-10-17",
+      "input": 0.07,
+      "output": 0.3,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-oss-20b-1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.07,
+      "output": 0.3,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-oss-safeguard-120b": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/openai.gpt-oss-safeguard-20b": {
+      "as_of": "2026-10-17",
+      "input": 0.07,
+      "output": 0.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/qwen.qwen3-235b-a22b-2507-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.22,
+      "output": 0.88,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/qwen.qwen3-32b-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/qwen.qwen3-coder-30b-a3b-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/qwen.qwen3-coder-480b-a35b-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.45,
+      "output": 1.8,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/qwen.qwen3-coder-next": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 1.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/qwen.qwen3-next-80b-a3b": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 1.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/qwen.qwen3-vl-235b-a22b": {
+      "as_of": "2026-10-17",
+      "input": 0.53,
+      "output": 2.66,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us-gov.openai.gpt-oss-120b-1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.18,
+      "output": 0.72,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us-gov.openai.gpt-oss-20b-1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.084,
+      "output": 0.36,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.amazon.nova-2-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.0825,
+      "cache_write": 0.33,
+      "input": 0.33,
+      "output": 2.75,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.amazon.nova-lite-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.015,
+      "cache_write": 0.06,
+      "input": 0.06,
+      "output": 0.24,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.amazon.nova-micro-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.00875,
+      "cache_write": 0.035,
+      "input": 0.035,
+      "output": 0.14,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.amazon.nova-premier-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.625,
+      "cache_write": 2.5,
+      "input": 2.5,
+      "output": 12.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.amazon.nova-pro-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 0.8,
+      "input": 0.8,
+      "output": 3.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-fable-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.1,
+      "cache_write": 13.75,
+      "input": 11,
+      "output": 55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-fable-5-1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.275,
+      "cache_write": 13.75,
+      "input": 11,
+      "output": 55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 1.375,
+      "input": 1.1,
+      "output": 5.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-haiku-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.011,
+      "cache_write": 0.1375,
+      "context_over": 100000,
+      "input": 0.11,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.055,
+        "cache_write": 0.6875,
+        "input": 0.55,
+        "output": 2.75,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-opus-4-1-20250805-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.5,
+      "cache_write": 18.75,
+      "input": 15,
+      "output": 75,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-opus-4-5-20251101-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-opus-4-6-v1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-opus-4-7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-opus-4-8": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-opus-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "cache_write": 6.875,
+      "input": 5.5,
+      "output": 27.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-opus-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 5.5,
+      "input": 4.4,
+      "output": 22,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-sonnet-4-20250514-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-sonnet-4-5-20250929-v1:0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-sonnet-4-6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-sonnet-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "input": 2.2,
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.anthropic.claude-sonnet-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 2.75,
+      "input": 2.2,
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.deepseek.r1-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 1.35,
+      "output": 5.4,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.meta.llama3-1-70b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.72,
+      "output": 0.72,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.meta.llama3-1-8b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.22,
+      "output": 0.22,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.meta.llama3-3-70b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.72,
+      "output": 0.72,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.meta.llama4-maverick-17b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.24,
+      "output": 0.97,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.meta.llama4-scout-17b-instruct-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.17,
+      "output": 0.66,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.mistral.pixtral-large-2502-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.moonshotai.kimi-k3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.33,
+      "cache_write": 4.125,
+      "input": 3.3,
+      "output": 16.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.openai.gpt-5.6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.022,
+      "cache_write": 0.275,
+      "context_over": 272000,
+      "input": 0.22,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.044,
+        "cache_write": 0.55,
+        "input": 0.44,
+        "output": 1.98,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 1.32,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.openai.gpt-5.6-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.44,
+      "cache_write": 5.5,
+      "context_over": 272000,
+      "input": 4.4,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.88,
+        "cache_write": 11,
+        "input": 8.8,
+        "output": 33,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 22,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.openai.gpt-5.6-terra": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "context_over": 272000,
+      "input": 2.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.44,
+        "cache_write": 5.5,
+        "input": 4.4,
+        "output": 19.8,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 13.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.openai.gpt-6-astra": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.1,
+      "cache_write": 13.75,
+      "context_over": 272000,
+      "input": 11,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 2.2,
+        "cache_write": 27.5,
+        "input": 22,
+        "output": 82.5,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.openai.gpt-6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.011,
+      "cache_write": 0.1375,
+      "context_over": 272000,
+      "input": 0.11,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.022,
+        "cache_write": 0.275,
+        "input": 0.22,
+        "output": 0.825,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 0.55,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.openai.gpt-6-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.22,
+      "cache_write": 2.75,
+      "context_over": 272000,
+      "input": 2.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.44,
+        "cache_write": 5.5,
+        "input": 4.4,
+        "output": 16.5,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.openai.gpt-6.1-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 2.75,
+      "context_over": 272000,
+      "input": 2.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.22,
+        "cache_write": 5.5,
+        "input": 4.4,
+        "output": 16.5,
+        "source": "models.dev/amazon-bedrock"
+      },
+      "output": 11,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.writer.palmyra-x4-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.writer.palmyra-x5-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.6,
+      "output": 6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.xai.grok-4.6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "input": 2.2,
+      "output": 6.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.xai.grok-4.7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "input": 2.2,
+      "output": 6.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/us.zai.glm-5.3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3432,
+      "cache_write": 2.31,
+      "input": 1.848,
+      "output": 5.808,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/writer.palmyra-x4-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/writer.palmyra-x5-v1:0": {
+      "as_of": "2026-10-17",
+      "input": 0.6,
+      "output": 6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/xai.grok-4.3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "input": 1.25,
+      "output": 2.5,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/xai.grok-4.6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "input": 2.2,
+      "output": 6.6,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/zai.glm-4.7": {
+      "as_of": "2026-10-17",
+      "input": 0.6,
+      "output": 2.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/zai.glm-4.7-flash": {
+      "as_of": "2026-10-17",
+      "input": 0.07,
+      "output": 0.4,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "amazon-bedrock/zai.glm-5": {
+      "as_of": "2026-10-17",
+      "input": 1,
+      "output": 3.2,
+      "source": "models.dev/amazon-bedrock"
+    },
+    "anthropic/claude-fable-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 1,
+      "cache_write": 12.5,
+      "input": 10,
+      "output": 50,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-fable-5-1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.25,
+      "cache_write": 12.5,
+      "input": 10,
+      "output": 50,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-haiku-4-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 1.25,
+      "input": 1,
+      "output": 5,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-haiku-4-5-20251001": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 1.25,
+      "input": 1,
+      "output": 5,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-haiku-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "cache_write": 0.125,
+      "context_over": 100000,
+      "input": 0.1,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.05,
+        "cache_write": 0.625,
+        "input": 0.5,
+        "output": 2.5,
+        "source": "models.dev/anthropic"
+      },
+      "output": 0.5,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-opus-4-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-opus-4-5-20251101": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-opus-4-6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-opus-4-7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-opus-4-8": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-opus-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "cache_write": 6.25,
+      "input": 5,
+      "output": 25,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-opus-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 5,
+      "input": 4,
+      "output": 20,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-sonnet-4-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-sonnet-4-5-20250929": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-sonnet-4-6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-sonnet-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 2.5,
+      "input": 2,
+      "output": 10,
+      "source": "models.dev/anthropic"
+    },
+    "anthropic/claude-sonnet-5-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 2.5,
+      "input": 2,
+      "output": 10,
+      "source": "models.dev/anthropic"
+    },
+    "cohere/command-a-03-2025": {
+      "as_of": "2026-10-17",
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/cohere"
+    },
+    "cohere/command-a-plus-05-2026": {
+      "as_of": "2026-10-17",
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/cohere"
+    },
+    "cohere/command-a-reasoning-08-2025": {
+      "as_of": "2026-10-17",
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/cohere"
+    },
+    "cohere/command-a-translate-08-2025": {
+      "as_of": "2026-10-17",
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/cohere"
+    },
+    "cohere/command-a-vision-07-2025": {
+      "as_of": "2026-10-17",
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/cohere"
+    },
+    "cohere/command-r-08-2024": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/cohere"
+    },
+    "cohere/command-r-plus-08-2024": {
+      "as_of": "2026-10-17",
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/cohere"
+    },
+    "cohere/command-r7b-12-2024": {
+      "as_of": "2026-10-17",
+      "input": 0.0375,
+      "output": 0.15,
+      "source": "models.dev/cohere"
+    },
+    "cohere/command-r7b-arabic-02-2025": {
+      "as_of": "2026-10-17",
+      "input": 0.0375,
+      "output": 0.15,
+      "source": "models.dev/cohere"
+    },
+    "cohere/north-mini-code-1-0": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/cohere"
+    },
+    "cohere/north-small-translate-09-2026": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/cohere"
+    },
+    "deepseek/deepseek-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.003,
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/deepseek"
+    },
+    "deepseek/deepseek-v4-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.003,
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/deepseek"
+    },
+    "deepseek/deepseek-v4-flash-vision-exp": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.003,
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/deepseek"
+    },
+    "deepseek/deepseek-v4-pro": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.022,
+      "input": 0.66,
+      "output": 1.98,
+      "source": "models.dev/deepseek"
+    },
+    "google/deep-research-max-preview-04-2026": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 4,
+        "output": 18,
+        "source": "models.dev/google"
+      },
+      "output": 12,
+      "source": "models.dev/google"
+    },
+    "google/deep-research-preview-04-2026": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 4,
+        "output": 18,
+        "source": "models.dev/google"
+      },
+      "output": 12,
+      "source": "models.dev/google"
+    },
+    "google/gemini-2.5-computer-use-preview-10-2025": {
+      "as_of": "2026-10-17",
+      "context_over": 200000,
+      "input": 1.25,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "input": 2.5,
+        "output": 15,
+        "source": "models.dev/google"
+      },
+      "output": 10,
+      "source": "models.dev/google"
+    },
+    "google/gemini-2.5-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "input": 0.3,
+      "output": 2.5,
+      "source": "models.dev/google"
+    },
+    "google/gemini-2.5-flash-image": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "input": 0.3,
+      "output": 30,
+      "source": "models.dev/google"
+    },
+    "google/gemini-2.5-flash-lite": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "input": 0.1,
+      "output": 0.4,
+      "source": "models.dev/google"
+    },
+    "google/gemini-2.5-flash-preview-tts": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 10,
+      "source": "models.dev/google"
+    },
+    "google/gemini-2.5-pro": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.125,
+      "context_over": 200000,
+      "input": 1.25,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.25,
+        "input": 2.5,
+        "output": 15,
+        "source": "models.dev/google"
+      },
+      "output": 10,
+      "source": "models.dev/google"
+    },
+    "google/gemini-2.5-pro-preview-tts": {
+      "as_of": "2026-10-17",
+      "input": 1,
+      "output": 20,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3-flash-preview": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.05,
+      "input": 0.5,
+      "output": 3,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3-pro-image": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 120,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3-pro-image-preview": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 120,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-flash-image": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 60,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-flash-image-preview": {
+      "as_of": "2026-10-17",
+      "input": 0.5,
+      "output": 60,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-flash-lite": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.025,
+      "input": 0.25,
+      "output": 1.5,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-flash-lite-image": {
+      "as_of": "2026-10-17",
+      "input": 0.25,
+      "output": 30,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-flash-lite-preview": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.025,
+      "input": 0.25,
+      "output": 1.5,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-flash-live-preview": {
+      "as_of": "2026-10-17",
+      "input": 0.75,
+      "output": 4.5,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-flash-tts-preview": {
+      "as_of": "2026-10-17",
+      "input": 1,
+      "output": 20,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-pro-preview": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 4,
+        "output": 18,
+        "source": "models.dev/google"
+      },
+      "output": 12,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.1-pro-preview-customtools": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 4,
+        "output": 18,
+        "source": "models.dev/google"
+      },
+      "output": 12,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.5-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.15,
+      "input": 1.5,
+      "output": 9,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.5-flash-lite": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "input": 0.3,
+      "output": 2.5,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.5-live-translate-preview": {
+      "as_of": "2026-10-17",
+      "input": 3.5,
+      "output": 21,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.6-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "input": 0.75,
+      "output": 3.75,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.7-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "input": 0.75,
+      "output": 3.75,
+      "source": "models.dev/google"
+    },
+    "google/gemini-3.8-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "input": 0.75,
+      "output": 3.75,
+      "source": "models.dev/google"
+    },
+    "google/gemini-4-argon": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "input": 2,
+      "output": 10,
+      "source": "models.dev/google"
+    },
+    "google/gemini-embedding-001": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0,
+      "source": "models.dev/google"
+    },
+    "google/gemini-embedding-2": {
+      "as_of": "2026-10-17",
+      "input": 0.2,
+      "output": 0,
+      "source": "models.dev/google"
+    },
+    "google/gemini-flash-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "input": 0.75,
+      "output": 3.75,
+      "source": "models.dev/google"
+    },
+    "google/gemini-flash-lite-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "input": 0.3,
+      "output": 2.5,
+      "source": "models.dev/google"
+    },
+    "google/gemini-omni-flash-preview": {
+      "as_of": "2026-10-17",
+      "input": 1.5,
+      "output": 17.5,
+      "source": "models.dev/google"
+    },
+    "google/lyria-3-clip-preview": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/google"
+    },
+    "google/lyria-3-pro-preview": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/google"
+    },
+    "meta/muse-spark-1.1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.15,
+      "input": 1.25,
+      "output": 4.25,
+      "source": "models.dev/meta"
+    },
+    "meta/muse-spark-1.2": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.15,
+      "input": 1.25,
+      "output": 4.25,
+      "source": "models.dev/meta"
+    },
+    "meta/muse-spark-1.2-contributor": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.002,
+      "input": 0.1,
+      "output": 0.2,
+      "source": "models.dev/meta"
+    },
+    "meta/muse-spark-1.3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.15,
+      "input": 1.25,
+      "output": 4.25,
+      "source": "models.dev/meta"
+    },
+    "meta/muse-spark-1.3-contributor": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.002,
+      "input": 0.1,
+      "output": 0.2,
+      "source": "models.dev/meta"
+    },
+    "meta/muse-wonder-1.0": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "input": 4,
+      "output": 20,
+      "source": "models.dev/meta"
+    },
+    "minimax/MiniMax-M2": {
+      "as_of": "2026-10-17",
+      "input": 0.3,
+      "output": 1.2,
+      "source": "models.dev/minimax"
+    },
+    "minimax/MiniMax-M2.1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "cache_write": 0.375,
+      "input": 0.3,
+      "output": 1.2,
+      "source": "models.dev/minimax"
+    },
+    "minimax/MiniMax-M2.5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "cache_write": 0.375,
+      "input": 0.3,
+      "output": 1.2,
+      "source": "models.dev/minimax"
+    },
+    "minimax/MiniMax-M2.5-highspeed": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "cache_write": 0.375,
+      "input": 0.6,
+      "output": 2.4,
+      "source": "models.dev/minimax"
+    },
+    "minimax/MiniMax-M2.7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.06,
+      "cache_write": 0.375,
+      "input": 0.3,
+      "output": 1.2,
+      "source": "models.dev/minimax"
+    },
+    "minimax/MiniMax-M2.7-highspeed": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.06,
+      "cache_write": 0.375,
+      "input": 0.6,
+      "output": 2.4,
+      "source": "models.dev/minimax"
+    },
+    "minimax/MiniMax-M3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.06,
+      "context_over": 512000,
+      "input": 0.3,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.12,
+        "input": 0.6,
+        "output": 2.4,
+        "source": "models.dev/minimax"
+      },
+      "output": 1.2,
+      "source": "models.dev/minimax"
+    },
+    "mistral/codestral-2508": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "input": 0.3,
+      "output": 0.9,
+      "source": "models.dev/mistral"
+    },
+    "mistral/codestral-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "input": 0.3,
+      "output": 0.9,
+      "source": "models.dev/mistral"
+    },
+    "mistral/devstral-2512": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 2,
+      "source": "models.dev/mistral"
+    },
+    "mistral/devstral-latest": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 2,
+      "source": "models.dev/mistral"
+    },
+    "mistral/devstral-medium-2507": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 2,
+      "source": "models.dev/mistral"
+    },
+    "mistral/devstral-medium-latest": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 2,
+      "source": "models.dev/mistral"
+    },
+    "mistral/devstral-small-2505": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.3,
+      "source": "models.dev/mistral"
+    },
+    "mistral/devstral-small-2507": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.3,
+      "source": "models.dev/mistral"
+    },
+    "mistral/glm-5-2": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.14,
+      "input": 1.4,
+      "output": 4.4,
+      "source": "models.dev/mistral"
+    },
+    "mistral/labs-devstral-small-2512": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/mistral"
+    },
+    "mistral/labs-leanstral-1-5-1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/mistral"
+    },
+    "mistral/magistral-medium-latest": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 5,
+      "source": "models.dev/mistral"
+    },
+    "mistral/ministral-14b-2512": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.02,
+      "input": 0.2,
+      "output": 0.2,
+      "source": "models.dev/mistral"
+    },
+    "mistral/ministral-3b-2512": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "input": 0.1,
+      "output": 0.1,
+      "source": "models.dev/mistral"
+    },
+    "mistral/ministral-3b-latest": {
+      "as_of": "2026-10-17",
+      "input": 0.04,
+      "output": 0.04,
+      "source": "models.dev/mistral"
+    },
+    "mistral/ministral-8b-2512": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.015,
+      "input": 0.15,
+      "output": 0.15,
+      "source": "models.dev/mistral"
+    },
+    "mistral/ministral-8b-latest": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.1,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-embed": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-large-2411": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-large-2512": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.05,
+      "input": 0.5,
+      "output": 1.5,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-large-4": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.07,
+      "input": 0.68,
+      "output": 2.09,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-large-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.05,
+      "input": 0.5,
+      "output": 1.5,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-medium-2505": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 2,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-medium-2508": {
+      "as_of": "2026-10-17",
+      "input": 0.4,
+      "output": 2,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-medium-2604": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.15,
+      "input": 1.5,
+      "output": 7.5,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-medium-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.15,
+      "input": 1.5,
+      "output": 7.5,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-nemo": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.15,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-small-2506": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.3,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-small-2603": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.015,
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/mistral"
+    },
+    "mistral/mistral-small-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.015,
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/mistral"
+    },
+    "mistral/open-mistral-7b": {
+      "as_of": "2026-10-17",
+      "input": 0.25,
+      "output": 0.25,
+      "source": "models.dev/mistral"
+    },
+    "mistral/open-mistral-nemo": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.15,
+      "source": "models.dev/mistral"
+    },
+    "mistral/open-mixtral-8x22b": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/mistral"
+    },
+    "mistral/open-mixtral-8x7b": {
+      "as_of": "2026-10-17",
+      "input": 0.7,
+      "output": 0.7,
+      "source": "models.dev/mistral"
+    },
+    "mistral/pixtral-12b": {
+      "as_of": "2026-10-17",
+      "input": 0.15,
+      "output": 0.15,
+      "source": "models.dev/mistral"
+    },
+    "mistral/pixtral-large-latest": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 6,
+      "source": "models.dev/mistral"
+    },
+    "mistral/voxtral-small-2507": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.4,
+      "source": "models.dev/mistral"
+    },
+    "mistral/voxtral-small-latest": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0.3,
+      "source": "models.dev/mistral"
+    },
+    "mistral/zai-glm-5-2": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.14,
+      "input": 1.4,
+      "output": 4.4,
+      "source": "models.dev/mistral"
+    },
+    "mistral/zai-glm-5-3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.14,
+      "input": 1.4,
+      "output": 4.4,
+      "source": "models.dev/mistral"
+    },
+    "moonshotai/kimi-k2.6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.16,
+      "input": 0.95,
+      "output": 4,
+      "source": "models.dev/moonshotai"
+    },
+    "moonshotai/kimi-k2.7-code": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.19,
+      "input": 0.95,
+      "output": 4,
+      "source": "models.dev/moonshotai"
+    },
+    "moonshotai/kimi-k2.7-code-highspeed": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.38,
+      "input": 1.9,
+      "output": 8,
+      "source": "models.dev/moonshotai"
+    },
+    "moonshotai/kimi-k3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "cache_write": 3,
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/moonshotai"
+    },
+    "nvidia/abacusai/dracarys-llama-3.1-70b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/baai/bge-m3": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/black-forest-labs/flux.1-dev": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/black-forest-labs/flux_1-kontext-dev": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/black-forest-labs/flux_1-schnell": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/black-forest-labs/flux_2-klein-4b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/bytedance/seed-oss-36b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/deepseek-ai/deepseek-v4-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.0028,
+      "input": 0.14,
+      "output": 0.28,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/deepseek-ai/deepseek-v4-flash-0731": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/deepseek-ai/deepseek-v4-pro": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.003625,
+      "input": 0.435,
+      "output": 0.87,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/deepseek-ai/deepseek-v4-pro-0813": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/deepseek-ai/deepseek-v4.1-flash": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/google/diffusiongemma-26b-a4b-it": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/google/gemma-2-2b-it": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/google/gemma-3-12b-it": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/google/gemma-3-4b-it": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/google/gemma-3n-e2b-it": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/google/gemma-3n-e4b-it": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/google/gemma-4-31b-it": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/google/google-paligemma": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/esm2-650m": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/esmfold": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-3.1-70b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-3.1-8b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-3.2-11b-vision-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-3.2-1b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-3.2-3b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-3.2-90b-vision-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-3.3-70b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-4-maverick-17b-128e-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/llama-guard-4-12b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/meta/muse-glimmer-30b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/microsoft/phi-4-mini-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/microsoft/phi-4-multimodal-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/minimaxai/minimax-m2.7": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/minimaxai/minimax-m3": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/magistral-small-2506": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/ministral-14b-instruct-2512": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/mistral-7b-instruct-v0.3": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/mistral-large-3-675b-instruct-2512": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/mistral-medium-3-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/mistral-medium-3.5-128b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/mistral-nemotron": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/mistral-small-4-119b-2603": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/mixtral-8x22b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/mistralai/mixtral-8x7b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/moonshotai/kimi-k2.6": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/moonshotai/kimi-k3": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/active-speaker-detection": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/bevformer": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/cosmos-predict1-5b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/cosmos-reason2-8b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/cosmos-transfer1-7b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/cosmos-transfer2_5-2b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/gliner-pii": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-3.1-nemotron-70b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-3.1-nemotron-nano-8b-v1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-3.1-nemotron-nano-vl-8b-v1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-3.1-nemotron-safety-guard-8b-v3": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-3.1-nemotron-ultra-253b-v1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-3.3-nemotron-super-49b-v1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-3.3-nemotron-super-49b-v1.5": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-3_2-nemoretriever-300m-embed-v1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-nemotron-embed-vl-1b-v2": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/llama-nemotron-rerank-vl-1b-v2": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/magpie-tts-zeroshot": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-3-content-safety": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-3-nano-30b-a3b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-3-ultra-550b-a55b": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.15,
+      "input": 0.5,
+      "output": 2.5,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-3.5-content-safety": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-content-safety-reasoning-4b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-mini-4b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-nano-12b-v2-vl": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nemotron-voicechat": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nv-embed-v1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nv-embedcode-7b-v1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/nvidia-nemotron-nano-9b-v2": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/rerank-qa-mistral-4b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/riva-translate-4b-instruct-v1.1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/sparsedrive": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/streampetr": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/studiovoice": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/synthetic-video-detector": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/usdcode": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/nvidia/usdvalidate": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/openai/gpt-oss-20b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/openai/whisper-large-v3": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/poolside/laguna-xs-2.1": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/qwen/qwen-image": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/qwen/qwen-image-edit": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/qwen/qwen2.5-coder-32b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/qwen/qwen3-coder-480b-a35b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/qwen/qwen3-next-80b-a3b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/qwen/qwen3.5-122b-a10b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/qwen/qwen3.5-397b-a17b": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/sarvamai/sarvam-m": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/stepfun-ai/step-3.5-flash": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/stepfun-ai/step-3.7-flash": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/thinkingmachines/inkling": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/upstage/solar-10.7b-instruct": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/z-ai/glm-5.2": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/z-ai/glm-5.3": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "nvidia/z-ai/glm-5.3-flash": {
+      "as_of": "2026-10-17",
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/nvidia"
+    },
+    "openai/gpt-3.5-turbo": {
+      "as_of": "2026-10-17",
+      "cache_read": 0,
+      "input": 0.5,
+      "output": 1.5,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4": {
+      "as_of": "2026-10-17",
+      "input": 30,
+      "output": 60,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4-turbo": {
+      "as_of": "2026-10-17",
+      "input": 10,
+      "output": 30,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4.1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "input": 2,
+      "output": 8,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4.1-mini": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "input": 0.4,
+      "output": 1.6,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4.1-nano": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.025,
+      "input": 0.1,
+      "output": 0.4,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4o": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.25,
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4o-2024-05-13": {
+      "as_of": "2026-10-17",
+      "input": 5,
+      "output": 15,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4o-2024-08-06": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.25,
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4o-2024-11-20": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.25,
+      "input": 2.5,
+      "output": 10,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-4o-mini": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "input": 0.15,
+      "output": 0.6,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.125,
+      "input": 1.25,
+      "output": 10,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5-mini": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.025,
+      "input": 0.25,
+      "output": 2,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5-nano": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.005,
+      "input": 0.05,
+      "output": 0.4,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5-pro": {
+      "as_of": "2026-10-17",
+      "input": 15,
+      "output": 120,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.125,
+      "input": 1.25,
+      "output": 10,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.2": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.175,
+      "input": 1.75,
+      "output": 14,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.2-chat-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.175,
+      "input": 1.75,
+      "output": 14,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.2-pro": {
+      "as_of": "2026-10-17",
+      "input": 21,
+      "output": 168,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.3-chat-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.175,
+      "input": 1.75,
+      "output": 14,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.3-codex": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.175,
+      "input": 1.75,
+      "output": 14,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.3-codex-spark": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.175,
+      "input": 1.75,
+      "output": 14,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.4": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.25,
+      "context_over": 272000,
+      "input": 2.5,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.5,
+        "input": 5,
+        "output": 22.5,
+        "source": "models.dev/openai"
+      },
+      "output": 15,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.4-mini": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "input": 0.75,
+      "output": 4.5,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.4-nano": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.02,
+      "input": 0.2,
+      "output": 1.25,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.4-pro": {
+      "as_of": "2026-10-17",
+      "context_over": 272000,
+      "input": 30,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "input": 60,
+        "output": 270,
+        "source": "models.dev/openai"
+      },
+      "output": 180,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "context_over": 272000,
+      "input": 5,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 1,
+        "input": 10,
+        "output": 45,
+        "source": "models.dev/openai"
+      },
+      "output": 30,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.5-pro": {
+      "as_of": "2026-10-17",
+      "context_over": 272000,
+      "input": 30,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "input": 60,
+        "output": 270,
+        "source": "models.dev/openai"
+      },
+      "output": 180,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.4,
+      "cache_write": 5,
+      "context_over": 272000,
+      "input": 4,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.8,
+        "cache_write": 10,
+        "input": 8,
+        "output": 30,
+        "source": "models.dev/openai"
+      },
+      "output": 20,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.02,
+      "cache_write": 0.25,
+      "context_over": 272000,
+      "input": 0.2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.04,
+        "cache_write": 0.5,
+        "input": 0.4,
+        "output": 1.8,
+        "source": "models.dev/openai"
+      },
+      "output": 1.2,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.6-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.4,
+      "cache_write": 5,
+      "context_over": 272000,
+      "input": 4,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.8,
+        "cache_write": 10,
+        "input": 8,
+        "output": 30,
+        "source": "models.dev/openai"
+      },
+      "output": 20,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-5.6-terra": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 2.5,
+      "context_over": 272000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "cache_write": 5,
+        "input": 4,
+        "output": 18,
+        "source": "models.dev/openai"
+      },
+      "output": 12,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-6-astra": {
+      "as_of": "2026-10-17",
+      "cache_read": 1,
+      "cache_write": 12.5,
+      "context_over": 272000,
+      "input": 10,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 2,
+        "cache_write": 25,
+        "input": 20,
+        "output": 75,
+        "source": "models.dev/openai"
+      },
+      "output": 50,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-6-luna": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "cache_write": 0.125,
+      "context_over": 272000,
+      "input": 0.1,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.02,
+        "cache_write": 0.25,
+        "input": 0.2,
+        "output": 0.75,
+        "source": "models.dev/openai"
+      },
+      "output": 0.5,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-6-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 2.5,
+      "context_over": 272000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "cache_write": 5,
+        "input": 4,
+        "output": 15,
+        "source": "models.dev/openai"
+      },
+      "output": 10,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-6.1-sol": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.1,
+      "cache_write": 2.5,
+      "context_over": 272000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.2,
+        "cache_write": 5,
+        "input": 4,
+        "output": 15,
+        "source": "models.dev/openai"
+      },
+      "output": 10,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-daybreak-blue-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.4,
+      "cache_write": 5,
+      "context_over": 272000,
+      "input": 4,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.8,
+        "cache_write": 10,
+        "input": 8,
+        "output": 30,
+        "source": "models.dev/openai"
+      },
+      "output": 20,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-daybreak-red-latest": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.25,
+      "cache_write": 15.625,
+      "input": 12.5,
+      "output": 75,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-image-2": {
+      "as_of": "2026-10-17",
+      "cache_read": 1.25,
+      "input": 5,
+      "output": 30,
+      "source": "models.dev/openai"
+    },
+    "openai/gpt-realtime-2.1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.4,
+      "input": 4,
+      "output": 24,
+      "source": "models.dev/openai"
+    },
+    "openai/o1": {
+      "as_of": "2026-10-17",
+      "cache_read": 7.5,
+      "input": 15,
+      "output": 60,
+      "source": "models.dev/openai"
+    },
+    "openai/o1-pro": {
+      "as_of": "2026-10-17",
+      "input": 150,
+      "output": 600,
+      "source": "models.dev/openai"
+    },
+    "openai/o3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "input": 2,
+      "output": 8,
+      "source": "models.dev/openai"
+    },
+    "openai/o3-mini": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.55,
+      "input": 1.1,
+      "output": 4.4,
+      "source": "models.dev/openai"
+    },
+    "openai/o3-pro": {
+      "as_of": "2026-10-17",
+      "input": 20,
+      "output": 80,
+      "source": "models.dev/openai"
+    },
+    "openai/o4-mini": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.275,
+      "input": 1.1,
+      "output": 4.4,
+      "source": "models.dev/openai"
+    },
+    "openai/text-embedding-3-large": {
+      "as_of": "2026-10-17",
+      "input": 0.13,
+      "output": 0,
+      "source": "models.dev/openai"
+    },
+    "openai/text-embedding-3-small": {
+      "as_of": "2026-10-17",
+      "input": 0.02,
+      "output": 0,
+      "source": "models.dev/openai"
+    },
+    "openai/text-embedding-ada-002": {
+      "as_of": "2026-10-17",
+      "input": 0.1,
+      "output": 0,
+      "source": "models.dev/openai"
+    },
+    "perplexity/sonar": {
+      "as_of": "2026-10-17",
+      "input": 1,
+      "output": 1,
+      "source": "models.dev/perplexity"
+    },
+    "perplexity/sonar-deep-research": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 8,
+      "source": "models.dev/perplexity"
+    },
+    "perplexity/sonar-pro": {
+      "as_of": "2026-10-17",
+      "input": 3,
+      "output": 15,
+      "source": "models.dev/perplexity"
+    },
+    "perplexity/sonar-reasoning-pro": {
+      "as_of": "2026-10-17",
+      "input": 2,
+      "output": 8,
+      "source": "models.dev/perplexity"
+    },
+    "xai/grok-4.20-0309-non-reasoning": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 1.25,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 2.5,
+        "output": 5,
+        "source": "models.dev/xai"
+      },
+      "output": 2.5,
+      "source": "models.dev/xai"
+    },
+    "xai/grok-4.20-0309-reasoning": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 1.25,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 2.5,
+        "output": 5,
+        "source": "models.dev/xai"
+      },
+      "output": 2.5,
+      "source": "models.dev/xai"
+    },
+    "xai/grok-4.20-multi-agent-0309": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 1.25,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 2.5,
+        "output": 5,
+        "source": "models.dev/xai"
+      },
+      "output": 2.5,
+      "source": "models.dev/xai"
+    },
+    "xai/grok-4.3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 1.25,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 2.5,
+        "output": 5,
+        "source": "models.dev/xai"
+      },
+      "output": 2.5,
+      "source": "models.dev/xai"
+    },
+    "xai/grok-4.5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.3,
+      "context_over": 200000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.6,
+        "input": 4,
+        "output": 12,
+        "source": "models.dev/xai"
+      },
+      "output": 6,
+      "source": "models.dev/xai"
+    },
+    "xai/grok-4.6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "context_over": 200000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 1,
+        "input": 4,
+        "output": 12,
+        "source": "models.dev/xai"
+      },
+      "output": 6,
+      "source": "models.dev/xai"
+    },
+    "xai/grok-4.7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.5,
+      "context_over": 200000,
+      "input": 2,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 1,
+        "input": 4,
+        "output": 12,
+        "source": "models.dev/xai"
+      },
+      "output": 6,
+      "source": "models.dev/xai"
+    },
+    "xai/grok-build-0.1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "context_over": 200000,
+      "input": 1,
+      "long_context": {
+        "as_of": "2026-10-17",
+        "cache_read": 0.4,
+        "input": 2,
+        "output": 4,
+        "source": "models.dev/xai"
+      },
+      "output": 2,
+      "source": "models.dev/xai"
+    },
+    "zai/glm-4.5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 0,
+      "input": 0.6,
+      "output": 2.2,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.5-air": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "cache_write": 0,
+      "input": 0.2,
+      "output": 1.1,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.5-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.5v": {
+      "as_of": "2026-10-17",
+      "input": 0.6,
+      "output": 1.8,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.6": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 0,
+      "input": 0.6,
+      "output": 2.2,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.6v": {
+      "as_of": "2026-10-17",
+      "input": 0.3,
+      "output": 0.9,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.6v-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.7": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.11,
+      "cache_write": 0,
+      "input": 0.6,
+      "output": 2.2,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.7-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-4.7-flashx": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.01,
+      "cache_write": 0,
+      "input": 0.07,
+      "output": 0.4,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-5": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.2,
+      "cache_write": 0,
+      "input": 1,
+      "output": 3.2,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-5-turbo": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.24,
+      "cache_write": 0,
+      "input": 1.2,
+      "output": 4,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-5.1": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.26,
+      "cache_write": 0,
+      "input": 1.4,
+      "output": 4.4,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-5.2": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.26,
+      "cache_write": 0,
+      "input": 1.4,
+      "output": 4.4,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-5.3": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.26,
+      "cache_write": 0,
+      "input": 1.4,
+      "output": 4.4,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-5.3-flash": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.03,
+      "cache_write": 0,
+      "input": 0.15,
+      "output": 0.5,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-5.3-flashx": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.075,
+      "cache_write": 0,
+      "input": 0.37,
+      "output": 1.25,
+      "source": "models.dev/zai"
+    },
+    "zai/glm-5v-turbo": {
+      "as_of": "2026-10-17",
+      "cache_read": 0.24,
+      "cache_write": 0,
+      "input": 1.2,
+      "output": 4,
+      "source": "models.dev/zai"
+    }
+  }
+}

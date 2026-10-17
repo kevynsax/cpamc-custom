@@ -294,6 +294,7 @@ func (h *Handler) CustomQuotaAPICall(c *gin.Context) {
 	customQuota.entries[key] = &customQuotaEntry{Recipe: recipe, StatusCode: resp.StatusCode, Header: resp.Header, Body: resp.Body, FetchedAt: now}
 	customQuotaSaveLocked()
 	customQuota.mu.Unlock()
+	h.observeClientQuota(recipe, resp, now)
 	h.customQuotaApplyResetPriority()
 	c.Header("X-CPAMC-Quota-Cache", "miss")
 	c.JSON(http.StatusOK, customQuotaAPICallResponse{apiCallResponse: resp, FetchedAt: now})
@@ -325,8 +326,8 @@ func (h *Handler) CustomQuotaStatus(c *gin.Context) {
 		resetOut[id] = t.UTC()
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"entries": rows, "last_run": lastRun, "in_window": customQuotaInWindow(time.Now()),
-		"refresh_every": customQuotaRefreshEvery.String(), "window": "09:30-21:30 UTC-3",
+		"entries": rows, "last_run": lastRun, "in_window": customQuotaInWindow(time.Now()) || h.clientUsageEnabled(),
+		"refresh_every": customQuotaRefreshEvery.String(), "window": h.clientQuotaWindowLabel(),
 		"reset_by_auth": resetOut, "exhausted_by_auth": h.customQuotaExhaustedByAuth(time.Now()),
 		"priority_boosts": coreauth.CustomResetPriorityBoosts(),
 	})
@@ -346,6 +347,10 @@ func (h *Handler) StartCustomQuotaCache(ctx context.Context) {
 		customQuota.mu.Lock()
 		h.customQuotaEnsureLoaded()
 		customQuota.mu.Unlock()
+		h.seedClientQuotaHistory()
+		if h.clientPricing != nil {
+			go h.clientPricing.Run(ctx)
+		}
 		h.customQuotaApplyResetPriority()
 		go h.customQuotaLoop(ctx)
 	})
@@ -362,7 +367,7 @@ func (h *Handler) customQuotaLoop(ctx context.Context) {
 			customQuota.mu.Lock()
 			due := !customQuota.running && now.Sub(customQuota.lastRun) >= customQuotaRefreshEvery
 			customQuota.mu.Unlock()
-			if due && customQuotaInWindow(now) {
+			if due && h.clientQuotaRefreshAllowed(now) {
 				h.customQuotaRefreshAll(ctx)
 			} else {
 				// Re-rank without refreshing: a window that rolled over since the last
@@ -406,6 +411,10 @@ func (h *Handler) customQuotaRefreshAll(ctx context.Context) {
 	ok, failed, dropped := 0, 0, 0
 	var countMu sync.Mutex
 	for _, j := range jobs {
+		// Extra overnight polls are read-only; preserve the existing daytime contract.
+		if !customQuotaInWindow(time.Now()) && (strings.ToUpper(j.recipe.Method) != "GET" || customQuotaUnsafeURL.MatchString(j.recipe.URL)) {
+			continue
+		}
 		auth := authsByID[j.recipe.AuthID]
 		if auth == nil {
 			customQuota.mu.Lock()
@@ -424,21 +433,26 @@ func (h *Handler) customQuotaRefreshAll(ctx context.Context) {
 			defer func() { <-sem }()
 			resp, err := h.customPerformAPICall(ctx, customQuotaPayload(j.recipe, index))
 			customQuota.mu.Lock()
-			defer customQuota.mu.Unlock()
 			entry := customQuota.entries[j.key]
 			if entry == nil {
+				customQuota.mu.Unlock()
 				return
 			}
 			countMu.Lock()
-			defer countMu.Unlock()
 			if err != nil {
 				entry.LastError = err.Error()
 				failed++
+				countMu.Unlock()
+				customQuota.mu.Unlock()
 				return
 			}
+			at := time.Now().UTC()
 			entry.StatusCode, entry.Header, entry.Body = resp.StatusCode, resp.Header, resp.Body
-			entry.FetchedAt, entry.LastError = time.Now().UTC(), ""
+			entry.FetchedAt, entry.LastError = at, ""
 			ok++
+			countMu.Unlock()
+			customQuota.mu.Unlock()
+			h.observeClientQuota(j.recipe, resp, at)
 		}(j, auth.Index)
 	}
 	wg.Wait()

@@ -30,6 +30,7 @@ import {
   IconSidebarStore,
   IconSidebarSystem,
   IconChevronDown,
+  IconScrollText,
 } from '@/components/ui/icons';
 import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
 import {
@@ -102,7 +103,7 @@ interface SidebarNavGroup {
 const flattenNavItems = (items: SidebarNavItem[]): SidebarNavLinkItem[] =>
   items.flatMap((item) => (item.kind === 'drawer' ? item.children : [item]));
 
-/** 点击菜单外或按下 Escape 时关闭弹出菜单 */
+/** Close the popover when clicking outside the menu or pressing Escape. */
 function useMenuDismiss(
   open: boolean,
   menuRef: RefObject<HTMLDivElement | null>,
@@ -640,6 +641,12 @@ export function MainLayout() {
       id: 'observe',
       labelKey: 'nav_groups.observe',
       items: [
+        {
+          path: '/usage',
+          labelKey: 'client_usage.title',
+          metaKey: 'client_usage.nav_hint',
+          icon: <IconScrollText size={18} />,
+        },
         {
           path: '/quota',
           labelKey: 'nav.quota_management',

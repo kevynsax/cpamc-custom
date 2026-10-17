@@ -140,9 +140,9 @@ func (h *Handler) CustomQuotaView(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"credentials":   credentials,
 		"last_run":      last,
-		"in_window":     customQuotaInWindow(time.Now()),
+		"in_window":     customQuotaInWindow(time.Now()) || h.clientUsageEnabled(),
 		"refresh_every": customQuotaRefreshEvery.String(),
-		"window":        "09:30-21:30 UTC-3",
+		"window":        h.clientQuotaWindowLabel(),
 	})
 }
 
