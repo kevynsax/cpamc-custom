@@ -181,7 +181,7 @@ describe('person allowances and compact financial UI', () => {
     expect(mergedCompanyModels([...rows, { ...rows[0], provider: 'claude' }])).toBeNull();
     expect(mergedCompanyModels([])).toBeNull();
   });
-  test('person cards exclude systems, include idle people, and show pies and waste without counts', () => {
+  test('person cards exclude systems, retain idle people with actual allowances, and show pies and waste without counts', () => {
     const now = new Date('2026-10-17T12:00:00Z');
     const data = normalizeClientUsage(createUsageFixture(now));
     const rows = periodRows(data, 'month', 0, now);
@@ -193,6 +193,12 @@ describe('person allowances and compact financial UI', () => {
         personIds: [...ids, 'idle'],
         names: { idle: 'Idle person' },
         allowances: {
+          idle: {
+            anthropic: {
+              wasted: { usd: null, partial: false },
+              available: { usd: 20, partial: false },
+            },
+          },
           [ids[0]]: {
             anthropic: {
               wasted: { usd: 10, partial: true },

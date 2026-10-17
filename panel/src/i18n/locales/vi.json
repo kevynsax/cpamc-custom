@@ -779,6 +779,7 @@
     "minute_tools": "Lượt gọi tool {{count}} phút"
   },
   "xai_quota": {
+    "assumed_weekly": "Giả định hạn mức tuần khả dụng: chưa có số liệu hạn mức.",
     "title": "Quota Grok",
     "empty_title": "Không có File xác thực xAI/Grok",
     "empty_desc": "Đăng nhập bằng xAI OAuth để xem quota Grok.",

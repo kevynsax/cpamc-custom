@@ -23,6 +23,7 @@ import { periodRows, valueByModel } from './reporting';
 import { allocatePersonFees } from './personAllocation';
 import { useClientUsage } from './useClientUsage';
 import { useCrossQuote } from './useCrossQuote';
+import { withGrokAvailability } from './grokAvailability';
 import styles from './UsagePage.module.scss';
 
 export function UsagePage() {
@@ -30,8 +31,20 @@ export function UsagePage() {
   const [period, setPeriod] = useState<UsagePeriod>('week');
   const [offset, setOffset] = useState(0);
   const range = usageRange(period, offset);
-  const { data, catalog, connected, loading, error, saving, refresh, saveSettings } =
-    useClientUsage(period === 'month' ? usageRange(period, offset + 1).from : range.from, range.to);
+  const {
+    data: usageData,
+    catalog,
+    connected,
+    loading,
+    error,
+    saving,
+    refresh,
+    saveSettings,
+  } = useClientUsage(
+    period === 'month' ? usageRange(period, offset + 1).from : range.from,
+    range.to
+  );
+  const data = usageData && offset === 0 ? withGrokAvailability(usageData) : usageData;
   const quote = useCrossQuote();
   const theme = useThemeStore((state) => state.resolvedTheme);
   const apiBase = useAuthStore((state) => state.apiBase);

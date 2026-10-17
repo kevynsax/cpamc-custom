@@ -10,6 +10,7 @@ import { FeeTags } from './FeeTags';
 import { companyUnusedValue, personUnusedValue, sumFeeValues } from './fees';
 import type { PersonAllowances } from './personAllocation';
 import type { ApiKeyKind } from '@/services/api/keyNames';
+import { hasFeeValue, hasMoney } from './visibility';
 
 export function PeopleSpend({
   data,
@@ -32,7 +33,18 @@ export function PeopleSpend({
 }) {
   const { t } = useTranslation();
   const id = useId();
-  const people = spendingByPerson(companies).filter((person) => kinds[person.id] !== 'system');
+  const actors = spendingByPerson(companies);
+  const people = actors.filter(
+    (person) =>
+      kinds[person.id] !== 'system' &&
+      (hasMoney(person.costUsd, quote) ||
+        (allowances &&
+          hasFeeValue(
+            sumFeeValues(Object.values(allowances[person.id] ?? {})),
+            companies.some((company) => company.current),
+            quote
+          )))
+  );
   const [hovered, setHovered] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
   const selectedKey = hovered ?? focused;
@@ -41,7 +53,7 @@ export function PeopleSpend({
   )
     ? selectedKey
     : null;
-  const actorIds = people.map((person) => person.id).sort();
+  const actorIds = actors.map((person) => person.id).sort();
   const name = (key: string) => names[key] || data.keyLabels[key] || key.slice(0, 8);
   const price = (usd: number, missing: number) => {
     const value = formatReais(usd, quote);
@@ -52,6 +64,7 @@ export function PeopleSpend({
   const maximum = Math.max(...people.map((person) => person.costUsd), Number.MIN_VALUE);
   const current = companies.some((company) => company.current);
   const unusedValue = sumFeeValues(companies.map(companyUnusedValue));
+  if (!people.length) return null;
   return (
     <Card title={<h2>{t('client_usage.spend_title')}</h2>} className={styles.peopleCard}>
       <div className={styles.headlineGroup}>
@@ -151,15 +164,21 @@ export function PeopleSpend({
         })}
       </ul>
       <div className={styles.companyLegend}>
-        {companies.map((company) => (
-          <span key={company.id}>
-            <i
-              style={{ backgroundColor: appearance[company.id]?.color ?? 'var(--text-primary)' }}
-            />
-            {appearance[company.id]?.icon && <img src={appearance[company.id].icon!} alt="" />}
-            {COMPANY_NAMES[company.id] ?? company.id}
-          </span>
-        ))}
+        {companies
+          .filter((company) =>
+            people.some((person) =>
+              person.companies.some((entry) => entry.id === company.id && entry.costUsd > 0)
+            )
+          )
+          .map((company) => (
+            <span key={company.id}>
+              <i
+                style={{ backgroundColor: appearance[company.id]?.color ?? 'var(--text-primary)' }}
+              />
+              {appearance[company.id]?.icon && <img src={appearance[company.id].icon!} alt="" />}
+              {COMPANY_NAMES[company.id] ?? company.id}
+            </span>
+          ))}
       </div>
     </Card>
   );

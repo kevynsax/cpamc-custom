@@ -42,7 +42,7 @@ export function SubscriptionFacts({
       {quotas.length > 0 && (
         <section className={styles.cachedQuotas} aria-label={t('client_usage.cached_availability')}>
           {quotas.map((quota) => {
-            const fresh = quotaIsFresh(quota),
+            const fresh = quota.assumed === true || quotaIsFresh(quota),
               duration = quota.periodSeconds / 3600;
             const scope = quota.scope === 'account' ? '' : quota.scope;
             const label = `${scope ? `${scope} · ` : ''}${t(duration >= 24 ? 'client_usage.pool_days' : 'client_usage.pool_hours', { count: duration >= 24 ? duration / 24 : duration })}`;
@@ -62,6 +62,7 @@ export function SubscriptionFacts({
                   aria-valuemax={100}
                   aria-valuenow={fresh ? remaining : undefined}
                   aria-valuetext={fresh ? `${remaining}%` : t('client_usage.quota_stale')}
+                  title={quota.assumed ? t('xai_quota.assumed_weekly') : undefined}
                 >
                   {fresh && <i style={{ width: `${remaining}%` }} />}
                 </div>

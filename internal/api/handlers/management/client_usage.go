@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagehistory"
+	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	log "github.com/sirupsen/logrus"
 )
@@ -126,6 +127,7 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 				accounts[id] = info
 			}
 			info["provider"] = quotaViewProvider(account)
+			info["disabled"] = account.Disabled || account.Status == coreauth.StatusDisabled
 			email, fee := h.clientUsageAccountInfo(account)
 			info["email"] = email
 			if fee != nil {

@@ -795,6 +795,7 @@
     "reset_hint": "{{hint}} 후 초기화"
   },
   "xai_quota": {
+    "assumed_weekly": "주간 잔여량을 추정합니다. 할당량 데이터가 없습니다.",
     "title": "Grok 할당량",
     "empty_title": "xAI/Grok 인증 파일 없음",
     "empty_desc": "xAI OAuth로 로그인하여 Grok 할당량을 확인하세요.",

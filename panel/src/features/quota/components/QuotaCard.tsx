@@ -6,7 +6,9 @@
 import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
-import type { ClaudeQuotaState, ResolvedTheme } from '@/types';
+import type { ClaudeQuotaState, ResolvedTheme, XaiQuotaState } from '@/types';
+import { grokDisplayQuota } from '@/utils/quota/grokAvailability';
+import type { UsageAccount } from '@/services/api/clientUsage';
 import { resolveQuotaErrorMessage } from '@/utils/quota';
 import { getQuotaDisplayName } from '@/utils/quota/identity';
 import {
@@ -30,6 +32,7 @@ const quotaClasses = bindQuotaClasses(bodyStyles, 'QuotaBody.module.scss');
 export type QuotaCardProps = {
   entry: QuotaFileEntry;
   quota?: QuotaCardState;
+  cachedAccount?: UsageAccount;
   resolvedTheme: ResolvedTheme;
   canRefresh: boolean;
   resetting: boolean;
@@ -43,6 +46,7 @@ export function QuotaCard(props: QuotaCardProps) {
   const {
     entry,
     quota,
+    cachedAccount,
     resolvedTheme,
     canRefresh,
     resetting,
@@ -64,6 +68,11 @@ export function QuotaCard(props: QuotaCardProps) {
       ? undefined
       : ({ '--card-delay': `${mountEntranceDelayMs}ms` } as CSSProperties);
 
+  const xaiDisplay =
+    entry.type === 'xai'
+      ? grokDisplayQuota(file, quota as XaiQuotaState | undefined, cachedAccount)
+      : null;
+  const displayQuota = xaiDisplay ?? quota;
   const status = quota?.status ?? 'idle';
   const loading = status === 'loading';
   const claudeReset = useClaudeResetGrants(
@@ -160,10 +169,13 @@ export function QuotaCard(props: QuotaCardProps) {
             {t(`${adapter.i18nPrefix}.load_failed`, { message: errorMessage })}
           </div>
         ) : quota && !retainedClaudeUsage ? (
-          <adapter.Body quota={quota} classes={quotaClasses} />
+          <adapter.Body quota={displayQuota ?? quota} classes={quotaClasses} />
         ) : !retainedClaudeUsage ? (
           <div className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</div>
         ) : null}
+        {status === 'error' && xaiDisplay && (
+          <adapter.Body quota={xaiDisplay} classes={quotaClasses} />
+        )}
         {loading && retainedClaudeUsage && (
           <div role="status" aria-busy="true" className={quotaClasses.quotaMessage}>
             {t(`${adapter.i18nPrefix}.loading`)}

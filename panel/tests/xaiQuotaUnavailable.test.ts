@@ -1,11 +1,4 @@
-/**
- * xAI quota body: unknown usage must not masquerade as a zero.
- *
- * When the weekly endpoint omits creditUsagePercent the summary keeps
- * usagePercent null; the body should say the usage is unavailable and hide
- * the meter rather than render a fabricated "Used 0%". The legacy
- * zero-limit/zero-used monthly row is hidden only while weekly data exists.
- */
+/** Grok keeps raw counters unknown while displaying the approved 100% weekly fallback. */
 
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { createElement } from 'react';
@@ -90,13 +83,14 @@ describe('resolveXaiSubscriptionPlan', () => {
 });
 
 describe('XaiQuotaBody unavailable weekly usage', () => {
-  test('reports unavailable instead of a fabricated zero when usagePercent is missing', () => {
+  test('shows assumed 100% weekly availability without changing a missing raw percentage', () => {
     const quota = quotaFor(weeklyConfig(), monthlyConfig());
     expect(quota.billing?.usagePercent).toBeNull();
 
     const markup = render(quota);
 
-    expect(markup).toContain('Usage unavailable from xAI');
+    expect(markup).toContain('class="quotaPercent">100%</span>');
+    expect(markup).toContain('data-assumed="true"');
     expect(markup).toContain(formatQuotaResetTime(WEEKLY_PERIOD_END));
     expect(markup).not.toContain('Used --');
     expect(markup).not.toContain('Used 0%');
@@ -111,7 +105,8 @@ describe('XaiQuotaBody unavailable weekly usage', () => {
 
     const markup = render(quota);
 
-    expect(markup).toContain('Usage unavailable from xAI');
+    expect(markup).toContain('class="quotaPercent">100%</span>');
+    expect(markup).toContain('data-assumed="true"');
     expect(markup).not.toContain('Used 0%');
   });
 
@@ -151,7 +146,8 @@ describe('XaiQuotaBody unavailable weekly usage', () => {
 
     const markup = render(quota);
     expect(markup).toContain('Monthly credits');
-    expect(markup).toContain('Usage unavailable from xAI');
+    expect(markup).toContain('class="quotaPercent">100%</span>');
+    expect(markup).toContain('data-assumed="true"');
     expect(markup).toContain(formatQuotaResetTime(WEEKLY_PERIOD_END));
   });
 
@@ -250,7 +246,8 @@ describe('XaiQuotaBody unavailable weekly usage', () => {
 
     expect(markup).toContain('GrokBuild usage: 14%');
     expect(markup).toContain('GrokChat usage: Usage unavailable from xAI');
-    expect(markup).not.toContain('width:');
+    expect(markup).toContain('width:100%');
+    expect(markup).toContain('data-assumed="true"');
     expect(markup).not.toContain('Used 14%');
   });
 
@@ -298,9 +295,10 @@ describe('XaiQuotaBody unavailable weekly usage', () => {
     expect(markup.split(label)).toHaveLength(2);
   });
 
-  test('keeps the monthly-only zero row when no weekly data exists', () => {
+  test('shows the assumed weekly row instead of an uninformative zero monthly row', () => {
     const markup = render(quotaFor(null, monthlyConfig()));
-
-    expect(markup).toContain('Monthly credits');
+    expect(markup).toContain('Weekly limit');
+    expect(markup).toContain('width:100%');
+    expect(markup).not.toContain('Monthly credits');
   });
 });

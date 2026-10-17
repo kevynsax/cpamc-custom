@@ -54,7 +54,11 @@ one chart with combined company/model legend names; coincidentally equal totals 
 not trigger a merge. Friendly model names replace raw slugs and server file paths,
 and model cards/legends sort by the selected period's spending, highest first.
 Company, person and model-price card collections use responsive CSS-column masonry.
-Usage uses the standard Lucide Wallet icon in both navigation and its page heading. Current periods
+Usage uses the standard Lucide Wallet icon in both navigation and its page heading.
+Informational company/person cards and account rows are omitted when they have no
+usable money, allowance, comparison, or availability percentage. Names and activity
+counters alone do not keep a card visible. Hidden idle Person keys still count in
+the allowance denominator; hiding a card never changes classifications or allocation. Current periods
 compare with the same elapsed duration in the previous period (calendar UTC
 months; each account's reset-aligned subscription week); completed periods compare
 full periods. Short prior months are clamped. Comparisons describe observed records,
@@ -68,7 +72,7 @@ sanitized numeric quota windows from the existing quota cache even when tracking
 is paused, without polling providers or persisting a new history observation.
 Independent scopes/durations remain separate; only the newest observation for a
 pool is shown. Observations older than 30 minutes, with a passed reset, or with
-invalid timestamps show unknown availability, never a presumed reset to 100%.
+invalid timestamps stay unknown except for the explicit Grok presentation policy below.
 Unreported prices remain unknown, with explicit `monthly_fee_usd` metadata taking
 precedence over known published plan fees. Monetary UI values are reais only;
 missing conversion quotes never fall back to dollar amounts. Unknown/zero waste
@@ -79,6 +83,19 @@ Chart and progress-bar tooltips omit the
 client token/key name. Repeated status labels, empty-state prose, observation rows
 and the period-comparison paragraph are removed; freshness and reset metadata
 remain accessible without those visible rows.
+
+Grok weekly availability uses one shared display policy on Usage and Quota
+Management: keep actual percentages (including 0% remaining when exhausted); if no
+usable weekly reading exists, show 100% remaining for a seven-day account window.
+Same-plan peers provide the window structure only, never their usage, balances or
+account-specific reset date. Recent own cached/history observations take precedence
+over the assumption. Quota Management asynchronously reads the same existing
+read-only account metadata endpoint as Usage to match credential fingerprints and
+plans; the credential list and primary refresh are not blocked by that extra read.
+Errors remain errors and visible even alongside the assumed percentage, and disabled
+subscriptions receive no full-quota fallback. The assumed flag is presentation-only:
+it is never persisted as a quota observation or used for routing, recovery sorting,
+or per-person waste accounting.
 
 Waste is attributed only to active Person keys, including people without requests.
 For each company, subtract System consumption from plan-weighted capacity, then
@@ -204,7 +221,8 @@ All endpoints use existing v8 management authentication:
   reset-cycle reports under the legacy `weeks` field, account/key labels, accounts,
   configured model-price references, settings, collection status and catalog date.
   `key_names` carries shared names (including clear tombstones), and `key_kinds`
-  carries Person/System classifications. Models may include `display_name`. Each account may
+  carries Person/System classifications. Models may include `display_name`. Accounts
+  expose the current `disabled` credential flag. Each account may
   include `cached_quotas` with numeric used percentage, scope, duration, reset and
   observation timestamps; cache recipes, bodies and credentials are never returned.
   Cycle reports retain their actual `period_seconds`, not an assumed seven days.

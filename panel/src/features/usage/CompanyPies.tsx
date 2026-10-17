@@ -14,6 +14,7 @@ import { ModelValuePie } from './ModelValuePie';
 import { SubscriptionFacts } from './SubscriptionFacts';
 import type { PersonAllowances } from './personAllocation';
 import type { ApiKeyKind } from '@/services/api/keyNames';
+import { hasAccountInformation, hasCompanyInformation } from './visibility';
 
 interface CompanyChartProps {
   kinds: Record<string, ApiKeyKind>;
@@ -225,23 +226,25 @@ function CompanyChart({
       <ModelValuePie rows={rows} company={company.id} quote={quote} classes={styles} />
       {company.id !== 'in_house' && (
         <div className={styles.accountBreakdowns}>
-          {company.accounts.map((account) => (
-            <section
-              key={account.id}
-              className={styles.accountBreakdown}
-              data-account-id={account.id}
-              aria-label={
-                account.displayName || account.email || t('client_usage.email_unavailable')
-              }
-            >
-              <SubscriptionFacts
-                account={account}
-                quote={quote}
-                current={company.current}
-                classes={styles}
-              />
-            </section>
-          ))}
+          {company.accounts
+            .filter((account) => hasAccountInformation(account, company.current, quote))
+            .map((account) => (
+              <section
+                key={account.id}
+                className={styles.accountBreakdown}
+                data-account-id={account.id}
+                aria-label={
+                  account.displayName || account.email || t('client_usage.email_unavailable')
+                }
+              >
+                <SubscriptionFacts
+                  account={account}
+                  quote={quote}
+                  current={company.current}
+                  classes={styles}
+                />
+              </section>
+            ))}
         </div>
       )}
     </article>
@@ -270,6 +273,7 @@ export function CompanyPies({
   classes: Record<string, string>;
 }) {
   const { t } = useTranslation();
+  const visibleCompanies = companies.filter((company) => hasCompanyInformation(company, quote));
   const label = (id: string) =>
     (
       ({
@@ -300,10 +304,11 @@ export function CompanyPies({
     const value = formatReais(usd, quote);
     return value === '—' ? value : missing > 0 && usd === 0 ? '—' : value;
   };
+  if (!visibleCompanies.length) return null;
   return (
     <Card title={<h2>{t('client_usage.subscription_title')}</h2>}>
       <div className={styles.companyGrid}>
-        {companies.map((company) => (
+        {visibleCompanies.map((company) => (
           <CompanyChart
             key={company.id}
             rows={rows}

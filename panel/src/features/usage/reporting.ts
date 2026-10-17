@@ -1,5 +1,6 @@
 import type { ClientUsageResponse, ClientUsageRow } from '@/services/api/clientUsage';
 import { accountRange, companyId, type UsagePeriod } from './companies';
+import { quotaObservationIsFresh } from '@/utils/quota/grokAvailability';
 
 export interface UsageTotal {
   tokens: number;
@@ -136,14 +137,4 @@ export function percentChange(current: number, previous: number): number | null 
 }
 
 /** Expired/reset or stale observations must never look like fresh available quota. */
-export function quotaIsFresh(quota: { observedAt: string; reset: string }, now = Date.now()) {
-  const observed = Date.parse(quota.observedAt),
-    reset = Date.parse(quota.reset);
-  return (
-    Number.isFinite(observed) &&
-    Number.isFinite(reset) &&
-    observed <= now &&
-    now - observed <= 30 * 60_000 &&
-    reset > now
-  );
-}
+export const quotaIsFresh = quotaObservationIsFresh;

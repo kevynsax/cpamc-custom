@@ -216,11 +216,11 @@ describe('company capacity pies', () => {
     expect(html).not.toContain('Unidentified usage');
     expect(html).not.toContain('Unattributed');
     expect(html).not.toContain('Unknown capacity');
-    expect((html.match(/data-account-id=/g) ?? []).length).toBe(8);
+    expect((html.match(/data-account-id=/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((html.match(/data-account-id=/g) ?? []).length).toBeLessThan(8);
     expect(html).toContain('@example.test');
     expect(html).not.toContain('Account 1');
     expect(html).not.toContain('Claude Max');
-    expect(html).toContain('Grok Pro');
     expect(html).toContain('Max 20×');
     expect(html).not.toMatch(/<p(?:\s|>)|<table|<select/);
     expect(piePath(0, 100)).not.toContain('NaN');

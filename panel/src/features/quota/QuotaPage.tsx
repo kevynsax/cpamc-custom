@@ -10,6 +10,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { authFilesApi } from '@/services/api';
+import { clientUsageApi, type UsageAccount } from '@/services/api/clientUsage';
+import { findGrokAccount } from '@/utils/quota/grokAvailability';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { IconSearch, IconX } from '@/components/ui/icons';
@@ -87,12 +89,17 @@ export function QuotaPage() {
 
   const sessionGeneration = useQuotaStore((state) => state.cacheGeneration);
   const [filesGeneration, setFilesGeneration] = useState<number | null>(null);
+  const [grokAccounts, setGrokAccounts] = useState<{
+    generation: number;
+    accounts: UsageAccount[];
+  } | null>(null);
   const listRequestRef = useRef(0);
   const loadFiles = useCallback(async () => {
     const requestId = ++listRequestRef.current;
     if (connectionStatus !== 'connected') {
       setFiles([]);
       setFilesGeneration(null);
+      setGrokAccounts(null);
       setLoading(false);
       return;
     }
@@ -108,8 +115,26 @@ export function QuotaPage() {
         listApiKeyQuotaCredentials(),
       ]);
       if (!isCurrent()) return;
-      setFiles([...(data?.files || []), ...apiKeyFiles]);
+      const listedFiles = [...(data?.files || []), ...apiKeyFiles];
+      setFiles(listedFiles);
       setFilesGeneration(sessionGeneration);
+      // Reuse the read-only account metadata shown by Usage; never probe another credential.
+      if (listedFiles.some((file) => QUOTA_ADAPTERS.xai.filterFn(file))) {
+        void clientUsageApi
+          .get()
+          .then((snapshot) => {
+            if (isCurrent())
+              setGrokAccounts({
+                generation: sessionGeneration,
+                accounts: snapshot.accounts.filter((account) =>
+                  ['xai', 'grok'].includes(account.provider)
+                ),
+              });
+          })
+          .catch(() => {
+            if (isCurrent()) setGrokAccounts(null);
+          });
+      } else setGrokAccounts(null);
     } catch (err: unknown) {
       if (!isCurrent()) return;
       const message = err instanceof Error ? err.message : t('notification.refresh_failed');
@@ -473,6 +498,11 @@ export function QuotaPage() {
                 key={`${entry.type}:${getQuotaCacheKey(entry.file)}`}
                 entry={entry}
                 quota={getQuota(entry)}
+                cachedAccount={
+                  entry.type === 'xai' && grokAccounts?.generation === sessionGeneration
+                    ? findGrokAccount(entry.file, grokAccounts.accounts)
+                    : undefined
+                }
                 resolvedTheme={resolvedTheme}
                 canRefresh={canUseActions && !entry.file.disabled}
                 resetting={resettingQuotaName === getQuotaCacheKey(entry.file)}

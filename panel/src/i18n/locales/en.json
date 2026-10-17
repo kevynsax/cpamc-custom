@@ -823,6 +823,7 @@
     "minute_tools": "{{count}}-minute tool calls"
   },
   "xai_quota": {
+    "assumed_weekly": "Assumed weekly availability: no quota reading available.",
     "title": "Grok Quota",
     "empty_title": "No xAI/Grok Auth Files",
     "empty_desc": "Log in with xAI OAuth to view Grok quota.",

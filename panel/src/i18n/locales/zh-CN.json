@@ -822,6 +822,7 @@
     "minute_tools": "{{count}} 分钟工具调用"
   },
   "xai_quota": {
+    "assumed_weekly": "假定周额度可用：没有可用的配额读数。",
     "title": "Grok 额度",
     "empty_title": "暂无 xAI/Grok 认证",
     "empty_desc": "使用 xAI OAuth 登录后即可查看 Grok 额度。",

@@ -67,6 +67,8 @@ export interface UsageWeek {
 }
 
 export interface CachedUsageQuota {
+  /** Presentation fallback only; never an observed quota. */
+  assumed?: boolean;
   scope: string;
   used: number;
   reset: string;
@@ -76,6 +78,7 @@ export interface CachedUsageQuota {
 
 export interface UsageAccount {
   id: string;
+  disabled?: boolean;
   email?: string;
   monthlyFeeUsd?: number | null;
   cachedQuotas?: CachedUsageQuota[];
@@ -215,6 +218,7 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
         return {
           id,
           email: typeof account.email === 'string' ? account.email : '',
+          ...(account.disabled === true ? { disabled: true } : {}),
           monthlyFeeUsd: nullableCount(account, 'monthly_fee_usd'),
           cachedQuotas: (account.cached_quotas === undefined
             ? []

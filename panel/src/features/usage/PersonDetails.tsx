@@ -9,6 +9,7 @@ import { sumFeeValues } from './fees';
 import type { PersonAllowances } from './personAllocation';
 import { ValuePie } from './ModelValuePie';
 import { friendlyModelName } from './modelNames';
+import { hasPersonInformation } from './visibility';
 
 export function PersonDetails({
   current,
@@ -42,6 +43,14 @@ export function PersonDetails({
           companies: [],
           models: [],
         }
+    )
+    .filter((person) =>
+      hasPersonInformation(
+        person,
+        sumFeeValues(Object.values(allowances[person.id] ?? {})),
+        currentPeriod,
+        quote
+      )
     )
     .sort((a, b) => b.current.costUsd - a.current.costUsd || a.id.localeCompare(b.id));
   if (!people.length) return null;
