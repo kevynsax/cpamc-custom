@@ -6,6 +6,7 @@ WORKDIR /panel
 COPY panel/package.json panel/bun.lock ./
 RUN bun install --frozen-lockfile
 COPY panel/ ./
+COPY internal/usagehistory/model_reference.json /internal/usagehistory/model_reference.json
 ARG VERSION=dev
 ENV VERSION=${VERSION}
 RUN bun run build && mv dist/index.html dist/management.html
