@@ -4,17 +4,21 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 import path from 'path';
 import { execSync } from 'child_process';
 import fs from 'fs';
+import { usageDemoPlugin } from './dev/usage/plugin';
 
 // Get version from environment, git tag, or package.json
 function getVersion(): string {
-  // 1. Environment variable (set by GitHub Actions)
+  // 1. Environment variable (set by TeamCity)
   if (process.env.VERSION) {
     return process.env.VERSION;
   }
 
   // 2. Try git tag
   try {
-    const gitTag = execSync('git describe --tags --exact-match 2>/dev/null || git describe --tags 2>/dev/null || echo ""', { encoding: 'utf8' }).trim();
+    const gitTag = execSync(
+      'git describe --tags --exact-match 2>/dev/null || git describe --tags 2>/dev/null || echo ""',
+      { encoding: 'utf8' }
+    ).trim();
     if (gitTag) {
       return gitTag;
     }
@@ -36,31 +40,50 @@ function getVersion(): string {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command, mode }) => ({
+  server:
+    command === 'serve' && mode === 'usage-demo'
+      ? {
+          host: '127.0.0.1',
+          port: 5190,
+          strictPort: true,
+          fs: {
+            allow: [
+              __dirname,
+              path.resolve(__dirname, '../internal/usagehistory/model_reference.json'),
+            ],
+          },
+          headers: {
+            'Content-Security-Policy':
+              "connect-src 'self' ws://127.0.0.1:* ws://localhost:* wss://cross-otc.com; form-action 'self'; base-uri 'self'",
+          },
+        }
+      : undefined,
   plugins: [
+    ...(command === 'serve' && mode === 'usage-demo' ? [usageDemoPlugin()] : []),
     react(),
     viteSingleFile({
-      removeViteModuleLoader: true
-    })
+      removeViteModuleLoader: true,
+    }),
   ],
   define: {
-    __APP_VERSION__: JSON.stringify(getVersion())
+    __APP_VERSION__: JSON.stringify(getVersion()),
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+      '@': path.resolve(__dirname, './src'),
+    },
   },
   css: {
     modules: {
       localsConvention: 'camelCase',
-      generateScopedName: '[name]__[local]___[hash:base64:5]'
+      generateScopedName: '[name]__[local]___[hash:base64:5]',
     },
     preprocessorOptions: {
       scss: {
-        additionalData: `@use "@/styles/variables.scss" as *;`
-      }
-    }
+        additionalData: `@use "@/styles/variables.scss" as *;`,
+      },
+    },
   },
   build: {
     target: 'es2020',
@@ -70,8 +93,8 @@ export default defineConfig({
     cssCodeSplit: false,
     rolldownOptions: {
       output: {
-        codeSplitting: false
-      }
-    }
-  }
-});
+        codeSplitting: false,
+      },
+    },
+  },
+}));

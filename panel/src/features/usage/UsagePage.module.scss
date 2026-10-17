@@ -1,54 +1,73 @@
 .page {
+  --quota-remaining: color-mix(in srgb, var(--viz-success) 28%, var(--bg-primary));
+  --chart-track: color-mix(in srgb, var(--text-secondary) 8%, var(--bg-primary));
+  --quota-expired: var(--viz-failure);
+  --quota-unknown: color-mix(in srgb, var(--text-secondary) 45%, var(--bg-primary));
+  --quota-unidentified: #8798ab;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
-}
-.header,
-.weekHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
+  h2 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+  }
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+  }
 }
 .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
   h1 {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 0 0 8px;
-  }
-  p {
-    color: var(--text-secondary);
     margin: 0;
-    max-width: 65ch;
+    font-size: 26px;
   }
 }
-.note {
-  color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.6;
-}
-.accountPicker {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 2px 2px 8px;
-}
-.accountOption {
-  flex-shrink: 0;
+.controls,
+.weekNavigation {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  gap: 8px;
+}
+.fxQuote {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+.periodControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.periodCards {
+  display: flex;
+  gap: 10px;
+}
+.periodCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--text-primary);
   background: var(--bg-primary);
-  text-align: left;
+  border: 1px solid var(--border-color);
+  padding: 11px 14px;
+  border-radius: 10px;
   cursor: pointer;
-  max-width: 330px;
-  transition: border-color var(--dur-hover) var(--ease-out-strong);
+  strong {
+    font-size: 12px;
+    font-weight: 500;
+  }
   &[aria-pressed='true'] {
     border-color: var(--text-primary);
     box-shadow: inset 0 0 0 1px var(--text-primary);
@@ -57,233 +76,645 @@
     outline: 2px solid var(--text-primary);
     outline-offset: 3px;
   }
-  img {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-  }
-  span {
-    min-width: 0;
-  }
-  strong,
-  small {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  small {
-    color: var(--text-secondary);
-    margin-top: 4px;
-  }
 }
-.weekHeader h2 {
-  font-size: 24px;
-  margin: 5px 0;
-}
-.weekNavigation {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.weekNavigation h2 {
+  font-size: 12px;
 }
 .nextIcon {
   transform: rotate(180deg);
 }
-.valueCard {
-  padding-block: 26px;
+.status {
+  color: var(--text-secondary);
 }
 .headline {
   display: block;
-  font-size: clamp(30px, 4vw, 52px);
+  font-size: clamp(30px, 4vw, 44px);
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
-  margin: 8px 0;
+  margin: 0 0 28px;
   overflow-wrap: anywhere;
 }
-.chartGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  > * {
-    min-width: 0;
+.headlineGroup {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 28px;
+  > .headline {
+    margin-bottom: 0;
   }
 }
-.barList {
-  list-style: none;
-  padding: 0;
-  margin: 24px 0 0;
+.feeTags {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  margin-left: 5px;
+  font-size: 9px;
+  line-height: 1.45;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+.wastedTag {
+  color: var(--viz-failure);
+}
+.availableTag {
+  color: var(--viz-success);
+}
+.personPrice {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-}
-.barLabel {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 8px;
-  span {
-    overflow-wrap: anywhere;
-  }
-  strong {
+  align-items: flex-end;
+  gap: 3px;
+  max-width: 190px;
+  text-align: right;
+  > span:first-child {
+    font-size: 14px;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
+  }
+  .feeTags {
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+}
+.peopleSpend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 40px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.personSpend {
+  min-width: 0;
+}
+.personHeading {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  > strong {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
+  > span:last-child {
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
 }
-.track {
+.personAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+.spendChart {
+  position: relative;
+  margin-left: 42px;
+}
+.spendTrack {
+  height: 14px;
   display: flex;
-  height: 9px;
-  border-radius: 6px;
-  background: var(--bg-tertiary, var(--border-color));
+  background: var(--chart-track);
+  border-radius: 5px;
+}
+.spendSegment {
+  height: 100%;
+  flex-shrink: 0;
+  border-inline-end: 1px solid var(--bg-primary);
+  cursor: help;
+  transition: opacity var(--dur-hover) var(--ease-out-strong);
+  &:first-child {
+    border-radius: 5px 0 0 5px;
+  }
+  &:last-child {
+    border-radius: 0 5px 5px 0;
+    border-inline-end: 0;
+  }
+  &[data-muted='true'] {
+    opacity: 0.35;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 3px;
+    position: relative;
+    z-index: 2;
+  }
+}
+.companyLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+  i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+  }
+}
+.spendTooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 10%, transparent);
+  pointer-events: none;
+  font-size: 11px;
+  flex-wrap: wrap;
+  max-width: min(440px, calc(100vw - 64px));
+  white-space: normal;
+  span {
+    color: var(--text-secondary);
+  }
+  .wastedTag {
+    color: var(--viz-failure);
+  }
+  .availableTag {
+    color: var(--viz-success);
+  }
+  b {
+    font-variant-numeric: tabular-nums;
+  }
+}
+.companyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+}
+.companyCard {
+  min-width: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--text-primary) 2%, var(--bg-primary)),
+    var(--bg-primary)
+  );
+  > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    > div {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    > span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    img {
+      width: 23px;
+      height: 23px;
+      object-fit: contain;
+    }
+  }
+}
+.companyPriceRow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 14px 0 18px;
+  > .companyPrice {
+    margin: 0;
+  }
+}
+.companyPrice {
+  display: block;
+  font-size: 21px;
+  font-variant-numeric: tabular-nums;
+  margin: 14px 0 18px;
+  overflow-wrap: anywhere;
+}
+.accountBreakdowns {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+.accountBreakdown {
+  min-width: 0;
+  > header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+    > strong {
+      font-size: 11px;
+      font-weight: 500;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    > div {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 4px 12px;
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+    b {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      margin-left: 3px;
+    }
+  }
+}
+.accountTrack {
+  display: flex;
+  height: 7px;
+  border-radius: 4px;
+  background: var(--chart-track);
   overflow: hidden;
   > span {
     display: block;
     height: 100%;
-    border-radius: inherit;
-    background: var(--text-primary);
   }
 }
-.capacitySummary {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 22px 0 12px;
-  strong {
-    font-size: 22px;
-    font-variant-numeric: tabular-nums;
-  }
-  span {
-    color: var(--text-secondary);
-    margin-right: 14px;
-    font-size: 13px;
-  }
+.accountUsed {
+  background: var(--text-primary);
+  opacity: 0.7;
 }
-.history {
-  display: flex;
-  gap: 18px;
-  overflow-x: auto;
-  padding: 24px 0 8px;
+.accountUnused {
+  background: var(--quota-remaining);
 }
-.historyColumn {
-  min-width: 100px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  strong {
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  small {
-    color: var(--text-secondary);
-    max-width: 120px;
-    font-size: 11px;
-    min-height: 30px;
-  }
+.accountWasted {
+  background: var(--quota-expired);
 }
-.historyTrack {
-  display: flex;
-  align-items: flex-end;
-  height: 140px;
-  width: 40px;
-  border-radius: 6px;
-  background: var(--bg-tertiary, var(--border-color));
-  overflow: hidden;
-  span {
-    display: block;
-    width: 100%;
-    background: var(--text-secondary);
-    border-radius: inherit;
-  }
+.accountWastedLabel {
+  display: block;
+  color: var(--viz-failure);
+  font-size: 9px;
+  margin-top: 5px;
 }
-.noObservation {
+.accountUnknown {
   background: repeating-linear-gradient(
     135deg,
-    transparent,
-    transparent 5px,
-    var(--border-color) 5px,
-    var(--border-color) 7px
+    var(--quota-unknown),
+    var(--quota-unknown) 3px,
+    var(--chart-track) 3px,
+    var(--chart-track) 5px
   );
-  border: 1px solid var(--border-color);
 }
-.explainer {
-  margin-top: 16px;
+.accountUnknownLabel {
+  display: block;
+  font-size: 9px;
   color: var(--text-secondary);
-  font-size: 13px;
-  summary {
-    cursor: pointer;
-    width: fit-content;
-  }
-  summary:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 3px;
+  margin-top: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.pieContent {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+.pieStage {
+  width: 148px;
+  height: 148px;
+  position: relative;
+  > svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
 }
-
-.settings {
+.donutSlice {
+  cursor: pointer;
+  transition:
+    transform var(--dur-hover) var(--ease-out-strong),
+    opacity var(--dur-hover) var(--ease-out-strong);
+  outline: none;
+  &[data-muted='true'] {
+    opacity: 0.3;
+  }
+  &[data-active='true'] {
+    filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--text-primary) 16%, transparent));
+  }
+  &:focus-visible {
+    stroke: var(--text-primary);
+    stroke-width: 0.7;
+  }
+}
+.pieCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  padding: 35px;
+  strong {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.06em;
+    font-variant-numeric: tabular-nums;
+  }
+  span {
+    display: block;
+    max-width: 85px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 3px;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+}
+.chartTooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% - 6px);
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 7px max-content auto;
+  align-items: center;
+  gap: 4px 8px;
+  max-width: 270px;
+  padding: 10px 13px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 12%, transparent);
+  pointer-events: none;
+  font-size: 11px;
+  white-space: nowrap;
+  strong {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  b {
+    font-variant-numeric: tabular-nums;
+  }
+  small {
+    grid-column: 2 / -1;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+}
+.tooltipDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.pieLegend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  li {
+    transition: opacity var(--dur-hover) var(--ease-out-strong);
+    &[data-muted='true'] {
+      opacity: 0.42;
+    }
+    button {
+      display: grid;
+      width: 100%;
+      grid-template-columns: 7px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 2px 6px;
+      padding: 4px;
+      margin: -4px;
+      text-align: left;
+      color: inherit;
+      border: 0;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 11px;
+      &:focus-visible {
+        outline: 2px solid var(--text-primary);
+        outline-offset: 2px;
+      }
+      > span:nth-child(2) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      strong {
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+      }
+      small {
+        grid-column: 2 / -1;
+        font-size: 10px;
+        color: var(--text-secondary);
+        font-variant-numeric: tabular-nums;
+      }
+    }
+  }
+}
+.legendDot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.modelSettings {
   border-top: 1px solid var(--border-color);
-  padding-top: 18px;
-  summary {
+  padding-top: 20px;
+  > summary {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
     width: fit-content;
-    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  > summary > span {
+    color: var(--text-secondary);
+    font-size: 12px;
   }
   summary:focus-visible {
     outline: 2px solid var(--text-primary);
     outline-offset: 4px;
   }
-}
-.settingsBody {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  padding-block: 24px;
-  form {
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--border-color);
-  }
-  h3 {
-    margin-top: 0;
+  > :global(.form-group) {
+    max-width: 400px;
   }
 }
-.formGrid {
+.modelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 18px;
+}
+.modelCard {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px;
+  min-width: 0;
+  > header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    h3 {
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+      font-size: 12px;
+    }
+    a {
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+  }
+  footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  :global(.form-group) {
+    margin-bottom: 0;
+  }
+  :global(label) {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  :global(input) {
+    font-size: 12px;
+  }
+}
+.modelStatus {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 10px;
+  margin: 8px 0 20px;
+}
+.priceFields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 20px;
+  gap: 14px 12px;
 }
-.overrideList {
-  list-style: none;
-  padding: 0;
-  li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  code {
-    overflow-wrap: anywhere;
+.contextPrices {
+  font-size: 11px;
+  margin-top: 16px;
+  summary {
+    margin-bottom: 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
   }
 }
 @media (max-width: 768px) {
-  .header,
-  .weekHeader {
-    flex-direction: column;
+  .header {
+    align-items: flex-start;
   }
-  .chartGrid,
-  .formGrid {
+  .controls {
+    gap: 2px;
+  }
+  .fxQuote {
+    max-width: 150px;
+  }
+  .periodControls {
+    flex-wrap: wrap;
+  }
+  .peopleSpend,
+  .companyGrid,
+  .modelGrid {
     grid-template-columns: 1fr;
   }
-  .accountOption {
-    max-width: 260px;
+  .companyCard {
+    padding: 16px;
+  }
+}
+@media (max-width: 480px) {
+  .pieContent {
+    grid-template-columns: 124px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .pieStage {
+    width: 124px;
+    height: 124px;
+  }
+  .pieCenter {
+    padding: 30px;
+    strong {
+      font-size: 21px;
+    }
+    span {
+      max-width: 70px;
+      font-size: 9px;
+    }
+  }
+  .spendTooltip {
+    gap: 6px;
+    font-size: 10px;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+@media (max-width: 360px) {
+  .pieContent {
+    grid-template-columns: 108px minmax(0, 1fr);
+  }
+  .pieStage {
+    width: 108px;
+    height: 108px;
+  }
+  .pieCenter {
+    padding: 26px;
+    strong {
+      font-size: 18px;
+    }
+    span {
+      max-width: 60px;
+    }
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .accountOption {
+  .donutSlice,
+  .pieLegend li,
+  .spendSegment {
     transition: none;
   }
 }

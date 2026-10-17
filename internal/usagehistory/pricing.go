@@ -23,14 +23,15 @@ var seedPrices []byte
 
 // Rates are USD per million tokens. Missing cache rates are not assumed free.
 type Rates struct {
-	Input       float64  `json:"input"`
-	Output      float64  `json:"output"`
-	CacheRead   *float64 `json:"cache_read,omitempty"`
-	CacheWrite  *float64 `json:"cache_write,omitempty"`
-	Source      string   `json:"source,omitempty"`
-	AsOf        string   `json:"as_of,omitempty"`
-	ContextOver int64    `json:"context_over,omitempty"`
-	LongContext *Rates   `json:"long_context,omitempty"`
+	Input            float64  `json:"input"`
+	Output           float64  `json:"output"`
+	CacheRead        *float64 `json:"cache_read,omitempty"`
+	CacheWrite       *float64 `json:"cache_write,omitempty"`
+	Source           string   `json:"source,omitempty"`
+	AsOf             string   `json:"as_of,omitempty"`
+	ContextOver      int64    `json:"context_over,omitempty"`
+	ContextInclusive bool     `json:"context_inclusive,omitempty"`
+	LongContext      *Rates   `json:"long_context,omitempty"`
 }
 
 // UnmarshalJSON distinguishes an explicit free rate from a missing price.
@@ -73,6 +74,12 @@ func OpenPricing(dir string) (*Pricing, error) {
 	}
 	if len(p.catalog.Models) == 0 {
 		return nil, fmt.Errorf("empty price catalog")
+	}
+	for key, rate := range p.catalog.Models {
+		if strings.HasPrefix(key, "zai/") && rate.CacheWrite != nil && *rate.CacheWrite == 0 {
+			rate.CacheWrite = nil
+			p.catalog.Models[key] = rate
+		}
 	}
 	for _, rate := range p.catalog.Models {
 		if !validRates(rate) || rate.LongContext != nil && !validRates(*rate.LongContext) {
@@ -151,8 +158,8 @@ func ParsePublicPrices(data []byte, asOf string) (PriceCatalog, error) {
 				CacheRead  *float64 `json:"cache_read"`
 				CacheWrite *float64 `json:"cache_write"`
 				Tiers      []struct {
-					Input      float64  `json:"input"`
-					Output     float64  `json:"output"`
+					Input      *float64 `json:"input"`
+					Output     *float64 `json:"output"`
 					CacheRead  *float64 `json:"cache_read"`
 					CacheWrite *float64 `json:"cache_write"`
 					Tier       struct {
@@ -174,14 +181,22 @@ func ParsePublicPrices(data []byte, asOf string) (PriceCatalog, error) {
 				continue
 			}
 			rate := Rates{Input: *cost.Input, Output: *cost.Output, CacheRead: cost.CacheRead, CacheWrite: cost.CacheWrite, Source: "models.dev/" + vendor, AsOf: asOf}
+			// Z.ai's free cache storage is not a published per-token cache-write tariff.
+			if vendor == "zai" && rate.CacheWrite != nil && *rate.CacheWrite == 0 {
+				rate.CacheWrite = nil
+			}
 			if !validRates(rate) {
 				continue
 			}
 			for _, tier := range cost.Tiers {
 				if tier.Tier.Type == "context" && tier.Tier.Size > 0 && (rate.ContextOver == 0 || tier.Tier.Size < rate.ContextOver) {
-					extra := Rates{Input: tier.Input, Output: tier.Output, CacheRead: tier.CacheRead, CacheWrite: tier.CacheWrite, Source: rate.Source, AsOf: asOf}
+					rate.ContextOver = tier.Tier.Size
+					rate.ContextInclusive = vendor == "xai"
+					if tier.Input == nil || tier.Output == nil {
+						continue
+					}
+					extra := Rates{Input: *tier.Input, Output: *tier.Output, CacheRead: tier.CacheRead, CacheWrite: tier.CacheWrite, Source: rate.Source, AsOf: asOf}
 					if validRates(extra) {
-						rate.ContextOver = tier.Tier.Size
 						rate.LongContext = &extra
 					}
 				}
@@ -206,9 +221,19 @@ func (p *Pricing) Resolve(record usage.Record, overrides map[string]Rates) *Rate
 		model = strings.TrimSpace(record.Model)
 	}
 	providerName := strings.TrimPrefix(strings.TrimPrefix(strings.ToLower(record.Provider), "openai-compatible-"), "openai-compatibility-")
-	for _, key := range []string{record.Provider + "/" + model, providerName + "/" + model, model} {
-		if rate, ok := overrides[key]; ok {
-			return effectiveRate(rate, record)
+	for _, candidate := range []string{strings.TrimSpace(record.Alias), model, strings.TrimSpace(record.Model)} {
+		if candidate == "" {
+			continue
+		}
+		for _, key := range []string{record.Provider + "/" + candidate, providerName + "/" + candidate, candidate} {
+			if rate, ok := overrides[key]; ok {
+				return effectiveRate(rate, record)
+			}
+		}
+	}
+	for _, candidate := range []string{record.Alias, model} {
+		if info, found := referenceModels()[candidate]; found && (info.Status == "self_hosted" || info.Status == "subscription_only" || info.Status == "unpublished") {
+			return nil
 		}
 	}
 	for _, unsupported := range []string{"audio", "realtime", "image", "video", "tts", "transcrib"} {
@@ -222,6 +247,11 @@ func (p *Pricing) Resolve(record usage.Record, overrides map[string]Rates) *Rate
 	}
 	if tier != "" && tier != "auto" && tier != "default" && tier != "standard" {
 		return nil
+	}
+	if fallback := researchedTokenRate(model); fallback != nil {
+		if p == nil || p.AsOf() <= fallback.AsOf {
+			return effectiveRate(*fallback, record)
+		}
 	}
 	if p == nil {
 		return nil
@@ -259,12 +289,18 @@ func (p *Pricing) Resolve(record usage.Record, overrides map[string]Rates) *Rate
 	if len(candidates) == 1 {
 		return effectiveRate(p.catalog.Models[candidates[0]], record)
 	}
+	if fallback := researchedTokenRate(model); fallback != nil {
+		return effectiveRate(*fallback, record)
+	}
 	return nil
 }
 
 func effectiveRate(rate Rates, record usage.Record) *Rates {
 	detail := usage.EnsureTokenBreakdownForProvider(record.Detail, record.Provider, record.ExecutorType)
-	if rate.LongContext != nil && detail.TokenBreakdown.Input.TotalTokens > rate.ContextOver {
+	if rate.ContextOver > 0 && (detail.TokenBreakdown.Input.TotalTokens > rate.ContextOver || rate.ContextInclusive && detail.TokenBreakdown.Input.TotalTokens == rate.ContextOver) {
+		if rate.LongContext == nil {
+			return nil
+		}
 		rate = *rate.LongContext
 	}
 	rate.LongContext = nil

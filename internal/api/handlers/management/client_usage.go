@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagehistory"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	log "github.com/sirupsen/logrus"
@@ -71,7 +72,7 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "client usage history persistence unavailable"})
 		return
 	}
-	weeks, errWeeks := h.clientUsage.Weeks()
+	weeks, errWeeks := h.clientUsage.Reports(from, to)
 	if errWeeks != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "weekly usage history unavailable"})
 		return
@@ -115,6 +116,11 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 				accounts[id] = info
 			}
 			info["provider"] = quotaViewProvider(account)
+			email, fee := h.clientUsageAccountInfo(account)
+			info["email"] = email
+			if fee != nil {
+				info["monthly_fee_usd"] = *fee
+			}
 			if plan := account.Attributes["plan_type"]; plan != "" {
 				info["plan"] = plan
 			}
@@ -135,5 +141,9 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 	if h.clientPricing != nil {
 		catalogDate = h.clientPricing.AsOf()
 	}
-	c.JSON(http.StatusOK, gin.H{"from": from, "to": to, "timezone": "UTC", "retention_days": usagehistory.RetentionDays, "collection_enabled": enabled, "rows": rows, "account_labels": labels, "key_labels": keyLabels, "weeks": weeks, "accounts": accounts, "settings": settings, "prices_as_of": catalogDate})
+	models := make([]usagehistory.ModelReference, 0)
+	for _, model := range registry.GetGlobalRegistry().GetAvailableModelInfos() {
+		models = append(models, h.clientPricing.ModelReference(model.ID, model.OwnedBy, model.MetadataModelID, settings))
+	}
+	c.JSON(http.StatusOK, gin.H{"models": models, "from": from, "to": to, "timezone": "UTC", "retention_days": usagehistory.RetentionDays, "collection_enabled": enabled, "rows": rows, "account_labels": labels, "key_labels": keyLabels, "weeks": weeks, "accounts": accounts, "settings": settings, "prices_as_of": catalogDate})
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -15,14 +16,15 @@ type Sample struct {
 }
 
 type Cycle struct {
-	ID        string    `json:"id"`
-	AccountID string    `json:"account_id"`
-	Provider  string    `json:"provider"`
-	Scope     string    `json:"scope"`
-	Plan      string    `json:"plan"`
-	Start     time.Time `json:"start"`
-	Reset     time.Time `json:"reset"`
-	Samples   []Sample  `json:"samples"`
+	ID            string    `json:"id"`
+	AccountID     string    `json:"account_id"`
+	Provider      string    `json:"provider"`
+	Scope         string    `json:"scope"`
+	PeriodSeconds int64     `json:"period_seconds,omitempty"`
+	Plan          string    `json:"plan"`
+	Start         time.Time `json:"start"`
+	Reset         time.Time `json:"reset"`
+	Samples       []Sample  `json:"samples"`
 }
 
 type PersonWeek struct {
@@ -47,7 +49,11 @@ type WeeklyReport struct {
 }
 
 func (s *Store) ObserveQuota(accountID, provider, scope, plan string, reset, at time.Time, used float64) error {
-	if math.IsNaN(used) || at.IsZero() || reset.IsZero() || !at.Before(reset) || at.Before(reset.Add(-Week)) || used < 0 || used > 100 {
+	return s.ObserveQuotaWindow(accountID, provider, scope, plan, reset, at, used, Week)
+}
+
+func (s *Store) ObserveQuotaWindow(accountID, provider, scope, plan string, reset, at time.Time, used float64, period time.Duration) error {
+	if period < time.Minute || period > 31*24*time.Hour || math.IsNaN(used) || at.IsZero() || reset.IsZero() || !at.Before(reset) || at.Before(reset.Add(-period)) || used < 0 || used > 100 {
 		return nil
 	}
 	s.mu.Lock()
@@ -56,10 +62,14 @@ func (s *Store) ObserveQuota(accountID, provider, scope, plan string, reset, at 
 		return nil
 	}
 	account := Fingerprint(accountID)
-	id := account + "|" + scope + "|" + reset.UTC().Format(time.RFC3339)
+	windowKey := ""
+	if period != Week {
+		windowKey = period.String() + "|"
+	}
+	id := account + "|" + scope + "|" + windowKey + reset.UTC().Format(time.RFC3339)
 	cycle := s.cycles[id]
 	if cycle.ID == "" {
-		cycle = Cycle{ID: id, AccountID: account, Provider: provider, Scope: scope, Plan: plan, Start: reset.Add(-Week).UTC(), Reset: reset.UTC(), Samples: []Sample{}}
+		cycle = Cycle{ID: id, AccountID: account, Provider: provider, Scope: scope, PeriodSeconds: int64(period / time.Second), Plan: plan, Start: reset.Add(-period).UTC(), Reset: reset.UTC(), Samples: []Sample{}}
 	}
 	if len(cycle.Samples) > 0 && !at.After(cycle.Samples[len(cycle.Samples)-1].At) {
 		return nil
@@ -89,8 +99,17 @@ func (s *Store) ObserveQuota(accountID, provider, scope, plan string, reset, at 
 	return nil
 }
 
-func (s *Store) Weeks() ([]WeeklyReport, error) {
-	rows, err := s.Snapshot("0000-01-01", "9999-12-31")
+func (s *Store) Weeks() ([]WeeklyReport, error) { return s.Reports("0000-01-01", "9999-12-31") }
+
+func (s *Store) Reports(from, to string) ([]WeeklyReport, error) {
+	before, after := from, to
+	if at, err := time.Parse(DateLayout, from); err == nil && from != "0000-01-01" {
+		before = at.AddDate(0, 0, -31).Format(DateLayout)
+	}
+	if at, err := time.Parse(DateLayout, to); err == nil && to != "9999-12-31" {
+		after = at.AddDate(0, 0, 31).Format(DateLayout)
+	}
+	rows, err := s.Snapshot(before, after)
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +130,9 @@ func (s *Store) Weeks() ([]WeeklyReport, error) {
 	}
 	out := make([]WeeklyReport, 0, len(s.cycles))
 	for _, cycle := range s.cycles {
+		if cycle.Reset.UTC().Format(DateLayout) < from || cycle.Start.UTC().Format(DateLayout) > to {
+			continue
+		}
 		if len(cycle.Samples) == 0 || cycle.Reset.Before(s.now().AddDate(0, 0, -RetentionDays)) {
 			continue
 		}
@@ -158,7 +180,7 @@ func BuildWeek(cycle Cycle, rows []Row, now time.Time) WeeklyReport {
 		if row.At.IsZero() {
 			continue
 		} // Old daily rows cannot be assigned across reset boundaries.
-		if cycle.Scope != "" && cycle.Scope != "account" && cycle.Scope != row.Model {
+		if !quotaScopeMatches(cycle.Scope, row.Model) {
 			continue
 		}
 		person := people[row.KeyID]
@@ -242,8 +264,18 @@ func BuildWeek(cycle Cycle, rows []Row, now time.Time) WeeklyReport {
 	return report
 }
 
+func quotaScopeMatches(scope, model string) bool {
+	if scope == "" || scope == "account" {
+		return true
+	}
+	if strings.HasPrefix(scope, "family:") {
+		return strings.HasPrefix(strings.ToLower(model), "claude-"+strings.TrimPrefix(scope, "family:")+"-")
+	}
+	return scope == model
+}
+
 func validCycle(key string, cycle Cycle) bool {
-	if cycle.ID != key || cycle.AccountID == "" || cycle.Reset.Sub(cycle.Start) != Week || len(cycle.Samples) == 0 {
+	if cycle.ID != key || cycle.AccountID == "" || cycle.Reset.Sub(cycle.Start) < time.Minute || cycle.Reset.Sub(cycle.Start) > 31*24*time.Hour || cycle.PeriodSeconds != 0 && time.Duration(cycle.PeriodSeconds)*time.Second != cycle.Reset.Sub(cycle.Start) || len(cycle.Samples) == 0 {
 		return false
 	}
 	var before time.Time

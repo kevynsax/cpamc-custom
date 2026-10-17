@@ -3,22 +3,24 @@ package usagehistory
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	"math"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 )
 
 type Settings struct {
-	Names  map[string]string `json:"names"`
-	Plans  map[string]string `json:"plans"`
-	Prices map[string]Rates  `json:"prices"`
+	Names      map[string]string             `json:"names"`
+	Plans      map[string]string             `json:"plans"`
+	Prices     map[string]Rates              `json:"prices"`
+	UnitPrices map[string]map[string]float64 `json:"unit_prices"`
 }
 
 func emptySettings() Settings {
-	return Settings{Names: map[string]string{}, Plans: map[string]string{}, Prices: map[string]Rates{}}
+	return Settings{Names: map[string]string{}, Plans: map[string]string{}, Prices: map[string]Rates{}, UnitPrices: map[string]map[string]float64{}}
 }
 
 func validRates(rate Rates) bool {
@@ -41,6 +43,14 @@ func validFingerprint(value string) bool {
 func (s *Store) PriceFor(pricing *Pricing, record usage.Record) *Rates {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	for _, key := range []string{record.Alias, record.ResponseModel, record.Model} {
+		if _, explicit := s.settings.UnitPrices[key]; explicit {
+			if _, tokenRate := s.settings.Prices[key]; !tokenRate {
+				return nil
+			}
+			break
+		}
+	}
 	return pricing.Resolve(record, s.settings.Prices)
 }
 
@@ -54,7 +64,7 @@ func (s *Store) Settings() Settings {
 }
 
 func (s *Store) UpdateSettings(settings Settings) error {
-	if len(settings.Names) > 10000 || len(settings.Plans) > 10000 || len(settings.Prices) > 10000 {
+	if len(settings.Names) > 10000 || len(settings.Plans) > 10000 || len(settings.Prices) > 10000 || len(settings.UnitPrices) > 10000 {
 		return fmt.Errorf("too many usage settings")
 	}
 	for _, values := range []map[string]string{settings.Names, settings.Plans} {
@@ -70,9 +80,35 @@ func (s *Store) UpdateSettings(settings Settings) error {
 		}
 		rate.Source = "manual"
 		rate.AsOf = s.now().UTC().Format(DateLayout)
-		rate.LongContext = nil
-		rate.ContextOver = 0
+		if rate.ContextOver < 0 || rate.ContextOver > 100_000_000 || rate.LongContext != nil && (rate.ContextOver == 0 || !validRates(*rate.LongContext)) {
+			return fmt.Errorf("invalid context model price")
+		}
+		if rate.LongContext != nil {
+			long := *rate.LongContext
+			long.Source = rate.Source
+			long.AsOf = rate.AsOf
+			long.LongContext = nil
+			long.ContextOver = 0
+			rate.LongContext = &long
+		}
 		settings.Prices[model] = rate
+	}
+	allowed := map[string]bool{}
+	for _, key := range []string{"input", "output", "cache_read", "cache_write", "cache_write_1h", "long_input", "long_output", "long_cache_read", "long_cache_write", "image_input", "image_cache_read", "text_output", "per_image", "per_second", "per_minute", "per_million_characters"} {
+		allowed[key] = true
+	}
+	for model, fields := range settings.UnitPrices {
+		if strings.TrimSpace(model) == "" || len(model) > 200 || strings.ContainsAny(model, "\r\n\x00") || len(fields) > len(allowed) {
+			return fmt.Errorf("invalid unit model price")
+		}
+		for key, value := range fields {
+			if !allowed[key] || math.IsNaN(value) || math.IsInf(value, 0) || value < 0 || value > 1e6 {
+				return fmt.Errorf("invalid unit model rate")
+			}
+		}
+	}
+	if settings.UnitPrices == nil {
+		settings.UnitPrices = map[string]map[string]float64{}
 	}
 	if settings.Names == nil {
 		settings.Names = map[string]string{}

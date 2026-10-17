@@ -16,15 +16,52 @@ and the `cpamc-upgrade` skill: [`docs/custom-fork-maintenance.md`](docs/custom-f
 
 ## Features
 
-### Weekly API value and subscription capacity
+### API value in reais and company capacity pies
 
-The **Weekly usage** page (`#/usage`) is chart-first: choose an account, navigate its
-actual subscription reset weeks, and compare people by estimated API-equivalent
-USD cost and estimated share of that account's weekly quota. One client API key is
-one person; optional names replace masked keys. Each account's own weekly allowance
-is 100%, without assuming all Max/Pro/Plus plans have the same capacity. Detected plan
-labels have manual overrides. Accounts with no weekly reset show **cost only over the
-last seven days**, never a fabricated subscription percentage.
+The **Usage** page (`#/usage`) restores a per-person API-equivalent spending card
+above the company charts, with stacked company contributions and BRL totals. Company
+capacity uses segmented donut charts with remaining capacity in the center. Hovering
+a segment or legend item reveals its person/category, percentage and known amount;
+focus provides the same detail, arrow keys move between slices, Enter/Space or tapping
+pins a slice, and Escape dismisses its tooltip. Legends and chart segments highlight
+together, and reduced-motion preferences disable transitions. Existing API-key names
+from the configuration key editor identify people; there is no separate naming or
+subscription-label editor. Account progress uses the authenticated account email,
+resolved at read time from auth/profile metadata and never persisted in usage files.
+Available and already-wasted capacity are shown separately on each account's bar.
+A company pie is omitted entirely if any included account/window has incomplete
+quota observations or unidentified consumption; no unattributed/unknown slice is
+rendered or silently called available. The percentage matrix and old unused-capacity
+card stay removed. Only chart titles, figures and controls remain.
+
+API-dollar values are converted to BRL using the live **USDT/BRL buy** ticker from
+`wss://cross-otc.com/api/v1/websocket`, exactly the public quote used by cross-otc.com.
+This is an approved stablecoin reference, not a claim of a direct USD/BRL fixing.
+Only anonymous ticker subscribe/ping messages are sent; no keys or usage go to Cross.
+Quotes older than 45 seconds become unavailable, not silently reused. Canonical
+model rates remain in USD; BRL edits pin the quote when editing starts and convert
+back to USD on save so a moving quote cannot change an in-progress edit.
+
+Capacity is explicitly an **estimate**, not a physical shared-token balance. Per-plan
+quotas are normalized separately and averaged equally, so short-window reset counts
+do not overwhelm weekly limits. Plans within each company are pooled by published
+capacity multipliers where known (Claude Pro/Max 5x/Max 20x), with flagged
+price-proportional proxies for ambiguous OpenAI Pro tiers. Unknown tiers use an
+explicitly estimated unit weight, not a claimed published ratio. Current month
+includes all observed reset cycles, with crossing cycles prorated by time overlap;
+request spending uses actual UTC request dates without proration. Pies distinguish
+people, currently available and already-wasted capacity. Unknown history is not
+invented: incomplete pies are hidden.
+
+Small money tags use the **unused share of the subscription fee**, not a hypothetical
+API-value extrapolation. Public known monthly web fees or an explicit authenticated
+`monthly_fee_usd` account attribute are prorated by actual UTC calendar-month lengths
+to the selected period. Expired unused quota is red `(... wasted)`; unexpired quota
+in the current period is separately shown as `(... still for grabs)`. Each person's
+share is proportional to their attributed quota usage within that company. Unknown
+plan fees/quotas stay unset; aggregate known subtotals are marked as lower bounds,
+and unknown per-person allocations are never guessed. Unit-price configuration
+fields and the exchange-rate quote are not usage spending and do not get waste tags.
 
 Cost uses the canonical non-overlapping v2 token buckets (uncached input, cache reads,
 cache writes, and output including reasoning). A bundled native-vendor models.dev
@@ -36,11 +73,12 @@ models, incomplete accounting, missing cache rates and unsupported service tiers
 unpriced. This estimates standard token API value, not subscription billing, guaranteed
 savings, image/audio/tool fees or an API-dollar-to-subscription conversion.
 
-Successful quota cache reads/replays record numeric weekly observations for Claude,
-Codex, Meta, xAI, Kimi, Devin, MiniMax and Z.ai when their explicit weekly contracts are
-available. Claude uses only the account-wide `seven_day` pool, not model-specific or
-five-hour quotas. MiniMax's model pools stay separate. Other provider/plugin shapes
-remain explicitly unavailable rather than being guessed. Quota recipes must first be
+Successful quota cache reads/replays preserve each supported quota's own scope and
+duration: Claude five-hour, weekly and model-family windows; Codex reported windows;
+Meta session/weekly; Devin daily/weekly; MiniMax model intervals/weekly; Z.ai token
+windows; and existing xAI/Kimi weekly contracts. Independent observations remain
+separate on disk even though the UI averages them into a company-level index. Other
+provider/plugin shapes remain explicitly unavailable rather than being guessed. Quota recipes must first be
 registered by opening Quota and refreshing the account; subsequently safe GET recipes
 are replayed around the clock every 10 minutes when usage collection is enabled.
 
@@ -52,18 +90,35 @@ stay unattributed. Counter decreases invalidate that week's allocation rather th
 producing impossible percentages. Activity outside the gateway can still bias the
 shares and is disclosed. Missing observations and unsupported quotas are not zero.
 
-The unused-capacity chart follows each account/pool's reset weeks. Open weeks show
-**last observed remaining**, not waste. A completed week has an **unused upper bound**
-only if its final observation was within 15 minutes of reset; missing closing samples
-stay blank. No interpolation invents a final quota measurement.
+Closed cycles have an unused upper-bound estimate only when their final observation
+was within 15 minutes of reset; otherwise their leftover capacity stays unattributed.
+Open cycles contribute remaining capacity, not expired waste. Monthly budget slices
+are time-prorated estimates and must not be treated as an exact monthly token grant.
+
+Model-price cards cover the configured registry inventory. The researched snapshot
+`internal/usagehistory/model_reference.json` contains all 68 model IDs advertised by
+the live gateway on 2026-10-17: 34 published API tariffs, four explicitly labeled family
+references, and 30 self-hosted, subscription-only or unpublished entries left unset.
+Each card links its public evidence. Image, video and voice rates retain their native
+units; they are never passed to token accounting without the corresponding metered
+quantities. Unknown prices do not mean free. Card edits preserve cache/context tiers;
+an explicit reset restores researched defaults. Sources include the Anthropic,
+OpenAI, xAI, Meta, MiniMax and Z.ai pricing/model documentation and models.dev. In
+particular, Muse Wonder Full and MiniMax M3.1 Flash Preview have no published matching
+pay-as-you-go API rate; Z.ai's promotional free cache storage is not a per-token write
+price. Local aliases are not assigned invented hosted tariffs.
 
 All endpoints use existing v8 management authentication:
 - `GET /v8/management/observability/usage/clients?from=YYYY-MM-DD&to=YYYY-MM-DD`
   returns minute/model rows for inclusive UTC dates (default last 30 days), summarized
-  `weeks`, account/key labels, accounts, settings, collection status and catalog date.
-- `PUT /v8/management/observability/usage/settings` replaces `names`, `plans` and
-  `prices` maps. Name/plan keys are full SHA-256 identities. Model prices are USD per
-  million tokens (`input`, `output`, optional `cache_read`/`cache_write`).
+  reset-cycle reports under the legacy `weeks` field, account/key labels, accounts,
+  configured model-price references, settings, collection status and catalog date.
+  Cycle reports retain their actual `period_seconds`, not an assumed seven days.
+- `PUT /v8/management/observability/usage/settings` preserves legacy `names`/`plans`
+  compatibility and replaces `prices` and `unit_prices` maps. Token overrides use USD
+  per million tokens, including optional context thresholds and long-context rates;
+  native image/second/minute/character reference overrides retain their units. Legacy
+  names are no longer a UI naming source; the key editor's existing names are reused.
 - `POST /v8/management/observability/usage/prices/refresh` fetches public prices only;
   no usage or credentials are sent to models.dev.
 
@@ -82,6 +137,14 @@ preserves history. There is no historical backfill or retrospective repricing of
 daily-only rows. The existing asynchronous usage dispatcher can briefly lag inference;
 a hard kill can lose events not yet dispatched.
 
+
+For local UI iteration, `cd panel && bun run dev:usage` starts a loopback-only Vite
+preview at `http://127.0.0.1:5190/#/usage` with HMR and a fake API. The eight-account
+provider/plan lineup matches the server quota view captured on 2026-10-17, but all
+identities, people and usage are synthetic. Model prices are researched public
+references, and BRL conversion reads the real public Cross ticker. No gateway or
+provider credentials or inference calls are needed. The preview entry and API are serve-only and absent from normal
+production builds. See `panel/dev/usage/README.md`.
 
 ### Native Jev decisions gateway
 

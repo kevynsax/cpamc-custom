@@ -23,12 +23,16 @@ export interface UsageRates {
   output: number;
   cache_read?: number;
   cache_write?: number;
+  context_over?: number;
+  context_inclusive?: boolean;
+  long_context?: UsageRates;
 }
 
 export interface UsageSettings {
   names: Record<string, string>;
   plans: Record<string, string>;
   prices: Record<string, UsageRates>;
+  unit_prices?: Record<string, Record<string, number>>;
 }
 
 export interface PersonWeek {
@@ -44,6 +48,7 @@ export interface UsageWeek {
   accountId: string;
   provider: string;
   scope: string;
+  periodSeconds?: number;
   plan: string;
   start: string;
   reset: string;
@@ -60,9 +65,24 @@ export interface UsageWeek {
 
 export interface UsageAccount {
   id: string;
+  email?: string;
+  monthlyFeeUsd?: number | null;
   provider: string;
   plan: string;
 }
+export interface UsageModelPrice {
+  id: string;
+  provider: string;
+  kind: string;
+  status: string;
+  prices: Record<string, number>;
+  sources: string[];
+  checkedAt: string;
+  contextThreshold: number;
+  contextInclusive: boolean;
+  overridden: boolean;
+}
+
 export interface ClientUsageResponse {
   collectionEnabled: boolean;
   rows: ClientUsageRow[];
@@ -72,6 +92,7 @@ export interface ClientUsageResponse {
   weeks: UsageWeek[];
   settings: UsageSettings;
   pricesAsOf: string;
+  models?: UsageModelPrice[];
 }
 
 function object(value: unknown): Record<string, unknown> {
@@ -108,6 +129,27 @@ function labels(value: unknown): Record<string, string> {
   );
 }
 
+function numericMap(value: unknown): Record<string, number> {
+  const row = object(value);
+  return Object.fromEntries(Object.keys(row).map((key) => [key, count(row, key)]));
+}
+function normalizeRates(value: unknown): UsageRates {
+  const rate = object(value);
+  return {
+    input: count(rate, 'input'),
+    output: count(rate, 'output'),
+    ...(rate.cache_read != null ? { cache_read: count(rate, 'cache_read') } : {}),
+    ...(rate.cache_write != null ? { cache_write: count(rate, 'cache_write') } : {}),
+    ...(rate.context_over != null
+      ? {
+          context_over: count(rate, 'context_over'),
+          context_inclusive: rate.context_inclusive === true,
+        }
+      : {}),
+    ...(rate.long_context ? { long_context: normalizeRates(rate.long_context) } : {}),
+  };
+}
+
 export function normalizeClientUsage(value: unknown): ClientUsageResponse {
   const data = object(value);
   const settings = object(data.settings);
@@ -120,27 +162,42 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
       names: labels(settings.names),
       plans: labels(settings.plans),
       prices: Object.fromEntries(
-        Object.entries(object(settings.prices)).map(([model, value]) => {
-          const rate = object(value);
-          return [
-            model,
-            {
-              input: count(rate, 'input'),
-              output: count(rate, 'output'),
-              ...(rate.cache_read !== undefined ? { cache_read: count(rate, 'cache_read') } : {}),
-              ...(rate.cache_write !== undefined
-                ? { cache_write: count(rate, 'cache_write') }
-                : {}),
-            },
-          ];
-        })
+        Object.entries(object(settings.prices)).map(([model, rate]) => [
+          model,
+          normalizeRates(rate),
+        ])
+      ),
+      unit_prices: Object.fromEntries(
+        Object.entries(object(settings.unit_prices ?? {})).map(([id, fields]) => [
+          id,
+          numericMap(fields),
+        ])
       ),
     },
+    models: (data.models === undefined ? [] : array(data, 'models')).map((value) => {
+      const model = object(value);
+      return {
+        id: text(model, 'id'),
+        provider: text(model, 'provider'),
+        kind: text(model, 'kind'),
+        status: text(model, 'status'),
+        prices: numericMap(model.prices),
+        sources: array(model, 'sources').filter(
+          (value): value is string => typeof value === 'string' && value.startsWith('https://')
+        ),
+        checkedAt: text(model, 'checked_at'),
+        contextThreshold: model.context_threshold ? count(model, 'context_threshold') : 0,
+        contextInclusive: model.context_inclusive === true,
+        overridden: model.overridden === true,
+      };
+    }),
     accounts: Object.entries(object(data.accounts))
       .map(([id, value]) => {
         const account = object(value);
         return {
           id,
+          email: typeof account.email === 'string' ? account.email : '',
+          monthlyFeeUsd: nullableCount(account, 'monthly_fee_usd'),
           provider: text(account, 'provider'),
           plan: typeof account.plan === 'string' ? account.plan : '',
         };
@@ -178,6 +235,9 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
         accountId: text(week, 'account_id'),
         provider: text(week, 'provider'),
         scope: text(week, 'scope'),
+        periodSeconds: week.period_seconds
+          ? count(week, 'period_seconds')
+          : (Date.parse(text(week, 'reset')) - Date.parse(text(week, 'start'))) / 1000,
         plan: text(week, 'plan'),
         start: text(week, 'start'),
         reset: text(week, 'reset'),

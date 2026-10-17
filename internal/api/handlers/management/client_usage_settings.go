@@ -77,7 +77,7 @@ func (h *Handler) observeClientQuota(recipe customQuotaRecipe, response apiCallR
 			}
 		}
 	}
-	windows, detected := usagehistory.ParseWeeklyQuota(provider, []byte(response.Body))
+	windows, detected := usagehistory.ParseQuotaWindows(provider, []byte(response.Body))
 	if len(windows) == 0 {
 		return
 	}
@@ -98,7 +98,7 @@ func (h *Handler) observeClientQuota(recipe customQuotaRecipe, response apiCallR
 		customQuota.mu.Unlock()
 	}
 	for _, window := range windows {
-		if err := h.clientUsage.ObserveQuota(recipe.AuthID, provider, window.Scope, plan, window.Reset, at, window.Used); err != nil {
+		if err := h.clientUsage.ObserveQuotaWindow(recipe.AuthID, provider, window.Scope, plan, window.Reset, at, window.Used, window.Period); err != nil {
 			log.WithError(err).Error("Persist subscription reset history")
 		}
 	}

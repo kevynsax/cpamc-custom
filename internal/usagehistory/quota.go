@@ -8,9 +8,10 @@ import (
 )
 
 type QuotaWindow struct {
-	Scope string
-	Reset time.Time
-	Used  float64
+	Scope  string
+	Reset  time.Time
+	Used   float64
+	Period time.Duration
 }
 
 func object(v any) map[string]any { m, _ := v.(map[string]any); return m }
@@ -51,6 +52,9 @@ func ParseWeeklyQuota(provider string, body []byte) ([]QuotaWindow, string) {
 	}
 	plan := text(root["plan_type"])
 	if plan == "" {
+		plan = text(root["subscriptionTier"])
+	}
+	if plan == "" {
 		plan = text(object(root["organization"])["rate_limit_tier"])
 	}
 	if plan == "" {
@@ -69,7 +73,7 @@ func ParseWeeklyQuota(provider string, body []byte) ([]QuotaWindow, string) {
 		p, ok := number(used)
 		at := instant(reset)
 		if ok && p >= 0 && p <= 100 && !at.IsZero() {
-			result = append(result, QuotaWindow{Scope: scope, Reset: at, Used: p})
+			result = append(result, QuotaWindow{Scope: scope, Reset: at, Used: p, Period: Week})
 		}
 	}
 	switch strings.ToLower(provider) {
