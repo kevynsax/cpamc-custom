@@ -18,6 +18,7 @@ import {
 import { latestQuotaSnapshots } from '../src/features/usage/quotaSnapshots';
 import { PersonDetails } from '../src/features/usage/PersonDetails';
 import { ModelValuePie } from '../src/features/usage/ModelValuePie';
+import { CompanyPies } from '../src/features/usage/CompanyPies';
 import { FeeTags } from '../src/features/usage/FeeTags';
 import { withInHousePrices } from '../src/features/usage/inHousePrices';
 import { SubscriptionFacts } from '../src/features/usage/SubscriptionFacts';
@@ -245,6 +246,55 @@ describe('usage reporting', () => {
     expect(person).not.toContain('Requests');
     expect(person).toContain('data-value-pie=');
     expect(person).not.toContain('Infinity');
+  });
+  test('a Spark reference estimate makes the In house money chart visible without quota tracking', () => {
+    const fixture = createUsageFixture(now);
+    const original = {
+      ...fixture.rows[0],
+      at: now.toISOString(),
+      date: now.toISOString().slice(0, 10),
+      provider: 'openai-compatible-spark',
+      model: '/models/Qwen3-VL-30B-A3B-Instruct-Q4_K_M.gguf',
+      model_alias: 'qwen-vl',
+      cost_usd: null,
+      reference_cost_usd: 0.00027,
+      requests: 1,
+      unpriced_requests: 1,
+      failed: 0,
+      input_tokens: 1000,
+      cached_tokens: 800,
+      output_tokens: 200,
+      total_tokens: 1200,
+    };
+    const data = normalizeClientUsage({
+      ...fixture,
+      rows: [original],
+      weeks: [],
+      accounts: { [original.account_id]: { provider: 'spark', plan: '', email: '' } },
+    });
+    const companies = buildCompanyUsage(data, 'month', 0, now);
+    const selected = periodRows(data, 'month', 0, now);
+    expect(companies[0].id).toBe('in_house');
+    expect(companies[0].costUsd).toBe(0.00027);
+    expect(companies[0].chartAvailable).toBe(false);
+    const rendered = html(
+      createElement(CompanyPies, {
+        data,
+        companies,
+        rows: selected.current,
+        names: {},
+        quote: { rate: 5, observedAt: Date.now() },
+        icons: {},
+        classes,
+      })
+    );
+    expect(rendered).toContain('In house');
+    expect(rendered).toContain('data-model-value-chart="in_house"');
+    expect(rendered).toContain('Qwen 3 VL 30B A3B');
+    expect(rendered).toContain('<svg');
+    expect(rendered).toContain('R$');
+    expect(original.cost_usd).toBeNull();
+    expect(original.unpriced_requests).toBe(1);
   });
   test('price pies are weighted by cost, not token count, and never reprice unknown rows', () => {
     const rows = [

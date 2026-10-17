@@ -5,6 +5,7 @@ import { donutPath, donutSegments, PERSON_COLORS } from './pie';
 import { valueByModel } from './reporting';
 import { formatReais, type CrossQuote } from './currency';
 import { friendlyModelName } from './modelNames';
+import { formatUsagePercent } from './utils';
 
 export interface ValueSlice {
   id: string;
@@ -51,7 +52,7 @@ export function ValuePie({
     ];
   const price = (usd: number) => formatReais(usd, quote);
   const describe = (part: (typeof segments)[number]) =>
-    `${part.label} · ${price(part.costUsd)} · ${part.value.toFixed(1)}%`;
+    `${part.label} · ${price(part.costUsd)} · ${formatUsagePercent(part.value, i18n.language)}`;
   if (total <= 0 || price(total) === '—') return null;
   return (
     <section className={styles.tokenBreakdown} data-value-pie={title}>
@@ -117,9 +118,7 @@ export function ValuePie({
               >
                 <span className={styles.legendDot} style={{ backgroundColor: color(part.id) }} />
                 <span>{part.label}</span>
-                <strong>
-                  {part.value.toLocaleString(i18n.language, { maximumFractionDigits: 1 })}%
-                </strong>
+                <strong>{formatUsagePercent(part.value, i18n.language)}</strong>
                 <small>
                   {price(part.costUsd)}
                   {part.wastedUsd != null && part.wastedUsd > 0 && (

@@ -51,6 +51,32 @@ describe('client usage', () => {
     expect(data.keyLabels['key-a']).toBe('••••abcd');
   });
 
+  test('separate in-house reference estimates reach money charts without changing recorded history', () => {
+    const projected = {
+      ...rawRow,
+      provider: 'openai-compatible-spark',
+      model: '/models/Qwen3-VL-30B-A3B-Instruct-Q4_K_M.gguf',
+      model_alias: 'qwen-vl',
+      cost_usd: null,
+      unpriced_requests: 2,
+      reference_cost_usd: 0.00027,
+    };
+    const data = normalizeClientUsage(response([projected]));
+    expect(data.rows[0].model).toBe('qwen-vl');
+    expect(data.rows[0].costUsd).toBe(0.00027);
+    expect(data.rows[0].recordedCostUsd).toBeNull();
+    expect(data.rows[0].referenceCostUsd).toBe(0.00027);
+    expect(data.rows[0].unpriced).toBe(0);
+    expect(projected.cost_usd).toBeNull();
+    expect(projected.unpriced_requests).toBe(2);
+    expect(projected.model).toContain('/models/');
+  });
+  test('recorded costs win over a separate reference estimate', () => {
+    const projected = { ...rawRow, cost_usd: 9, reference_cost_usd: 99, unpriced_requests: 0 };
+    const data = normalizeClientUsage(response([projected]));
+    expect(data.rows[0].costUsd).toBe(9);
+    expect(data.rows[0].referenceCostUsd).toBeUndefined();
+  });
   test('rejects malformed rows instead of displaying false zero usage', () => {
     for (const value of [
       null,

@@ -155,5 +155,5 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 		reference.DisplayName = model.DisplayName
 		models = append(models, reference)
 	}
-	c.JSON(http.StatusOK, gin.H{"models": models, "from": from, "to": to, "timezone": "UTC", "retention_days": usagehistory.RetentionDays, "collection_enabled": enabled, "rows": rows, "account_labels": labels, "key_labels": keyLabels, "key_names": h.clientUsage.KeyNames(), "key_kinds": h.clientKeyMetadata().Kinds, "weeks": weeks, "accounts": accounts, "settings": settings, "prices_as_of": catalogDate})
+	c.JSON(http.StatusOK, gin.H{"models": models, "from": from, "to": to, "timezone": "UTC", "retention_days": usagehistory.RetentionDays, "collection_enabled": enabled, "rows": usagehistory.WithInHouseReferenceEstimates(rows), "account_labels": labels, "key_labels": keyLabels, "key_names": h.clientUsage.KeyNames(), "key_kinds": h.clientKeyMetadata().Kinds, "weeks": weeks, "accounts": accounts, "settings": settings, "prices_as_of": catalogDate})
 }

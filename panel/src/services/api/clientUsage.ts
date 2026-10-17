@@ -16,6 +16,8 @@ export interface ClientUsageRow {
   cachedTokens: number;
   totalTokens: number;
   costUsd: number | null;
+  recordedCostUsd?: number | null;
+  referenceCostUsd?: number;
   unpriced: number;
 }
 
@@ -236,10 +238,18 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
       .sort((a, b) => a.provider.localeCompare(b.provider) || a.id.localeCompare(b.id)),
     rows: array(data, 'rows').map((value) => {
       const row = object(value);
+      const recordedCost = nullableCount(row, 'cost_usd');
+      const referenceCost = nullableCount(row, 'reference_cost_usd');
+      const estimated = recordedCost === null && referenceCost !== null;
       return {
         date: text(row, 'date'),
         at: typeof row.at === 'string' ? row.at : '',
-        model: typeof row.model === 'string' ? row.model : '',
+        model:
+          typeof row.model_alias === 'string' && row.model_alias.trim()
+            ? row.model_alias
+            : typeof row.model === 'string'
+              ? row.model
+              : '',
         keyId: text(row, 'key_id'),
         accountId: text(row, 'account_id'),
         provider: text(row, 'provider'),
@@ -250,9 +260,13 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
         outputTokens: count(row, 'output_tokens'),
         cachedTokens: count(row, 'cached_tokens'),
         totalTokens: count(row, 'total_tokens'),
-        costUsd: nullableCount(row, 'cost_usd'),
-        unpriced:
-          row.cost_usd == null
+        costUsd: recordedCost ?? referenceCost,
+        ...(estimated && referenceCost !== null
+          ? { recordedCostUsd: recordedCost, referenceCostUsd: referenceCost }
+          : {}),
+        unpriced: estimated
+          ? 0
+          : row.cost_usd == null
             ? count(row, 'requests')
             : typeof row.unpriced_requests === 'number'
               ? count(row, 'unpriced_requests')

@@ -123,8 +123,8 @@ API-value extrapolation. Public known monthly web fees or an explicit authentica
 `monthly_fee_usd` account attribute are prorated by actual UTC calendar-month lengths
 to the selected period. Expired unused quota is red `(... wasted)`; unexpired quota
 in the current period is separately shown as `(... still for grabs)`. Each person's
-share is proportional to their attributed quota usage within that company. Unknown
-plan fees/quotas stay unset; aggregate known subtotals are marked as lower bounds,
+share follows their equal-allowance shortfall after System usage, as described above. Unknown
+plan fees/quotas stay unset; known subtotals remain estimates without bound prefixes,
 and unknown per-person allocations are never guessed. Unit-price configuration
 fields and the exchange-rate quote are not usage spending and do not get waste tags.
 
@@ -133,9 +133,9 @@ cache writes, and output including reasoning). A bundled native-vendor models.de
 snapshot is available offline, refreshed every 24 hours while running; its date is
 visible. The public catalog can also be refreshed manually. Each minute/model/rate
 bucket records the rate and estimated cost at execution time, so later price changes
-never reprice history. Custom model rates override the catalog. Unknown/ambiguous
-models, incomplete accounting, missing cache rates and unsupported service tiers stay
-unpriced. This estimates standard token API value, not subscription billing, guaranteed
+never overwrite recorded history. Custom model rates override the catalog. Unknown/ambiguous
+models, incomplete accounting, missing cache rates (except the in-house read policy below)
+and unsupported service tiers stay unpriced. This estimates standard token API value, not subscription billing, guaranteed
 savings, image/audio/tool fees or an API-dollar-to-subscription conversion.
 
 Successful quota cache reads/replays preserve each supported quota's own scope and
@@ -169,10 +169,24 @@ from `https://openrouter.ai/api/v1/models`, using non-free, non-batch catalog en
 and their published input/output/cache-read rates, in canonical USD per million
 before the normal Cross conversion to reais. The serving configuration was checked:
 `qwen-coder` is Qwen3.8-27B, not Coder Next; `qwen-vl` is Qwen3-VL-30B-A3B-Instruct;
-`nemotron-120b` is Nemotron-3-Super-120B-A12B. Missing exact OpenRouter models or cache
-rates remain unset, never replaced with a neighboring model's price. These are
-counterfactual hosted prices, not electricity costs or a local subscription bill.
-Future executions snapshot the chosen rates as usual; older usage is never repriced.
+`nemotron-120b` is Nemotron-3-Super-120B-A12B. Missing exact OpenRouter models stay
+unset, never replaced with a neighboring model's price. For in-house OpenRouter
+comparisons, a missing cached-input read rate uses the regular input rate, not an
+invented free cache or a guessed discount; explicit published read discounts remain
+unchanged. Native providers, manual overrides and unknown cache-write rates keep
+their existing rules. These are counterfactual hosted prices, not electricity costs
+or a local subscription bill.
+
+Future executions snapshot that effective rate. Previously unpriced in-house rows
+also receive a separate read-time comparison when the recorded input/output/cache
+counters form a consistent OpenAI-compatible breakdown. Known GGUF response filenames
+resolve to their verified model, and `spark/` aliases normalize to one public model
+ID. The API adds `model_alias`, `reference_cost_usd` and `reference_price` while
+preserving the original `model`, `cost_usd`, `price` and `unpriced_requests` values.
+The panel uses the reference amount only when the recorded amount is absent, so the
+money-only charts no longer hide those calls. The projection does not write to disk,
+reprice non-null historical costs, backfill requests, or invent a different model's
+rate. A retained OpenRouter rate is used before the current bundled reference.
 The local panel can preview those sourced model-price cards against an older v8
 backend without changing its recorded usage or saved overrides.
 Each card links its public evidence. Image, video and voice rates retain their native
