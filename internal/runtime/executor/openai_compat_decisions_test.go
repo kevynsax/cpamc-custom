@@ -23,6 +23,9 @@ func TestOpenAICompatDecisionsNative(t *testing.T) {
 			t.Error("incorrect upstream route or credential")
 		}
 		body, _ := io.ReadAll(r.Body)
+		if gjson.GetBytes(body, "model").String() != "typesafe/jev-1.13" {
+			t.Error("openrouter slug rewritten")
+		}
 		if !gjson.GetBytes(body, "state").Exists() || !gjson.GetBytes(body, "questions.q").Exists() || gjson.GetBytes(body, "messages").Exists() {
 			t.Error("native request translated into chat")
 		}
@@ -37,6 +40,19 @@ func TestOpenAICompatDecisionsNative(t *testing.T) {
 		t.Fatal(err, string(out.Payload))
 	}
 }
+func TestJevUpstreamModel(t *testing.T) {
+	for _, tc := range []struct{ host, in, want string }{
+		{"api.typesafe.ai", "typesafe/jev-1.14", "jev-1.14.0"},
+		{"api.typesafe.ai", "typesafe/jev-latest", "jev-latest"},
+		{"api.typesafe.ai", "jev-1.14.0", "jev-1.14.0"},
+		{"openrouter.ai", "typesafe/jev-1.14", "typesafe/jev-1.14"},
+	} {
+		if got := jevUpstreamModel(tc.host, tc.in); got != tc.want {
+			t.Errorf("%s %s: got %s want %s", tc.host, tc.in, got, tc.want)
+		}
+	}
+}
+
 func TestOpenAICompatDecisionsPayloadRulesAreFinal(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)

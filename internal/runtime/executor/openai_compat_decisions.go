@@ -29,10 +29,27 @@ func isJevModel(model string) bool {
 // TypeSafe direct (api.typesafe.ai) serves /v1/systemone; OpenRouter-style bases serve the sibling /alpha/decisions.
 func jevDecisionsPath(host, basePath string) string {
 	basePath = strings.TrimRight(basePath, "/")
-	if strings.EqualFold(host, "api.typesafe.ai") || strings.HasSuffix(strings.ToLower(host), ".typesafe.ai") {
+	if isTypeSafeHost(host) {
 		return basePath + "/systemone"
 	}
 	return strings.TrimSuffix(basePath, "/v1") + "/alpha/decisions"
+}
+
+func isTypeSafeHost(host string) bool {
+	return strings.EqualFold(host, "api.typesafe.ai") || strings.HasSuffix(strings.ToLower(host), ".typesafe.ai")
+}
+
+// jevUpstreamModel rewrites the client alias to the name that host accepts.
+// TypeSafe's own API serves "jev-1.14.0", not the "typesafe/jev-1.14" catalog alias; OpenRouter accepts the slug unchanged.
+func jevUpstreamModel(host, model string) string {
+	if !isTypeSafeHost(host) {
+		return model
+	}
+	native := strings.TrimPrefix(model, "typesafe/")
+	if !strings.HasPrefix(native, "jev-") || strings.HasSuffix(native, ".0") || strings.HasSuffix(native, "-latest") {
+		return native
+	}
+	return native + ".0"
 }
 
 func (e *OpenAICompatExecutor) executeDecisions(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (resp cliproxyexecutor.Response, err error) {
@@ -48,6 +65,7 @@ func (e *OpenAICompatExecutor) executeDecisions(ctx context.Context, auth *clipr
 	u.RawPath = ""
 	u.RawQuery = ""
 	u.Fragment = ""
+	model = jevUpstreamModel(u.Host, model)
 	payload, err := sjson.SetBytes(req.Payload, "model", model)
 	if err != nil {
 		return resp, statusErr{code: 400, msg: "invalid decisions payload"}
