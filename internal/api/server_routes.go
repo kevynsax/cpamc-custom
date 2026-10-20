@@ -76,11 +76,13 @@ func (s *Server) setupRoutes() {
 		v1.POST("/images/generations", s.customImagesDispatch(openaiHandlers.ImagesGenerations))
 		v1.POST("/audio/speech", s.customSpeechDispatch(openaiHandlers.AudioSpeech)) // CUSTOM (cpamc-custom): MiniMax TTS default, grok-tts* to upstream
 		v1.POST("/images/edits", openaiHandlers.ImagesEdits)
-		v1.POST("/videos", openaiHandlers.XAIVideosGenerations)
+		// CUSTOM (cpamc-custom): minimax/* Hailuo V1 to MiniMax; every other model upstream (xAI native)
+		v1.POST("/videos", s.customVideosCreateDispatch(openaiHandlers.XAIVideosGenerations))
 		v1.POST("/videos/generations", openaiHandlers.XAIVideosGenerations)
 		v1.POST("/videos/edits", openaiHandlers.XAIVideosEdits)
 		v1.POST("/videos/extensions", openaiHandlers.XAIVideosExtensions)
-		v1.GET("/videos/:request_id", openaiHandlers.XAIVideosRetrieve)
+		v1.GET("/videos/:request_id/content", s.customVideosContentDispatch(nil)) // CUSTOM (cpamc-custom): MiniMax mp4 download
+		v1.GET("/videos/:request_id", s.customVideosRetrieveDispatch(openaiHandlers.XAIVideosRetrieve))
 		v1.POST("/tts", openaiHandlers.XAITTS)
 		v1.POST("/messages", claudeCodeHandlers.ClaudeMessages)
 		v1.POST("/messages/count_tokens", claudeCodeHandlers.ClaudeCountTokens)
@@ -113,9 +115,10 @@ func (s *Server) setupRoutes() {
 	openaiV1 := s.engine.Group("/openai/v1")
 	openaiV1.Use(AuthMiddleware(s.accessManager))
 	{
-		openaiV1.POST("/videos", openaiHandlers.VideosCreate)
-		openaiV1.GET("/videos/:video_id/content", openaiHandlers.VideosContent)
-		openaiV1.GET("/videos/:video_id", openaiHandlers.VideosRetrieve)
+		// CUSTOM (cpamc-custom): minimax/* Hailuo V1 to MiniMax; every other model upstream (OpenAI/xAI videos)
+		openaiV1.POST("/videos", s.customVideosCreateDispatch(openaiHandlers.VideosCreate))
+		openaiV1.GET("/videos/:video_id/content", s.customVideosContentDispatch(openaiHandlers.VideosContent))
+		openaiV1.GET("/videos/:video_id", s.customVideosRetrieveDispatch(openaiHandlers.VideosRetrieve))
 	}
 
 	// Codex CLI direct route aliases (chatgpt_base_url compatible)

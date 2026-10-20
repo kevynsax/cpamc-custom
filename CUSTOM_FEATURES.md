@@ -448,6 +448,23 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 - Key: same MiniMax openai-compatibility entry as TTS (`customMinimaxKey`); never leaves the server.
 - Used by the `image-gen` skill (`--model minimax`).
 
+### 15. Video generation endpoint (MiniMax Hailuo V1)
+
+- `POST /v1/videos` and `POST /openai/v1/videos` with `model: "minimax/<hailuo-or-t2v-or-i2v>"`
+  create an async MiniMax task via native `POST /v1/video_generation` and return OpenAI video
+  shape (`object: video`, `id` = MiniMax `task_id`, `status: queued`).
+- `GET /v1/videos/:id` / `GET /openai/v1/videos/:id` poll MiniMax
+  `GET /v1/query/video_generation` and map statuses to `queued|in_progress|completed|failed`.
+- `GET /v1/videos/:id/content` / `GET /openai/v1/videos/:id/content` download mp4 via
+  `retrieve_content` (fallback: `files/retrieve` → `download_url`).
+- T2V models: `MiniMax-Hailuo-2.3`, `MiniMax-Hailuo-02`, `T2V-01-Director`, `T2V-01`.
+  I2V models: those plus `MiniMax-Hailuo-2.3-Fast`, `I2V-01-Director`, `I2V-01-live`, `I2V-01`
+  (first frame from `first_frame_image` / `input_reference.image_url` / `image_url`).
+- `seconds` must be `6` or `10`; `size`/`resolution` map to MiniMax `512P|720P|768P|1080P`.
+  Prompt max 2000 chars. The `minimax/` prefix is required.
+- Key: same MiniMax openai-compatibility entry as TTS/images (`customMinimaxKey`).
+- Used by the `video-gen` skill (`--model hailuo`).
+
 ### 11. No GitHub Actions
 
 - Upstream and the panel subtree ship `.github/workflows/` and `panel/.github/workflows/`.
@@ -493,7 +510,8 @@ chat traffic. Code: `internal/client/codex/live/custom_apikey_live.go` (+ test);
 | `.dockerignore` | +2 lines |
 | `internal/api/custom_speech.go` | new (TTS endpoint) |
 | `internal/api/custom_images.go` (+ `_test.go`) | new (MiniMax image endpoint) |
-| `internal/api/server_routes.go` | +1 route line (speech), +1 route line + comment (images) |
+| `internal/api/custom_videos.go` (+ `_test.go`) | new (MiniMax Hailuo V1 video endpoint) |
+| `internal/api/server_routes.go` | +1 route line (speech), +1 route line + comment (images), video dispatch wrappers + `/v1/videos/:id/content` |
 | `internal/api/handlers/management/custom_quota_providers.go` | new (MiniMax/Z.ai credential list) |
 | `panel/src/features/quota/providers/customApiKeyQuota.ts` (+ `tests/customApiKeyQuota.test.ts`) | new |
 | `panel/src/features/quota/{constants,logic}.ts`, `providers/{index,types}.ts`, `QuotaPage.tsx` | minimax/zai entries |
