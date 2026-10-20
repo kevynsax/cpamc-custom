@@ -62,8 +62,10 @@ type Handler struct {
 	pluginStoreHTTPClient   pluginstore.HTTPDoer
 	pluginStoreRateLimiter  *pluginstore.GitHubRateLimiter
 	pluginReleases          pluginReleaseCache
-	clientUsage             *usagehistory.Store
-	clientPricing           *usagehistory.Pricing
+	clientUsage             *usagehistory.Store  // CUSTOM (cpamc-custom)
+	clientPricing           *usagehistory.Pricing // CUSTOM (cpamc-custom)
+	siwcOAuthFactory        func(*config.Config) siwcOAuthService
+	siwcCommitMu            sync.Mutex
 }
 
 type configReloadSnapshot struct {
