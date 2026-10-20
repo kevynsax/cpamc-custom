@@ -49,6 +49,14 @@ func TestQuotaViewURLStripsQuery(t *testing.T) {
 	if got != "https://chatgpt.com/backend-api/subscriptions" {
 		t.Fatalf("url = %q", got)
 	}
+	weekly := quotaViewURL("https://cli-chat-proxy.grok.com/v1/billing?format=credits&account_id=acct_123")
+	if weekly != "https://cli-chat-proxy.grok.com/v1/billing?format=credits" {
+		t.Fatalf("weekly url = %q", weekly)
+	}
+	monthly := quotaViewURL("https://cli-chat-proxy.grok.com/v1/billing?account_id=acct_123")
+	if monthly != "https://cli-chat-proxy.grok.com/v1/billing" {
+		t.Fatalf("monthly url = %q", monthly)
+	}
 }
 
 func TestCustomQuotaViewReadOnlyAndSanitized(t *testing.T) {

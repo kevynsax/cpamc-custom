@@ -169,15 +169,31 @@ func quotaViewID(authID string) string {
 	return hex.EncodeToString(sum[:])[:16]
 }
 
-// quotaViewURL keeps only scheme, host, and path: query strings can carry
-// account identifiers.
+// quotaViewURL keeps scheme, host, and path. Query strings usually carry
+// account identifiers, so they are stripped — except the fixed xAI weekly
+// marker format=credits, which is not identity and is required so access-key
+// clients can tell weekly credits apart from monthly billing.
 func quotaViewURL(raw string) string {
 	parsed, err := url.Parse(strings.TrimSpace(raw))
 	if err != nil || parsed.Host == "" {
 		return ""
 	}
+	keepCredits := false
+	for key, values := range parsed.Query() {
+		if key == "format" {
+			for _, value := range values {
+				if value == "credits" {
+					keepCredits = true
+				}
+			}
+		}
+	}
 	parsed.RawQuery, parsed.Fragment, parsed.User = "", "", nil
-	return parsed.Scheme + "://" + parsed.Host + parsed.EscapedPath()
+	out := parsed.Scheme + "://" + parsed.Host + parsed.EscapedPath()
+	if keepCredits {
+		out += "?format=credits"
+	}
+	return out
 }
 
 // quotaViewBody returns the cached provider body with identity and credential
