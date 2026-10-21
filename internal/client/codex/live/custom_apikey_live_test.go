@@ -67,7 +67,7 @@ func TestHandlerRoutesGPTLiveToAPIKeyLiveSessions(t *testing.T) {
 }
 
 func TestHandlerKeepsCodexModelOnOAuthRoute(t *testing.T) {
-	if isAPIKeyLiveModel("gpt-live-1-codex") || isAPIKeyLiveModel("gpt-live-1") || isAPIKeyLiveModel("") || !isAPIKeyLiveModel(" GPT-Live-1.1 ") {
+	if isAPIKeyLiveModel("gpt-live-1-codex") || !isAPIKeyLiveModel("gpt-live-1") || isAPIKeyLiveModel("") || !isAPIKeyLiveModel(" GPT-Live-1.1 ") {
 		t.Fatal("model routing is wrong")
 	}
 }

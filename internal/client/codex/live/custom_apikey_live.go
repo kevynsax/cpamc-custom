@@ -68,9 +68,12 @@ func isLiveModelUnavailable(status int, body []byte) bool {
 	return answer.Error.Code == "invalid_model"
 }
 
-// isAPIKeyLiveModel reports whether a live request must use an API-key credential.
+// isAPIKeyLiveModel reports whether a live request must use an API-key credential: the GPT Live API
+// models (gpt-live-1.1 and gpt-live-1). Only gpt-live-1-codex stays on the ChatGPT OAuth route, which
+// refuses voice sessions without a Voice entitlement.
 func isAPIKeyLiveModel(model string) bool {
-	return strings.EqualFold(strings.TrimSpace(model), apiKeyLiveModel)
+	name := strings.TrimSpace(model)
+	return strings.EqualFold(name, apiKeyLiveModel) || strings.EqualFold(name, apiKeyLiveFallbackModel)
 }
 
 // apiKeyLiveRequest turns the Codex-shaped {sdp, session} body into the GPT Live API shape.
