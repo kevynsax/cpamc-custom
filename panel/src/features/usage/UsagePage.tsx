@@ -19,7 +19,7 @@ import { withInHousePrices } from './inHousePrices';
 import { resolveUsageKeyNames } from './keyNames';
 import { useApiKeyNames } from '@/features/config/useApiKeyNames';
 import { PersonDetails } from './PersonDetails';
-import { periodRows, valueByModel } from './reporting';
+import { baseModelId, periodRows, valueByModel } from './reporting';
 import { allocatePersonFees } from './personAllocation';
 import { useClientUsage } from './useClientUsage';
 import { useCrossQuote } from './useCrossQuote';
@@ -65,9 +65,11 @@ export function UsagePage() {
   const kinds = { ...keyNames.kinds, ...data?.keyKinds };
   const personIds = Object.keys(data?.keyLabels ?? {}).filter((id) => kinds[id] !== 'system');
   const allowances = allocatePersonFees(companies, personIds, kinds);
-  const spending = Object.fromEntries(
-    valueByModel(recorded.current).map((part) => [part.id, part.value])
-  );
+  const spending: Record<string, number> = {};
+  for (const part of valueByModel(recorded.current)) {
+    const id = baseModelId(part.id);
+    spending[id] = (spending[id] ?? 0) + part.value;
+  }
   const appearance = Object.fromEntries(
     (data?.accounts ?? []).map((account) => [
       companyId(account.provider),

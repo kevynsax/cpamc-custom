@@ -35,6 +35,7 @@ const (
 type Row struct {
 	At               time.Time `json:"at,omitempty"`
 	Model            string    `json:"model,omitempty"`
+	Mode             string    `json:"mode,omitempty"`
 	Price            *Rates    `json:"price,omitempty"`
 	CostUSD          *float64  `json:"cost_usd"`
 	UnpricedRequests int64     `json:"unpriced_requests"`
@@ -240,7 +241,11 @@ func addRow(total, row Row) Row {
 }
 func rowKey(row Row) string {
 	price, _ := json.Marshal(row.Price)
-	return row.KeyID + "|" + row.AccountID + "|" + row.Provider + "|" + row.AuthType + "|" + row.At.Format(time.RFC3339) + "|" + row.Model + "|" + string(price)
+	key := row.KeyID + "|" + row.AccountID + "|" + row.Provider + "|" + row.AuthType + "|" + row.At.Format(time.RFC3339) + "|" + row.Model + "|" + string(price)
+	if row.Mode == "" {
+		return key
+	}
+	return key + "|" + row.Mode
 }
 
 // HandleUsage runs on the usage dispatcher, not the inference request goroutine.
@@ -275,7 +280,7 @@ func (s *Store) RecordPriced(record usage.Record, rate *Rates) error {
 	if date < s.foldCutoff() {
 		minute = minute.Truncate(time.Hour)
 	}
-	row := Row{At: minute, Model: model, Price: rate, Date: date, KeyID: Fingerprint(record.APIKey), AccountID: Fingerprint(account), Provider: record.Provider, AuthType: record.AuthType}
+	row := Row{At: minute, Model: model, Mode: ServiceMode(record), Price: rate, Date: date, KeyID: Fingerprint(record.APIKey), AccountID: Fingerprint(account), Provider: record.Provider, AuthType: record.AuthType}
 	if s.days[date] == nil && date < s.residentCutoff() {
 		// A late record for a day outside the resident window merges into its file at the next flush.
 		day, errRead := s.readDay(date)

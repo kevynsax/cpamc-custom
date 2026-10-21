@@ -17,6 +17,11 @@ export interface PersonDetail extends UsageDetail {
   companies: UsageDetail[];
   models: UsageDetail[];
 }
+/** Model plus speed mode, so fast/ultrafast spend stays separate from standard. */
+export const usageModelId = (row: ClientUsageRow) =>
+  row.mode ? `${row.model}@${row.mode}` : row.model;
+export const baseModelId = (id: string) => id.replace(/@[^@/]+$/, '');
+
 export const emptyTotal = (): UsageTotal => ({ tokens: 0, requests: 0, costUsd: 0, unpriced: 0 });
 const total = (rows: ClientUsageRow[]): UsageTotal =>
   rows.reduce(
@@ -80,7 +85,7 @@ export function personDetails(
     return {
       ...person,
       companies: details(rows, prior, (row) => companyId(row.provider)),
-      models: details(rows, prior, (row) => row.model),
+      models: details(rows, prior, usageModelId),
     };
   });
 }
@@ -89,7 +94,8 @@ export function tokensByModel(rows: ClientUsageRow[], company?: string) {
   const totals = new Map<string, number>();
   for (const row of rows) {
     if (company && companyId(row.provider) !== company) continue;
-    totals.set(row.model, (totals.get(row.model) ?? 0) + row.totalTokens);
+    const id = usageModelId(row);
+    totals.set(id, (totals.get(id) ?? 0) + row.totalTokens);
   }
   return [...totals]
     .map(([id, value]) => ({ id, value }))
@@ -101,10 +107,11 @@ export function valueByModel(rows: ClientUsageRow[], company?: string) {
   const totals = new Map<string, { id: string; value: number; unpriced: number }>();
   for (const row of rows) {
     if (company && companyId(row.provider) !== company) continue;
-    const part = totals.get(row.model) ?? { id: row.model, value: 0, unpriced: 0 };
+    const id = usageModelId(row);
+    const part = totals.get(id) ?? { id, value: 0, unpriced: 0 };
     part.value += row.costUsd ?? 0;
     part.unpriced += row.unpriced;
-    totals.set(row.model, part);
+    totals.set(id, part);
   }
   return [...totals.values()]
     .filter((part) => part.value > 0)
@@ -118,14 +125,12 @@ export function mergedCompanyModels(rows: ClientUsageRow[]) {
   for (const row of rows) {
     if (!(row.costUsd != null && row.costUsd > 0)) continue;
     const company = companyId(row.provider);
+    const model = usageModelId(row);
     const pair = pairs.get(company);
-    if (
-      (pair && pair.model !== row.model) ||
-      (owners.has(row.model) && owners.get(row.model) !== company)
-    )
+    if ((pair && pair.model !== model) || (owners.has(model) && owners.get(model) !== company))
       return null;
-    pairs.set(company, { company, model: row.model, value: (pair?.value ?? 0) + row.costUsd });
-    owners.set(row.model, company);
+    pairs.set(company, { company, model, value: (pair?.value ?? 0) + row.costUsd });
+    owners.set(model, company);
   }
   return pairs.size
     ? [...pairs.values()].sort((a, b) => b.value - a.value || a.company.localeCompare(b.company))

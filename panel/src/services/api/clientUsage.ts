@@ -5,6 +5,8 @@ export interface ClientUsageRow {
   date: string;
   at: string;
   model: string;
+  /** Speed mode ("fast" | "ultrafast"); absent means standard. */
+  mode?: string;
   keyId: string;
   accountId: string;
   provider: string;
@@ -254,6 +256,7 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
             : typeof row.model === 'string'
               ? row.model
               : '',
+        ...(typeof row.mode === 'string' && row.mode ? { mode: row.mode } : {}),
         keyId: text(row, 'key_id'),
         accountId: text(row, 'account_id'),
         provider: text(row, 'provider'),

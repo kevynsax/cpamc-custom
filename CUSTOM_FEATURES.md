@@ -152,7 +152,11 @@ visible. The public catalog can also be refreshed manually. Each minute/model/ra
 bucket records the rate and estimated cost at execution time, so later price changes
 never overwrite recorded history. Custom model rates override the catalog. Unknown/ambiguous
 models, incomplete accounting, missing cache rates (except the in-house read policy below)
-and unsupported service tiers stay unpriced. This estimates standard token API value, not subscription billing, guaranteed
+and unsupported service tiers stay unpriced. OpenAI speed modes are stored per row
+(`mode`: `fast` for `priority`/`fast`, `ultrafast`) and priced at OpenAI's published
+2x / 6x of the Standard rate, cache and long-context rates included. The requested
+tier is trusted over the response because OpenAI reports `default` while ultrafast runs.
+The panel shows them as separate model slices, e.g. "GPT 6.1 Sol (Ultrafast)". This estimates standard token API value, not subscription billing, guaranteed
 savings, image/audio/tool fees or an API-dollar-to-subscription conversion.
 
 Successful quota cache reads/replays preserve each supported quota's own scope and

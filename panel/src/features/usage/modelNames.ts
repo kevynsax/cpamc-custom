@@ -19,7 +19,15 @@ const WORDS: Record<string, string> = {
   zai: 'Z.ai',
 };
 
+const MODES: Record<string, string> = { fast: 'Fast', ultrafast: 'Ultrafast' };
+
+/** Usage ids may carry a speed mode suffix (`model@ultrafast`). */
 export function friendlyModelName(id: string, displayName?: string): string {
+  const mode = /@([^@/]+)$/.exec(id)?.[1];
+  if (mode) {
+    const base = friendlyModelName(id.slice(0, -(mode.length + 1)), displayName);
+    return `${base} (${MODES[mode] ?? mode})`;
+  }
   const key = id
     .replace(/^spark\//, '')
     .replace(/(claude-(?:opus|sonnet|haiku|mythos|fable)-)(\d+)-(\d+)(?=$|-)/i, '$1$2.$3');

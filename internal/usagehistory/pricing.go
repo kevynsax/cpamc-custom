@@ -212,10 +212,26 @@ func ParsePublicPrices(data []byte, asOf string) (PriceCatalog, error) {
 
 var nativePriceVendors = []string{"anthropic", "openai", "google", "xai", "moonshotai", "minimax", "zai", "deepseek", "mistral", "cohere", "perplexity", "alibaba", "qwen", "nvidia", "meta", "amazon-bedrock"}
 
+// Resolve returns the effective rate for the record's service mode. OpenAI fast and
+// ultrafast are scaled from the standard tariff; other non-standard tiers stay unpriced.
 func (p *Pricing) Resolve(record usage.Record, overrides map[string]Rates) *Rates {
 	if !usage.GenerateEnabled(record.Generate) {
 		return nil
 	}
+	multiplier, known := modeMultiplier(record)
+	if override := overrideRate(record, overrides); override != nil {
+		if !known {
+			return override
+		}
+		return scaleRates(override, multiplier)
+	}
+	if !known {
+		return nil
+	}
+	return scaleRates(p.resolveStandard(record), multiplier)
+}
+
+func overrideRate(record usage.Record, overrides map[string]Rates) *Rates {
 	model := strings.TrimSpace(record.ResponseModel)
 	if model == "" {
 		model = strings.TrimSpace(record.Model)
@@ -231,6 +247,14 @@ func (p *Pricing) Resolve(record usage.Record, overrides map[string]Rates) *Rate
 			}
 		}
 	}
+	return nil
+}
+
+func (p *Pricing) resolveStandard(record usage.Record) *Rates {
+	model := strings.TrimSpace(record.ResponseModel)
+	if model == "" {
+		model = strings.TrimSpace(record.Model)
+	}
 	for _, candidate := range []string{record.Alias, model} {
 		if info, found := referenceModels()[candidate]; found && (info.Status == "self_hosted" || info.Status == "subscription_only" || info.Status == "unpublished") {
 			return nil
@@ -240,13 +264,6 @@ func (p *Pricing) Resolve(record usage.Record, overrides map[string]Rates) *Rate
 		if strings.Contains(strings.ToLower(model), unsupported) {
 			return nil
 		}
-	}
-	tier := strings.ToLower(record.ResponseServiceTier)
-	if tier == "" {
-		tier = strings.ToLower(record.ServiceTier)
-	}
-	if tier != "" && tier != "auto" && tier != "default" && tier != "standard" {
-		return nil
 	}
 	// CUSTOM (cpamc-custom): exact in-house models use the sourced OpenRouter
 	// counterfactual, not a native-vendor tariff or a guessed neighboring model.

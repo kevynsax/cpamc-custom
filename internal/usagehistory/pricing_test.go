@@ -56,8 +56,8 @@ func TestCatalogResolutionAndLongContext(t *testing.T) {
 	}
 	record.Model = "model"
 	record.Provider = "codex"
-	if pricing.Resolve(record, nil) != nil {
-		t.Fatal("priority tier silently priced as standard")
+	if rate := pricing.Resolve(record, nil); rate == nil || rate.Input != 8 || rate.Output != 30 {
+		t.Fatalf("fast tier not priced at 2x standard: %+v", rate)
 	}
 }
 
