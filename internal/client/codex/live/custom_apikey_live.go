@@ -26,7 +26,47 @@ import (
 const (
 	apiKeyLiveModel   = "gpt-live-1.1"
 	apiKeyLiveBaseURL = "https://api.openai.com/v1"
+	// apiKeyLiveFallbackModel is used while the platform API still refuses gpt-live-1.1
+	// (`invalid_model`, "not supported in realtime mode"): 1.1 shipped to ChatGPT first. Once the
+	// API accepts 1.1 the first attempt succeeds and the fallback is never taken.
+	apiKeyLiveFallbackModel = "gpt-live-1"
 )
+
+// withSessionModel returns the GPT Live API body with session.model replaced.
+func withSessionModel(requestBody []byte, model string) ([]byte, error) {
+	var payload map[string]json.RawMessage
+	if errUnmarshal := json.Unmarshal(requestBody, &payload); errUnmarshal != nil {
+		return nil, errUnmarshal
+	}
+	var session map[string]json.RawMessage
+	if errUnmarshal := json.Unmarshal(payload["session"], &session); errUnmarshal != nil {
+		return nil, errUnmarshal
+	}
+	encodedModel, _ := json.Marshal(model)
+	session["model"] = encodedModel
+	encodedSession, errMarshal := json.Marshal(session)
+	if errMarshal != nil {
+		return nil, errMarshal
+	}
+	payload["session"] = encodedSession
+	return json.Marshal(payload)
+}
+
+// isLiveModelUnavailable reports an upstream refusal of the model itself (not of the offer or the key).
+func isLiveModelUnavailable(status int, body []byte) bool {
+	if status != http.StatusBadRequest {
+		return false
+	}
+	var answer struct {
+		Error struct {
+			Code string `json:"code"`
+		} `json:"error"`
+	}
+	if json.Unmarshal(body, &answer) != nil {
+		return false
+	}
+	return answer.Error.Code == "invalid_model"
+}
 
 // isAPIKeyLiveModel reports whether a live request must use an API-key credential.
 func isAPIKeyLiveModel(model string) bool {
@@ -101,26 +141,16 @@ func (h *Handler) handleAPIKeyLive(c *gin.Context, upstreamBody []byte) {
 		writeLiveError(c, http.StatusServiceUnavailable, "GPT Live API key credential unavailable")
 		return
 	}
-	headers := make(http.Header)
-	headers.Set("Content-Type", "application/json")
-	req, errRequest := h.authManager.NewHttpRequest(ctx, selected, http.MethodPost, apiKeyLiveURL(selected), requestBody, headers)
-	if errRequest != nil {
-		writeLiveError(c, clienterror.HTTPStatusFromErrorOr(errRequest, http.StatusBadGateway), errRequest.Error())
-		return
-	}
-	resp, errDo := h.authManager.HttpRequest(ctx, selected, req)
-	if errDo != nil {
-		writeLiveError(c, clienterror.HTTPStatusFromErrorOr(errDo, http.StatusBadGateway), errDo.Error())
-		return
-	}
-	defer func() {
-		if errClose := resp.Body.Close(); errClose != nil {
-			log.Errorf("codex live api-key: close response body error: %v", errClose)
+	resp, responseBody, errSend := h.sendAPIKeyLive(ctx, selected, requestBody)
+	if errSend == nil && isLiveModelUnavailable(resp.StatusCode, responseBody) {
+		log.Warnf("codex live api-key: upstream refused %s, retrying with %s", apiKeyLiveModel, apiKeyLiveFallbackModel)
+		fallbackBody, errFallback := withSessionModel(requestBody, apiKeyLiveFallbackModel)
+		if errFallback == nil {
+			resp, responseBody, errSend = h.sendAPIKeyLive(ctx, selected, fallbackBody)
 		}
-	}()
-	responseBody, errRead := readLimitedBody(resp.Body)
-	if errRead != nil {
-		writeLiveError(c, http.StatusBadGateway, "Failed to read GPT Live response")
+	}
+	if errSend != nil {
+		writeLiveError(c, clienterror.HTTPStatusFromErrorOr(errSend, http.StatusBadGateway), errSend.Error())
 		return
 	}
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
@@ -141,4 +171,28 @@ func (h *Handler) handleAPIKeyLive(c *gin.Context, upstreamBody []byte) {
 		c.Header("Location", "/v1/live/"+sessionID)
 	}
 	c.Data(resp.StatusCode, "application/sdp", []byte(sdp))
+}
+
+// sendAPIKeyLive posts one session request and returns the response with its body read.
+func (h *Handler) sendAPIKeyLive(ctx context.Context, selected *auth.Auth, requestBody []byte) (*http.Response, []byte, error) {
+	headers := make(http.Header)
+	headers.Set("Content-Type", "application/json")
+	req, errRequest := h.authManager.NewHttpRequest(ctx, selected, http.MethodPost, apiKeyLiveURL(selected), requestBody, headers)
+	if errRequest != nil {
+		return nil, nil, errRequest
+	}
+	resp, errDo := h.authManager.HttpRequest(ctx, selected, req)
+	if errDo != nil {
+		return nil, nil, errDo
+	}
+	defer func() {
+		if errClose := resp.Body.Close(); errClose != nil {
+			log.Errorf("codex live api-key: close response body error: %v", errClose)
+		}
+	}()
+	responseBody, errRead := readLimitedBody(resp.Body)
+	if errRead != nil {
+		return nil, nil, errors.New("Failed to read GPT Live response")
+	}
+	return resp, responseBody, nil
 }

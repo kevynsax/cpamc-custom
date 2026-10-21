@@ -486,6 +486,9 @@ The Codex Live route (chatgpt.com, OAuth) answers the SDP and then refuses the v
 Live config (PVC, not in the image): an `api-keys.codex` group with `prefix: openai-live`, `base-url`
 `https://api.openai.com/v1`, `models: [gpt-live-1.1]` and the platform key, so the key is not picked for ordinary
 chat traffic. Code: `internal/client/codex/live/custom_apikey_live.go` (+ test); hook in `live.go` `Handle`.
+While the platform API still answers `gpt-live-1.1` with `400 invalid_model` ("not supported in realtime mode";
+1.1 shipped to ChatGPT first, 2026-10-15), the same request is retried once with `gpt-live-1`. When the API accepts
+1.1 the first attempt succeeds and the fallback is never taken.
 
 ## Files
 
