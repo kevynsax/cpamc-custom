@@ -273,7 +273,10 @@ export function CompanyPies({
   classes: Record<string, string>;
 }) {
   const { t } = useTranslation();
-  const visibleCompanies = companies.filter((company) => hasCompanyInformation(company, quote));
+  // Most used (by priced value) first; the alphabetical input order breaks ties.
+  const visibleCompanies = companies
+    .filter((company) => hasCompanyInformation(company, quote))
+    .sort((a, b) => b.costUsd - a.costUsd);
   const label = (id: string) =>
     (
       ({
