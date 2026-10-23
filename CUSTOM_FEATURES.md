@@ -230,6 +230,14 @@ All endpoints use existing v8 management authentication:
   include `cached_quotas` with numeric used percentage, scope, duration, reset and
   observation timestamps; cache recipes, bodies and credentials are never returned.
   Cycle reports retain their actual `period_seconds`, not an assumed seven days.
+- `GET /v8/management/observability/usage/spend?period=week|month&offset=N` returns
+  compact API value totals per key, account, provider and model (`items`), plus
+  `key_names` and `key_kinds`, for one period. Weeks follow each account's own 7-day
+  reset cycle and months are UTC calendar months, exactly as on the Usage page;
+  in-house rows use the same reference estimates. `offset` is 0..50 weeks or 0..11
+  months. Used by CPAMC Bar instead of downloading minute rows.
+- Both usage report routes are gzip-compressed when the client sends
+  `Accept-Encoding: gzip` (the full `clients` report is ~16x smaller).
 - `GET /v8/management/access/key-names` returns `{version: 2,
   names: {fingerprint: name}, kinds: {fingerprint: "person" | "system"}}`.
 - `PATCH /v8/management/access/key-names` accepts optional `names` and `kinds` maps
