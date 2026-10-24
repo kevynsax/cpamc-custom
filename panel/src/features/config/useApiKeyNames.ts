@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { keyNamesApi, type KeyMetadata, type ApiKeyKind } from '@/services/api/keyNames';
+import {
+  keyNamesApi,
+  type KeyMetadata,
+  type ApiKeyKind,
+  type ApiKeySpeed,
+} from '@/services/api/keyNames';
 import { apiClient } from '@/services/api/client';
 import { useAuthStore } from '@/stores';
 import { resolveUsageKeyNames } from '@/features/usage/keyNames';
@@ -65,7 +70,7 @@ export function useApiKeyNames(apiKeys: string[]) {
       invalidate();
     };
   }, [scope, keys, apiBase, sessionMatches, invalidate]);
-  const save = async (apiKey: string, name: string, kind: ApiKeyKind) => {
+  const save = async (apiKey: string, name: string, kind: ApiKeyKind, speed: ApiKeySpeed) => {
     if (!sessionMatches() || (status?.scope === scope && status.busy)) return false;
     const revision = apiClient.getConnectionRevision();
     const request = ++generation.current;
@@ -76,7 +81,14 @@ export function useApiKeyNames(apiKeys: string[]) {
     setStatus({ scope, error: false, busy: true });
     try {
       const id = clientKeyFingerprint(apiKey);
-      const metadata = await keyNamesApi.patch({ [id]: name.trim() }, false, { [id]: kind });
+      const metadata = await keyNamesApi.patch(
+        { [id]: name.trim() },
+        false,
+        { [id]: kind },
+        {
+          [id]: speed,
+        }
+      );
       if (!matches()) return false;
       setResult({ scope, metadata });
       setStatus({ scope, error: false, busy: false });
@@ -90,6 +102,7 @@ export function useApiKeyNames(apiKeys: string[]) {
   return {
     names: result?.scope === scope ? result.metadata.names : {},
     kinds: result?.scope === scope ? result.metadata.kinds : {},
+    speeds: result?.scope === scope ? result.metadata.speeds : {},
     busy: status?.scope === scope && status.busy,
     error: status?.scope === scope && status.error,
     save,

@@ -65,6 +65,7 @@ type Store struct {
 	settings   Settings
 	keyNames   map[string]string
 	keyKinds   map[string]string
+	keySpeeds  map[string]string
 	cycles     map[string]Cycle
 	quotaErr   error
 	quotaDirty map[string]bool

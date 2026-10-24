@@ -1482,6 +1482,13 @@
         "kind_person": "Cá nhân",
         "kind_system": "Hệ thống",
         "kind_required": "Chọn Cá nhân hoặc Hệ thống.",
+        "speed_label": "Tốc độ OpenAI",
+        "speed_standard": "Tiêu chuẩn",
+        "speed_fast": "Nhanh",
+        "speed_ultrafast": "Siêu nhanh",
+        "speed_standard_hint": "Chặn chế độ nhanh",
+        "speed_fast_hint": "Cho phép nhanh",
+        "speed_ultrafast_hint": "Cho phép nhanh và siêu nhanh",
         "name_hint": "Lưu ngay trên ổ xác thực bền vững của máy chủ, dùng chung giữa trình duyệt và các lần triển khai, kể cả khi tạm dừng theo dõi. Để trống để xóa tên.",
         "name_save_error": "Không thể lưu tên bền vững trên máy chủ. Kiểm tra hỗ trợ máy chủ và kho lưu trữ rồi thử lại."
       },

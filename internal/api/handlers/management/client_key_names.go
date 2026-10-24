@@ -8,9 +8,12 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagehistory"
 )
 
-// Existing keys begin as Person; explicit System classifications survive renames.
+// Existing keys begin as Person at standard speed; explicit choices survive renames.
 func (h *Handler) clientKeyMetadata() usagehistory.KeyMetadata {
 	metadata := h.clientUsage.KeyMetadata()
+	if metadata.Speeds == nil {
+		metadata.Speeds = map[string]string{}
+	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if h.cfg != nil {
@@ -18,6 +21,9 @@ func (h *Handler) clientKeyMetadata() usagehistory.KeyMetadata {
 			id := usagehistory.Fingerprint(key)
 			if _, exists := metadata.Kinds[id]; !exists {
 				metadata.Kinds[id] = "person"
+			}
+			if _, exists := metadata.Speeds[id]; !exists {
+				metadata.Speeds[id] = usagehistory.KeySpeedStandard
 			}
 		}
 	}
@@ -39,13 +45,14 @@ func (h *Handler) PatchClientKeyNames(c *gin.Context) {
 	var body struct {
 		Names      map[string]string `json:"names"`
 		Kinds      map[string]string `json:"kinds"`
+		Speeds     map[string]string `json:"speeds"`
 		ImportOnly bool              `json:"import_only"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid key metadata"})
 		return
 	}
-	if err := h.clientUsage.PatchKeyMetadata(body.Names, body.Kinds, body.ImportOnly); err != nil {
+	if err := h.clientUsage.PatchKeyMetadataWithSpeeds(body.Names, body.Kinds, body.Speeds, body.ImportOnly); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot persist key metadata; check values and storage"})
 		return
 	}

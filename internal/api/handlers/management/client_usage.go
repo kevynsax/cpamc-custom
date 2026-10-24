@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagehistory"
+	sdkhandlers "github.com/router-for-me/CLIProxyAPI/v8/sdk/api/handlers"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	log "github.com/sirupsen/logrus"
@@ -22,10 +23,13 @@ func (h *Handler) StartClientUsageHistory() {
 	}
 	store, err := usagehistory.Open(filepath.Join(h.cfg.AuthDir, customQuotaCacheDirName, "usage-history"), nil)
 	if err != nil {
+		// CUSTOM (cpamc-custom): without key metadata every key stays at standard speed.
+		sdkhandlers.SetKeySpeedLookup(func(string) string { return usagehistory.KeySpeedStandard })
 		log.WithError(err).Error("Initialize client usage history")
 		return
 	}
 	h.clientUsage = store
+	sdkhandlers.SetKeySpeedLookup(func(apiKey string) string { return store.KeySpeed(usagehistory.Fingerprint(apiKey)) })
 	pricing, errPricing := usagehistory.OpenPricing(filepath.Join(h.cfg.AuthDir, customQuotaCacheDirName, "usage-history"))
 	if errPricing != nil {
 		log.WithError(errPricing).Warn("Initialize public API price catalog")

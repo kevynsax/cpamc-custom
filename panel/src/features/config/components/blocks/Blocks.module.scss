@@ -172,6 +172,30 @@
   color: var(--text-secondary);
   font-size: 11px;
 }
+// CUSTOM (cpamc-custom): OpenAI speed permission cards.
+.keySpeedCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.keySpeedCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+  > strong {
+    font-size: 14px;
+  }
+  > small {
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+}
 .apiKeys {
   display: flex;
   flex-direction: column;

@@ -5,8 +5,9 @@ import { Modal } from '@/components/ui/Modal';
 import { useAuthStore, useNotificationStore } from '@/stores';
 import { clientKeyFingerprint } from '../../apiKeyNames';
 import { useApiKeyNames } from '../../useApiKeyNames';
-import type { ApiKeyKind } from '@/services/api/keyNames';
+import type { ApiKeyKind, ApiKeySpeed } from '@/services/api/keyNames';
 import { ApiKeyKindCards } from './ApiKeyKindCards';
+import { ApiKeySpeedCards } from './ApiKeySpeedCards';
 import { copyToClipboard } from '@/utils/clipboard';
 import { makeClientId } from '@/types/visualConfig';
 import { generateSecureApiKey } from '@/utils/apiKey';
@@ -33,6 +34,7 @@ function ScopedApiKeysCardEditor({
 }: ApiKeysCardEditorProps & { apiBase: string }) {
   const [nameValue, setNameValue] = useState('');
   const [kindValue, setKindValue] = useState<ApiKeyKind | null>(null);
+  const [speedValue, setSpeedValue] = useState<ApiKeySpeed>('standard');
   const { t } = useTranslation();
   const showNotification = useNotificationStore((state) => state.showNotification);
   const apiKeys = useMemo(
@@ -46,6 +48,7 @@ function ScopedApiKeysCardEditor({
   const {
     names,
     kinds,
+    speeds,
     busy: namesBusy,
     error: namesError,
     save: saveName,
@@ -74,6 +77,7 @@ function ScopedApiKeysCardEditor({
 
   const openAddModal = () => {
     setKindValue(null);
+    setSpeedValue('standard');
     setNameValue('');
     setEditingApiKeyId(null);
     setInputValue('');
@@ -85,6 +89,7 @@ function ScopedApiKeysCardEditor({
     const editingIndex = renderApiKeyIds.findIndex((id) => id === apiKeyId);
     setNameValue(names[nameFingerprints[editingIndex]] ?? '');
     setKindValue(kinds[nameFingerprints[editingIndex]] ?? 'person');
+    setSpeedValue(speeds[nameFingerprints[editingIndex]] ?? 'standard');
     setEditingApiKeyId(apiKeyId);
     setInputValue(apiKeys[editingIndex] ?? '');
     setFormError('');
@@ -131,7 +136,7 @@ function ScopedApiKeysCardEditor({
       editingApiKeyId === null
         ? [...apiKeys, trimmed]
         : apiKeys.map((key, idx) => (idx === editingIndex ? trimmed : key));
-    if (!(await saveName(trimmed, nameValue, kindValue))) {
+    if (!(await saveName(trimmed, nameValue, kindValue, speedValue))) {
       setFormError(t('config_management.visual.api_keys.name_save_error'));
       return;
     }
@@ -190,6 +195,10 @@ function ScopedApiKeysCardEditor({
                 <span className={styles.apiKeyKind}>
                   {t(
                     `config_management.visual.api_keys.kind_${kinds[nameFingerprints[index]] ?? 'person'}`
+                  )}
+                  {' · '}
+                  {t(
+                    `config_management.visual.api_keys.speed_${speeds[nameFingerprints[index]] ?? 'standard'}`
                   )}
                 </span>
                 <span className={styles.apiKeyValue}>{maskApiKey(String(key || ''))}</span>
@@ -250,6 +259,7 @@ function ScopedApiKeysCardEditor({
         }
       >
         <ApiKeyKindCards value={kindValue} onChange={setKindValue} disabled={disabled} />
+        <ApiKeySpeedCards value={speedValue} onChange={setSpeedValue} disabled={disabled} />
         <div className="form-group">
           <label htmlFor={nameInputId}>{t('config_management.visual.api_keys.name_label')}</label>
           <input

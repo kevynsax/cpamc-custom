@@ -477,6 +477,22 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 - Key: same MiniMax openai-compatibility entry as TTS/images (`customMinimaxKey`).
 - Used by the `video-gen` skill (`--model hailuo`).
 
+### 16. OpenAI speed permission per API key
+
+- Each client API key has a speed level: `standard` (default for every key, including
+  existing ones), `fast` (may request fast) or `ultrafast` (may request fast and
+  ultrafast). Stored next to key names/kinds as `speeds` in
+  `<auth-dir>/.cpamc-custom/usage-history/key-names.json`, keyed by SHA-256 fingerprint.
+- Edited in the panel's API key editor (three option cards) and through
+  `GET/PATCH /v8/management/access/key-names` (`speeds` map).
+- `sdk/api/handlers/custom_key_speed.go` checks every request whose providers include
+  `codex`/`openai`: `service_tier` `fast`/`priority`/`ultrafast` or `speed: "fast"` above
+  the key's level is rejected with 403 `service_tier_not_allowed` before credential
+  selection. Other providers (Claude fast mode included) are not restricted.
+- Hooks: one call in `executeWithAuthManagerFormats` (`handlers_execution.go`) and one in
+  `executeStreamWithAuthManagerFormats` (`handlers_stream.go`); the lookup is installed in
+  `StartClientUsageHistory`. If key metadata storage fails to open, every key stays standard.
+
 ### 11. No GitHub Actions
 
 - Upstream and the panel subtree ship `.github/workflows/` and `panel/.github/workflows/`.
@@ -536,6 +552,9 @@ the same API-key route (only `gpt-live-1-codex` stays on the ChatGPT OAuth route
 | `internal/client/codex/live/custom_apikey_live.go` (+ `_test.go`) | new (GPT Live via API key) |
 | `internal/client/codex/live/live.go` | +4 lines (`isAPIKeyLiveModel` branch in `Handle`) |
 | `internal/translator/claude/openai/chat-completions/custom_fast_mode.go` (+ `_test.go`) | new |
+| `sdk/api/handlers/custom_key_speed.go` | new (OpenAI speed permission per key) |
+| `sdk/api/handlers/handlers_execution.go`, `handlers_stream.go` | +1 speed check each |
+| `panel/src/features/config/components/blocks/ApiKeySpeedCards.tsx` | new (speed option cards) |
 | `internal/translator/claude/openai/chat-completions/claude_openai_request.go` | +4 lines (fast mode) |
 | `panel/src/services/api/apiCall.ts` | `postApiCall` routes quota-scoped calls |
 | `panel/src/features/quota/providers/index.ts` | wraps `QUOTA_ADAPTERS` |
