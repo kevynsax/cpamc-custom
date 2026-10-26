@@ -449,6 +449,12 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 - Drop the haiku builtin once upstream's catalog includes the same id; until then
   keep both (and the `WithClaudeBuiltins` hook in `GetClaudeModels`) on every merge.
 
+- `internal/registry/custom_codex_builtins.go`: `gpt-6.1-terra` is present in the
+  upstream Codex account catalog but not yet in the public model registry.
+  `WithCodexBuiltins` keeps it available across registry refreshes: 500K default
+  context, 872K maximum context, text/image input and native web search. Remove
+  the temporary builtin once the public catalog includes the same model.
+
 ### 14. Image generation endpoint (MiniMax image-01)
 
 - `POST /v1/images/generations` with `model: "minimax/image-01"` (or `minimax/image-01-live`)
