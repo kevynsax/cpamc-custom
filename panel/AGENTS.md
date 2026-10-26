@@ -17,7 +17,7 @@ This is a React 19 + TypeScript + Vite management frontend for CLI Proxy API, no
 
 This panel is vendored in cpamc-custom. Work directly on the parent repository's `custom` branch; do not create worktrees or task branches unless explicitly requested. GitHub Actions is not used: never enable, activate, dispatch, or add Actions workflows. Use the existing TeamCity build/deployment pipeline instead. Upstream workflow files are reference material, not an instruction to enable Actions.
 
-Use Bun; `package.json` pins `bun@1.3.14`, and CI uses Node.js 24. Keep dependency changes consistent with `bun.lock`; do not introduce another package manager's lockfile.
+Use Bun; `package.json` pins `bun@1.4.3`, and CI uses Node.js 24. Keep dependency changes consistent with `bun.lock`; do not introduce another package manager's lockfile.
 
 - `bun install --frozen-lockfile`: install locked dependencies.
 - `bun run dev`: start Vite at `http://localhost:5173` by default.
