@@ -102,7 +102,7 @@ func TestManagementV8IndependentContract(t *testing.T) {
 		"GET /v8/management/access/key-names", "PATCH /v8/management/access/key-names",
 		"PUT /v8/management/observability/usage/settings", "POST /v8/management/observability/usage/prices/refresh",
 		"GET /v8/management/credentials", "POST /v8/management/credentials",
-		"GET /v8/management/oauth/auth-url", "POST /v8/management/oauth/import", "POST /v8/management/oauth/callback",
+		"GET /v8/management/oauth/auth-url", "POST /v8/management/oauth/auth-url", "POST /v8/management/oauth/import", "POST /v8/management/oauth/callback",
 		"POST /v8/management/routing/cooldown/reset",
 		"GET /v8/management/plugins/:id/quota", "POST /v8/management/plugins/:id/quota", "DELETE /v8/management/plugins/:id/quota",
 		"POST /v8/management/plugins/store/:id/install", "DELETE /v8/management/plugins/:id",
