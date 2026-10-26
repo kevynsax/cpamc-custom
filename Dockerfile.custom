@@ -1,7 +1,7 @@
 # CUSTOM (cpamc-custom): image = upstream Go server + panel built from ./panel.
 # Upstream's Dockerfile is left untouched so merges stay clean. See CUSTOM_FEATURES.md.
 
-FROM oven/bun:1.3 AS panel
+FROM oven/bun:1.4.3 AS panel
 WORKDIR /panel
 COPY panel/package.json panel/bun.lock ./
 RUN bun install --frozen-lockfile

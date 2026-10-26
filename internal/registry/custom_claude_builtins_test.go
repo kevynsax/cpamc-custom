@@ -23,7 +23,7 @@ func TestWithClaudeBuiltins_IncludesMythos51(t *testing.T) {
 		t.Fatalf("claude-mythos-5-1 count = %d, want 1", mythosCount)
 	}
 	if haiku == nil {
-		t.Fatal("claude-haiku-5-5 missing; builtin injection stopped working")
+		t.Fatal("claude-haiku-5-5 missing from the upstream catalog")
 	}
 	if fable == nil {
 		t.Fatal("claude-fable-5-1 missing from the catalog the builtin mirrors")

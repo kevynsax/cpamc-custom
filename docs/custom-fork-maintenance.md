@@ -5,8 +5,9 @@ upstream merge must keep. The step-by-step upgrade procedure (commands, TeamCity
 verification) lives in the `cpamc-upgrade` skill, outside this repository. See
 [What belongs where](#what-belongs-where).
 
-Feature list: [`CUSTOM_FEATURES.md`](../CUSTOM_FEATURES.md). Every custom line is marked
-`CUSTOM (cpamc-custom)`; list them with `git grep -n "CUSTOM (cpamc-custom)"`.
+Feature list: [`CUSTOM_FEATURES.md`](../CUSTOM_FEATURES.md). Fork-specific integration
+hooks use `CUSTOM (cpamc-custom)`; list them with
+`git grep -n "CUSTOM (cpamc-custom)"`.
 
 ## Branches and remotes
 
@@ -47,6 +48,16 @@ Feature list: [`CUSTOM_FEATURES.md`](../CUSTOM_FEATURES.md). Every custom line i
    go build ./... && go test ./sdk/cliproxy/auth/ ./internal/api/... ./internal/managementasset/ ./internal/config/...
    (cd panel && bun install --frozen-lockfile && bun run verify)
    ```
+
+## Model catalog maintenance
+
+Model availability is not a custom product feature. Compare temporary catalog
+fallbacks with the embedded and current public upstream catalogs on each upgrade.
+Remove redundant fallbacks once upstream includes the same model, and use upstream
+metadata instead of overriding it. Keep a fallback while it is needed to preserve
+access to a model that the provider already serves; a model release alone does not
+mean the public registry has caught up. Document intentional policy differences,
+such as verification-gated entries upstream declines to list, in the feature list.
 
 ## Transient-failure fixes (must survive merges)
 
@@ -180,7 +191,7 @@ production `v8.0.16-custom.2` returned 503 after ~40 s of retries; the fixed bui
 | | Codex CLI 0.160.1 | cpamc |
 |---|---|---|
 | Request body | HTTP: zstd-compressed (`Content-Encoding: zstd`); WebSocket: permessage-deflate | zstd for bodies ≥ 128 KiB (fork change); raw before |
-| Transport | WebSocket `wss://chatgpt.com/backend-api/codex/responses`, `OpenAI-Beta: responses_websockets=2026-02-06`, `response.create` frames, `previous_response_id` between turns; falls back to HTTPS after 5 failed retries | HTTP POST SSE to `https://chatgpt.com/backend-api/codex/responses` (WebSocket only when the credential sets `websockets: true` and the client connects by WebSocket) |
+| Transport | WebSocket `wss://chatgpt.com/backend-api/codex/responses`, `OpenAI-Beta: responses_websockets=2026-02-06`, `response.create` frames, `previous_response_id` between turns; falls back to HTTPS after 5 failed retries | HTTP POST SSE by default; OAuth payloads ≥ 1.5 MiB use an ephemeral upstream WebSocket. WebSocket clients also use that transport when enabled for the credential. |
 | Identity headers | `originator: codex_exec`/`codex-tui`, `User-Agent: codex_exec/0.160.1 ...`, `version`, `session-id`, `thread-id`, `x-client-request-id`, `x-codex-window-id`, `x-codex-turn-metadata`, `x-codex-routing-hint`, `x-codex-beta-features` | `Originator: codex-tui`, fixed `User-Agent: codex-tui/0.154.0 ...` (cloaking), `Session-Id`, `X-Codex-Routing-Hint`, `Chatgpt-Account-Id` |
 | Body extras | `client_metadata` (installation id, timing), `text.verbosity`, `generate:false` prewarm | adds the `image_generation` tool, `parallel_tool_calls: true` |
 | Other calls | `/codex/models`, plugins, `analytics-events`, `wham/*` | none |

@@ -5,7 +5,7 @@ Management Center panel vendored as a git subtree in `panel/` (remote
 `panel-upstream` = `router-for-me/Cli-Proxy-API-Management-Center`, branch `main`).
 Our branch is `custom` (remote `fork` = `kevynsax/cpamc-custom`).
 
-Every custom line is marked `CUSTOM (cpamc-custom)`. List them all with:
+Fork-specific integration hooks are marked `CUSTOM (cpamc-custom)`. List them with:
 
 ```bash
 git grep -n "CUSTOM (cpamc-custom)"
@@ -399,7 +399,7 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 
 ### 9. Transient failure recovery configuration
 
-- The custom config template uses `routing.retry.request-retry: 2` and
+- The custom config template uses `routing.retry.request-retry: 5` and
   `routing.cooldown.transient-error-cooldown-seconds: 5` to recover from temporary
   connection/server errors without a 60-second credential blackout.
 - Existing installations must apply these values to their persisted config; an
@@ -435,25 +435,15 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
   WebSocket instead, which has no body limit: `customCodexLargeRequestUsesWebsocket` in
   `codex_websockets_executor.go`. Details and tests: `docs/custom-fork-maintenance.md`.
 
-### 13. Early model registry entries (upstream not yet released)
+### 13. Verification-gated Mythos catalog entry
 
-- `internal/registry/custom_claude_builtins.go`: `claude-haiku-5-5` upserted ahead of
-  upstream (Anthropic API id `claude-haiku-5-5`, 1M context, 5.5-family thinking
-  levels). A hardcoded builtin, not `models.json`: the registry refreshes from the
-  remote catalog at runtime, which would wipe an embedded-only entry.
-- Same file: `claude-mythos-5-1`, the verification-gated id of Claude Fable 5.1
-  (1M context, 128K output, adaptive thinking). Upstream will not list it
-  (CLIProxyAPI #6428), so this builtin stays even after catalog refreshes. The
-  Claude executor already treats the id like Fable 5.1; only a credential whose
-  account has Mythos access can actually serve it.
-- Drop the haiku builtin once upstream's catalog includes the same id; until then
-  keep both (and the `WithClaudeBuiltins` hook in `GetClaudeModels`) on every merge.
-
-- `internal/registry/custom_codex_builtins.go`: `gpt-6.1-terra` is present in the
-  upstream Codex account catalog but not yet in the public model registry.
-  `WithCodexBuiltins` keeps it available across registry refreshes: 500K default
-  context, 872K maximum context, text/image input and native web search. Remove
-  the temporary builtin once the public catalog includes the same model.
+- `internal/registry/custom_claude_builtins.go` retains `claude-mythos-5-1`, the
+  verification-gated id of Claude Fable 5.1. Upstream declines to list it publicly
+  (CLIProxyAPI #6428). The Claude executor uses the Fable protocol, and only an
+  account with Mythos access can serve it. `WithClaudeBuiltins` in
+  `GetClaudeModels` preserves this deliberate catalog difference.
+- Ordinary upstream model releases and temporary catalog-availability fallbacks
+  are maintenance, not custom product features.
 
 ### 14. Image generation endpoint (MiniMax image-01)
 

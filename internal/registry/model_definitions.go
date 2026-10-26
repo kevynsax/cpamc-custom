@@ -41,7 +41,7 @@ type staticModelsJSON struct {
 
 // GetClaudeModels returns the standard Claude model definitions.
 func GetClaudeModels() []*ModelInfo {
-	return WithClaudeBuiltins(cloneModelInfos(getModels().Claude)) // CUSTOM (cpamc-custom): early haiku-5-5
+	return WithClaudeBuiltins(cloneModelInfos(getModels().Claude)) // CUSTOM (cpamc-custom): verification-gated Mythos entry.
 }
 
 // GetGeminiModels returns the standard Gemini model definitions.
