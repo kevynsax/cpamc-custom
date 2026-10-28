@@ -60,8 +60,12 @@ usable money, allowance, comparison, or availability percentage. Names and activ
 counters alone do not keep a card visible. Hidden idle Person keys still count in
 the allowance denominator; hiding a card never changes classifications or allocation. Current periods
 compare with the same elapsed duration in the previous period (calendar UTC
-months; each account's reset-aligned subscription week); completed periods compare
-full periods. Short prior months are clamped. Comparisons describe observed records,
+months; fixed weeks starting Thursday at 20:00 UTC-3, or 23:00 UTC, for every
+account); completed periods compare full periods. Provider resets never move the
+reporting window or discard earlier recorded GPT/model usage. Retained history is
+regrouped without rewriting it, and the open page advances using the shared minute
+clock. Both the selected and previous reporting periods are fetched for comparisons.
+Short prior months are clamped. Comparisons describe observed records,
 not complete billing history: paused/missing history is never backfilled, missing
 prices suppress value-change percentages, and a zero prior baseline is not an
 infinite percentage.
@@ -129,9 +133,10 @@ quotas are normalized separately and averaged equally, so short-window reset cou
 do not overwhelm weekly limits. Plans within each company are pooled by published
 capacity multipliers where known (Claude Pro/Max 5x/Max 20x), with flagged
 price-proportional proxies for ambiguous OpenAI Pro tiers. Unknown tiers use an
-explicitly estimated unit weight, not a claimed published ratio. Current month
-includes all observed reset cycles, with crossing cycles prorated by time overlap;
-request spending uses actual UTC request dates without proration. Pies distinguish
+explicitly estimated unit weight, not a claimed published ratio. Weekly and monthly
+views include all observed reset cycles, with crossing cycles prorated by time overlap;
+request spending uses actual UTC request dates without proration. Reporting cutoffs
+do not alter actual quota resets or the stored provider observations. Pies distinguish
 people, currently available and already-wasted capacity. Unknown history is not
 invented: incomplete pies are hidden.
 
@@ -232,8 +237,8 @@ All endpoints use existing v8 management authentication:
   Cycle reports retain their actual `period_seconds`, not an assumed seven days.
 - `GET /v8/management/observability/usage/spend?period=week|month&offset=N` returns
   compact API value totals per key, account, provider and model (`items`), plus
-  `key_names` and `key_kinds`, for one period. Weeks follow each account's own 7-day
-  reset cycle and months are UTC calendar months, exactly as on the Usage page;
+  `key_names` and `key_kinds`, for one period. Weeks start Thursday at 20:00 UTC-3
+  (23:00 UTC) for every account and months are UTC calendar months, exactly as on the Usage page;
   in-house rows use the same reference estimates. `offset` is 0..50 weeks or 0..11
   months. Used by CPAMC Bar instead of downloading minute rows.
 - Both usage report routes are gzip-compressed when the client sends

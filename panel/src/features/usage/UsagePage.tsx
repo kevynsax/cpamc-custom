@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/icons';
 import { getAuthFileIcon, getTypeColor } from '@/features/authFiles/constants';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
+import { useNow } from '@/hooks/useNow';
 import { useAuthStore, useConfigStore, useThemeStore } from '@/stores';
 import { buildCompanyUsage, companyId, usageRange, type UsagePeriod } from './companies';
 import { CompanyPies } from './CompanyPies';
@@ -30,7 +31,8 @@ export function UsagePage() {
   const { t } = useTranslation();
   const [period, setPeriod] = useState<UsagePeriod>('week');
   const [offset, setOffset] = useState(0);
-  const range = usageRange(period, offset);
+  const now = new Date(useNow());
+  const range = usageRange(period, offset, now);
   const {
     data: usageData,
     catalog,
@@ -40,10 +42,7 @@ export function UsagePage() {
     saving,
     refresh,
     saveSettings,
-  } = useClientUsage(
-    period === 'month' ? usageRange(period, offset + 1).from : range.from,
-    range.to
-  );
+  } = useClientUsage(usageRange(period, offset + 1, now).from, range.to);
   const data = usageData && offset === 0 ? withGrokAvailability(usageData) : usageData;
   const quote = useCrossQuote();
   const theme = useThemeStore((state) => state.resolvedTheme);
@@ -60,8 +59,8 @@ export function UsagePage() {
     ...data?.keyNames,
     ...keyNames.names,
   };
-  const companies = data ? buildCompanyUsage(data, period, offset) : [];
-  const recorded = data ? periodRows(data, period, offset) : { current: [], previous: [] };
+  const companies = data ? buildCompanyUsage(data, period, offset, now) : [];
+  const recorded = data ? periodRows(data, period, offset, now) : { current: [], previous: [] };
   const kinds = { ...keyNames.kinds, ...data?.keyKinds };
   const personIds = Object.keys(data?.keyLabels ?? {}).filter((id) => kinds[id] !== 'system');
   const allowances = allocatePersonFees(companies, personIds, kinds);
@@ -125,6 +124,7 @@ export function UsagePage() {
               key={value}
               className={styles.periodCard}
               aria-pressed={period === value}
+              title={value === 'week' ? t('client_usage.weekly_cutoff') : undefined}
               disabled={saving}
               onClick={() => choosePeriod(value)}
             >

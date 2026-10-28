@@ -1,5 +1,5 @@
 import type { ClientUsageResponse, ClientUsageRow } from '@/services/api/clientUsage';
-import { accountRange, companyId, type UsagePeriod } from './companies';
+import { companyId, reportingRange, type UsagePeriod } from './companies';
 import { quotaObservationIsFresh } from '@/utils/quota/grokAvailability';
 
 export interface UsageTotal {
@@ -34,7 +34,7 @@ const total = (rows: ClientUsageRow[]): UsageTotal =>
     emptyTotal()
   );
 
-/** Match each account's own reset week; never prorate tokens or costs. */
+/** All accounts share reporting periods; never prorate tokens or costs. */
 export function periodRows(
   data: ClientUsageResponse,
   period: UsagePeriod,
@@ -43,12 +43,12 @@ export function periodRows(
 ) {
   const current: ClientUsageRow[] = [],
     previous: ClientUsageRow[] = [];
+  const range = reportingRange(period, offset, now);
+  const prior = reportingRange(period, offset + 1, now);
+  const end = Math.min(range.end, now.getTime() + 1);
+  const previousEnd =
+    offset === 0 ? Math.min(prior.end, prior.start + Math.max(0, end - range.start)) : prior.end;
   for (const account of data.accounts) {
-    const range = accountRange(account, data.weeks, period, offset, now);
-    const prior = accountRange(account, data.weeks, period, offset + 1, now);
-    const end = Math.min(range.end, now.getTime() + 1);
-    const previousEnd =
-      offset === 0 ? Math.min(prior.end, prior.start + Math.max(0, end - range.start)) : prior.end;
     for (const row of data.rows) {
       if (row.accountId !== account.id) continue;
       const at = Date.parse(row.at || row.date);

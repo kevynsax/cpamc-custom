@@ -168,10 +168,10 @@ describe('company capacity pies', () => {
       cycle('two', 'two', '2026-10-12T00:00:00Z', '2026-10-19T00:00:00Z', 80, false),
     ];
     const company = buildCompanyUsage(data, 'week', 0, now)[0];
-    expect(company.accounts.map((account) => [account.used, account.unused])).toEqual([
-      [20, 80],
-      [80, 20],
-    ]);
+    for (const [index, used] of [20, 80].entries()) {
+      expect(company.accounts[index].used).toBeCloseTo(used, 8);
+      expect(company.accounts[index].unused).toBeCloseTo(100 - used, 8);
+    }
     expect(company.parts.find((part) => part.id === 'available')?.value).toBeCloseTo(50, 8);
   });
   test('reuses key names from the existing key editor without another name store', () => {

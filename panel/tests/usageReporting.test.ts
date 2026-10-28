@@ -93,25 +93,21 @@ describe('usage reporting', () => {
     expect(short.previous).toHaveLength(1);
     expect(short.current).toHaveLength(1);
   });
-  test('subscription weeks follow each account reset and compare only elapsed time', () => {
+  test('reporting weeks share Thursday 20:00 UTC-3 and compare only elapsed time', () => {
     const source = normalizeClientUsage(createUsageFixture(now));
     const selected = periodRows(source, 'week', 0, now);
-    for (const current of selected.current)
+    const start = Date.parse('2026-10-15T23:00:00Z');
+    const previousStart = start - 7 * 86400000;
+    expect(selected.current.length).toBeGreaterThan(0);
+    for (const current of selected.current) {
+      expect(Date.parse(current.at)).toBeGreaterThanOrEqual(start);
       expect(Date.parse(current.at)).toBeLessThanOrEqual(now.getTime());
-    const first = source.weeks.find(
-      (week) =>
-        week.accountId === source.accounts[0].id && !week.closed && week.periodSeconds === 604800
-    );
-    if (first) {
-      const start = Date.parse(first.reset) - 7 * 86400000;
-      const duration = now.getTime() - start;
-      for (const previous of selected.previous.filter(
-        (item) => item.accountId === first.accountId
-      )) {
-        expect(Date.parse(previous.at)).toBeGreaterThanOrEqual(start - 7 * 86400000);
-        expect(Date.parse(previous.at)).toBeLessThanOrEqual(start - 7 * 86400000 + duration);
-      }
     }
+    for (const previous of selected.previous) {
+      expect(Date.parse(previous.at)).toBeGreaterThanOrEqual(previousStart);
+      expect(Date.parse(previous.at)).toBeLessThanOrEqual(previousStart + now.getTime() - start);
+    }
+    expect(periodRows({ ...source, weeks: [] }, 'week', 0, now)).toEqual(selected);
   });
   test('groups all three in-house providers without merging people or double-counting cache tokens', () => {
     for (const provider of ['macbook', 'home-gpu', 'spark', 'openai-compatibility-spark'])

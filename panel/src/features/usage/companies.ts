@@ -1,9 +1,4 @@
-import type {
-  CachedUsageQuota,
-  ClientUsageResponse,
-  UsageAccount,
-  UsageWeek,
-} from '@/services/api/clientUsage';
+import type { CachedUsageQuota, ClientUsageResponse, UsageWeek } from '@/services/api/clientUsage';
 import { monthlyPlanFee, proratedPlanFee } from './fees';
 
 export type UsagePeriod = 'week' | 'month';
@@ -93,51 +88,31 @@ export function planWeight(provider: string, plan: string): { weight: number; es
   return { weight: 1, estimated: true };
 }
 
-export function usageRange(period: UsagePeriod, offset: number, now = new Date()) {
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const start =
-    period === 'month'
-      ? Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1)
-      : today - (14 + offset * 7) * DAY;
-  const end =
-    period === 'month'
-      ? Math.min(now.getTime(), Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset + 1, 1))
-      : now.getTime() - offset * WEEK;
-  return {
-    from: new Date(Math.max(start, today - 364 * DAY)).toISOString().slice(0, 10),
-    to: new Date(Math.max(start, end)).toISOString().slice(0, 10),
-  };
-}
-
-export function accountRange(
-  account: UsageAccount,
-  weeks: UsageWeek[],
-  period: UsagePeriod,
-  offset: number,
-  now: Date
-) {
+/** Reporting weeks start Thursday at 20:00 UTC-3, independently of quota resets. */
+export function reportingRange(period: UsagePeriod, offset: number, now = new Date()) {
   if (period === 'month')
     return {
       start: Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1),
       end: Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset + 1, 1),
     };
-  const primary = weeks
-    .filter(
-      (week) =>
-        week.accountId === account.id &&
-        Math.abs(Date.parse(week.reset) - Date.parse(week.start) - WEEK) < 1000
-    )
-    .sort(
-      (a, b) =>
-        Number(b.scope === 'account') - Number(a.scope === 'account') ||
-        Date.parse(b.reset) - Date.parse(a.reset)
-    )[0];
-  if (primary) {
-    let reset = Date.parse(primary.reset);
-    while (reset <= now.getTime()) reset += WEEK;
-    return { start: reset - (offset + 1) * WEEK, end: reset - offset * WEEK };
-  }
-  return { start: now.getTime() - (offset + 1) * WEEK, end: now.getTime() - offset * WEEK };
+
+  const daysSinceThursday = (now.getUTCDay() + 3) % 7;
+  let start =
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23) -
+    daysSinceThursday * DAY;
+  if (start > now.getTime()) start -= WEEK;
+  start -= offset * WEEK;
+  return { start, end: start + WEEK };
+}
+
+/** Inclusive UTC fetch dates; callers filter rows by the exact reporting instants. */
+export function usageRange(period: UsagePeriod, offset: number, now = new Date()) {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const { start, end } = reportingRange(period, offset, now);
+  return {
+    from: new Date(Math.max(start, today - 364 * DAY)).toISOString().slice(0, 10),
+    to: new Date(Math.min(end - 1, now.getTime())).toISOString().slice(0, 10),
+  };
 }
 
 export function buildCompanyUsage(
@@ -147,6 +122,7 @@ export function buildCompanyUsage(
   now = new Date()
 ): CompanyUsage[] {
   const companies = new Map<string, CompanyUsage>();
+  const range = reportingRange(period, offset, now);
   for (const account of data.accounts) {
     const id = companyId(account.provider);
     const company = companies.get(id) ?? {
@@ -163,7 +139,6 @@ export function buildCompanyUsage(
       chartAvailable: true,
       current: offset === 0,
     };
-    const range = accountRange(account, data.weeks, period, offset, now);
     const accountWeeks = data.weeks.filter(
       (week) =>
         week.accountId === account.id &&
