@@ -2476,7 +2476,10 @@
     "week_credits": "{{count}}주 크레딧",
     "week_tools": "{{count}}주 도구 호출",
     "minute_credits": "{{count}}분 크레딧",
-    "minute_tools": "{{count}}분 도구 호출"
+    "minute_tools": "{{count}}분 도구 호출",
+    "month_credits": "{{count}}개월 크레딧",
+    "month_tools": "{{count}}개월 도구 호출",
+    "no_plan": "이 API 키에는 활성 Z.ai 코딩 플랜이 없습니다"
   },
   "siwc": {
     "title": "SIWC 바인딩",

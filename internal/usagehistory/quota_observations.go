@@ -65,17 +65,11 @@ func ParseQuotaWindows(provider string, body []byte) ([]QuotaWindow, string) {
 			window := object(value)
 			unit, _ := number(window["unit"])
 			length, _ := number(window["number"])
-			cap, okCap := number(window["usage"])
-			used, okUsed := number(window["currentValue"])
-			period := time.Duration(0)
-			if unit == 3 {
-				period = time.Duration(length) * time.Hour
-			}
-			if unit == 5 {
-				period = time.Duration(length) * time.Minute
-			}
-			if okCap && okUsed && cap > 0 && text(window["type"]) != "TIME_LIMIT" {
-				add("account", window["nextResetTime"], 100*used/cap, period)
+			used, ok := zaiUsedPercent(window)
+			// Unit 3 is hours. Weekly windows (unit 6) come from ParseWeeklyQuota, and
+			// unit 5 is calendar months, which have no fixed period.
+			if unit == 3 && ok && text(window["type"]) != "TIME_LIMIT" {
+				add("account", window["nextResetTime"], used, time.Duration(length)*time.Hour)
 			}
 		}
 	}

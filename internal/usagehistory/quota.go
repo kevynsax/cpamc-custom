@@ -142,17 +142,36 @@ func ParseWeeklyQuota(provider string, body []byte) ([]QuotaWindow, string) {
 			}
 		}
 	case "zai":
-		limits, _ := object(root["data"])["limits"].([]any)
+		data := object(root["data"])
+		if level := text(data["level"]); plan == "" && len(level) <= 80 {
+			plan = level
+		}
+		limits, _ := data["limits"].([]any)
 		for _, value := range limits {
 			m := object(value)
 			unit, _ := number(m["unit"])
 			length, _ := number(m["number"])
-			cap, okCap := number(m["usage"])
-			used, okUsed := number(m["currentValue"])
-			if unit == 6 && length == 1 && text(m["type"]) != "TIME_LIMIT" && okCap && okUsed && cap > 0 {
-				add("account", m["nextResetTime"], 100*used/cap)
+			used, ok := zaiUsedPercent(m)
+			if unit == 6 && length == 1 && text(m["type"]) != "TIME_LIMIT" && ok {
+				add("account", m["nextResetTime"], used)
 			}
 		}
 	}
 	return result, plan
+}
+
+// zaiUsedPercent reads a Z.ai limit's used share. Credit plans and tool calls
+// report exact counters; legacy token windows report only a rounded percentage.
+func zaiUsedPercent(limit map[string]any) (float64, bool) {
+	_, hasCapacity := limit["usage"]
+	_, hasUsed := limit["currentValue"]
+	if !hasCapacity && !hasUsed {
+		return number(limit["percentage"])
+	}
+	capacity, okCapacity := number(limit["usage"])
+	used, okUsed := number(limit["currentValue"])
+	if !okCapacity || !okUsed || capacity <= 0 {
+		return 0, false
+	}
+	return 100 * used / capacity, true
 }

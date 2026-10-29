@@ -779,7 +779,10 @@
     "week_credits": "Credits {{count}} tuần",
     "week_tools": "Lượt gọi tool {{count}} tuần",
     "minute_credits": "Credits {{count}} phút",
-    "minute_tools": "Lượt gọi tool {{count}} phút"
+    "minute_tools": "Lượt gọi tool {{count}} phút",
+    "month_credits": "Credits {{count}} tháng",
+    "month_tools": "Lượt gọi tool {{count}} tháng",
+    "no_plan": "Khóa API này không có Z.ai Coding Plan đang hoạt động"
   },
   "xai_quota": {
     "assumed_weekly": "Giả định hạn mức tuần khả dụng: chưa có số liệu hạn mức.",

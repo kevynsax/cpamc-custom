@@ -32,6 +32,16 @@ func (h *Handler) clientCachedQuotas() map[string]clientCachedAccount {
 		}
 	}
 	customQuota.mu.Unlock()
+	// Recipes keep the internal auth provider. API-key providers (MiniMax, Z.ai)
+	// register as openai-compatibility, so parse with the name quota clients know.
+	providers := map[string]string{}
+	if h != nil && h.authManager != nil {
+		for _, auth := range h.authManager.List() {
+			if auth != nil {
+				providers[auth.ID] = quotaViewProvider(auth)
+			}
+		}
+	}
 	// Newer observations replace older duplicates, but never erase another scope.
 	sort.Slice(entries, func(i, j int) bool { return entries[i].FetchedAt.Before(entries[j].FetchedAt) })
 	result := map[string]clientCachedAccount{}
@@ -39,7 +49,11 @@ func (h *Handler) clientCachedQuotas() map[string]clientCachedAccount {
 	for _, entry := range entries {
 		id := usagehistory.Fingerprint(entry.Recipe.AuthID)
 		account := result[id]
-		quotas, plan := usagehistory.ParseQuotaWindows(entry.Recipe.Provider, []byte(entry.Body))
+		provider := providers[entry.Recipe.AuthID]
+		if provider == "" {
+			provider = entry.Recipe.Provider
+		}
+		quotas, plan := usagehistory.ParseQuotaWindows(provider, []byte(entry.Body))
 		if plan != "" {
 			account.Plan = plan
 		}

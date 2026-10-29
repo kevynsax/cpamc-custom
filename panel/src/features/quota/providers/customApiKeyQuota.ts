@@ -94,22 +94,58 @@ export function buildMinimaxQuotaRows(payload: unknown): KimiQuotaRow[] {
   return rows;
 }
 
-/** Z.ai unit codes: 3 = hours, 5 = minutes, 6 = weeks (number = window length). */
-const zaiWindowHours = (unit: number | null, number: number | null): number | null => {
-  if (unit === null || number === null) return null;
-  if (unit === 3) return number;
-  if (unit === 5) return number / 60;
-  if (unit === 6) return number * 24 * 7;
-  return null;
+type ZaiPeriod = 'limit' | 'hour' | 'week' | 'month';
+
+interface ZaiWindow {
+  period: ZaiPeriod;
+  count: number;
+  hours: number | null;
+}
+
+/** Z.ai window units (number = window length): 3 = hours, 5 = months, 6 = weeks. */
+const ZAI_UNITS: Record<number, { period: ZaiPeriod; hours: number | null }> = {
+  3: { period: 'hour', hours: 1 },
+  5: { period: 'month', hours: null }, // calendar months have no fixed length
+  6: { period: 'week', hours: 168 },
 };
 
-const zaiWindowLabel = (hours: number | null, type: string): string => {
-  const kind = type === 'TIME_LIMIT' ? 'tool calls' : 'credits';
-  if (hours === null) return kind;
-  if (hours >= 24 * 7 && hours % (24 * 7) === 0) return `${hours / (24 * 7)}-week ${kind}`;
-  if (hours >= 1) return `${hours}-hour ${kind}`;
-  return `${Math.round(hours * 60)}-minute ${kind}`;
+const zaiWindow = (unit: number | null, length: number | null): ZaiWindow => {
+  const known = unit === null ? undefined : ZAI_UNITS[unit];
+  if (!known || length === null || length <= 0) return { period: 'limit', count: 0, hours: null };
+  return {
+    period: known.period,
+    count: length,
+    hours: known.hours === null ? null : known.hours * length,
+  };
 };
+
+/**
+ * Credit plans and tool calls report exact counters; legacy token windows
+ * report only a rounded used percentage.
+ */
+const zaiUsage = (raw: Record<string, unknown>): { used: number; limit: number } | null => {
+  if (raw.usage === undefined && raw.currentValue === undefined) {
+    const percent = asNumber(raw.percentage);
+    if (percent === null || percent < 0 || percent > 100) return null;
+    return { used: percent, limit: 100 };
+  }
+  const limit = asNumber(raw.usage);
+  const used = asNumber(raw.currentValue);
+  if (limit === null || used === null || limit < 0 || used < 0) return null;
+  return { used, limit };
+};
+
+/**
+ * Z.ai answers HTTP 200 with success:false when it refuses the request, most
+ * often because the key has no active Coding Plan.
+ */
+function zaiRefusal(payload: unknown, t: TFunction): string | null {
+  const data = parseBody(payload);
+  if (!isRecord(data) || data.success !== false) return null;
+  const message = typeof data.msg === 'string' ? data.msg.trim() : '';
+  if (/coding ?plan|没有资格/i.test(message)) return t('zai_quota.no_plan');
+  return message || t('zai_quota.empty_data');
+}
 
 /** Z.ai coding plan: data.limits[] with usage (cap), currentValue (used), nextResetTime. */
 export function buildZaiQuotaRows(payload: unknown): KimiQuotaRow[] {
@@ -119,36 +155,20 @@ export function buildZaiQuotaRows(payload: unknown): KimiQuotaRow[] {
   return limits
     .map((raw, index): KimiQuotaRow | null => {
       if (!isRecord(raw)) return null;
-      const cap = asNumber(raw.usage);
-      const used = asNumber(raw.currentValue);
-      if (cap === null || used === null || cap < 0 || used < 0) return null;
-      const hours = zaiWindowHours(asNumber(raw.unit), asNumber(raw.number));
-      const kind = raw.type === 'TIME_LIMIT' ? 'tools' : 'credits';
-      const period =
-        hours === null
-          ? 'limit'
-          : hours >= 168 && hours % 168 === 0
-            ? 'week'
-            : hours >= 1
-              ? 'hour'
-              : 'minute';
-      const count =
-        hours === null
-          ? 0
-          : period === 'week'
-            ? hours / 168
-            : period === 'hour'
-              ? hours
-              : Math.round(hours * 60);
+      const usage = zaiUsage(raw);
+      if (usage === null) return null;
+      const span = zaiWindow(asNumber(raw.unit), asNumber(raw.number));
+      const tools = raw.type === 'TIME_LIMIT';
+      const kind = tools ? 'tool calls' : 'credits';
       return {
         id: `zai:${index}`,
-        label: zaiWindowLabel(hours, String(raw.type ?? '')),
-        labelKey: `zai_quota.${period}_${kind}`,
-        labelParams: { count },
-        used,
-        limit: cap,
+        label: span.period === 'limit' ? kind : `${span.count}-${span.period} ${kind}`,
+        labelKey: `zai_quota.${span.period}_${tools ? 'tools' : 'credits'}`,
+        labelParams: { count: span.count },
+        used: usage.used,
+        limit: usage.limit,
         resetAtMs: asNumber(raw.nextResetTime),
-        periodHours: hours,
+        periodHours: span.hours,
       };
     })
     .filter((row): row is KimiQuotaRow => row !== null);
@@ -158,7 +178,8 @@ const makeConfig = (
   type: 'minimax' | 'zai',
   url: string,
   header: Record<string, string>,
-  build: (payload: unknown) => KimiQuotaRow[]
+  build: (payload: unknown) => KimiQuotaRow[],
+  refusal?: (payload: unknown, t: TFunction) => string | null
 ): QuotaProviderData<KimiQuotaState, KimiQuotaRow[]> => ({
   type,
   i18nPrefix: `${type}_quota`,
@@ -183,7 +204,10 @@ const makeConfig = (
     if (result.statusCode < 200 || result.statusCode >= 300) {
       throw createStatusError(getApiCallErrorMessage(result), result.statusCode);
     }
-    const rows = build(result.body ?? result.bodyText);
+    const payload = result.body ?? result.bodyText;
+    const refused = refusal?.(payload, t);
+    if (refused) throw new Error(refused);
+    const rows = build(payload);
     if (rows.length === 0) throw new Error(t(`${prefix}.empty_data`));
     return rows.map((row) => ({
       ...row,
@@ -213,5 +237,6 @@ export const ZAI_CONFIG = makeConfig(
   'zai',
   ZAI_QUOTA_URL,
   { Authorization: '$TOKEN$', 'Accept-Language': 'en-US,en', 'Content-Type': 'application/json' },
-  buildZaiQuotaRows
+  buildZaiQuotaRows,
+  zaiRefusal
 );

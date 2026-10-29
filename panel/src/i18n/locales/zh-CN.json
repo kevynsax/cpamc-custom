@@ -822,7 +822,10 @@
     "week_credits": "{{count}} 周积分",
     "week_tools": "{{count}} 周工具调用",
     "minute_credits": "{{count}} 分钟积分",
-    "minute_tools": "{{count}} 分钟工具调用"
+    "minute_tools": "{{count}} 分钟工具调用",
+    "month_credits": "{{count}} 个月积分",
+    "month_tools": "{{count}} 个月工具调用",
+    "no_plan": "此 API 密钥没有有效的 Z.ai 编程套餐"
   },
   "xai_quota": {
     "assumed_weekly": "假定周额度可用：没有可用的配额读数。",

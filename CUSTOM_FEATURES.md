@@ -382,6 +382,13 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
   by their public `auth_index`, never by exposing the secret key.
 - Z.ai selects the international or BigModel quota host from the configured base
   URL. Both providers participate in reset sorting and the quota timeline.
+- Z.ai answers HTTP 200 with `success:false` for keys without an active Coding Plan;
+  the card says so instead of reporting empty data. Window units are 3 = hours,
+  5 = months (monthly tool calls), 6 = weeks. Credit limits use their exact counters;
+  legacy token windows without counters use the reported `percentage`. `data.level`
+  (lite/pro/max) is the plan name.
+- Cached quota bodies are parsed with the compat name (`zai`, `minimax`), not the
+  internal `openai-compatible-*` key, so the Usage page receives their `cached_quotas`.
 - Reset fields (`end_time`, `weekly_end_time`, `nextResetTime`) feed the earliest-reset routing.
 
 ### 7. Text-to-speech endpoint (MiniMax)

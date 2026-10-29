@@ -826,7 +826,10 @@
     "week_credits": "Кредиты за {{count}} нед.",
     "week_tools": "Вызовы инструментов за {{count}} нед.",
     "minute_credits": "Кредиты за {{count}} мин.",
-    "minute_tools": "Вызовы инструментов за {{count}} мин."
+    "minute_tools": "Вызовы инструментов за {{count}} мин.",
+    "month_credits": "Кредиты за {{count}} мес.",
+    "month_tools": "Вызовы инструментов за {{count}} мес.",
+    "no_plan": "У этого API-ключа нет активного плана Z.ai Coding Plan"
   },
   "xai_quota": {
     "assumed_weekly": "Доступность за неделю предполагается: данные квоты отсутствуют.",

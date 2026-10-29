@@ -823,7 +823,10 @@
     "week_credits": "{{count}}-week credits",
     "week_tools": "{{count}}-week tool calls",
     "minute_credits": "{{count}}-minute credits",
-    "minute_tools": "{{count}}-minute tool calls"
+    "minute_tools": "{{count}}-minute tool calls",
+    "month_credits": "{{count}}-month credits",
+    "month_tools": "{{count}}-month tool calls",
+    "no_plan": "This API key has no active Z.ai Coding Plan"
   },
   "xai_quota": {
     "assumed_weekly": "Assumed weekly availability: no quota reading available.",
