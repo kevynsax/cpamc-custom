@@ -353,6 +353,7 @@ func (h *Handler) StartCustomQuotaCache(ctx context.Context) {
 		}
 		h.customQuotaApplyResetPriority()
 		go h.customQuotaLoop(ctx)
+		go h.customCodexAutoResetLoop(ctx)
 	})
 }
 

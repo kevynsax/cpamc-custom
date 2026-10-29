@@ -501,6 +501,16 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
   `executeStreamWithAuthManagerFormats` (`handlers_stream.go`); the lookup is installed in
   `StartClientUsageHistory`. If key metadata storage fails to open, every key stays standard.
 
+### 17. Codex manual resets spent before they expire
+
+- Codex manual rate-limit resets lapse unused. `custom_codex_auto_reset.go` reads every
+  enabled Codex OAuth account's resets every 30 minutes and, each minute, spends any reset
+  within 10 minutes of expiry on that account (even if its quota is full: the reset would be
+  lost anyway), then clears that account's gateway cooldown.
+- The credit is re-read right before spending; each credit id is tried at most once per
+  process and the consume call is never retried.
+- Hook: one `go h.customCodexAutoResetLoop(ctx)` line in `StartCustomQuotaCache`.
+
 ### 11. No GitHub Actions
 
 - Upstream and the panel subtree ship `.github/workflows/` and `panel/.github/workflows/`.
@@ -532,6 +542,7 @@ the same API-key route (only `gpt-live-1-codex` stays on the ChatGPT OAuth route
 | `internal/config/config_v8_test.go` | expects `request-retry: 5` |
 | `config.example.yaml` | custom transient cooldown + retry configuration |
 | `internal/api/handlers/management/custom_quota_cache.go` (+ `_test.go`) | new |
+| `internal/api/handlers/management/custom_codex_auto_reset.go` | new (expiring Codex resets) |
 | `internal/managementasset/custom_bundled.go` | new |
 | `sdk/cliproxy/auth/custom_reset_priority.go` (+ `_test.go`) | new |
 | `panel/src/services/api/customQuotaApiCall.ts` | new |
