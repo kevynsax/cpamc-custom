@@ -34,16 +34,18 @@ export function PeopleSpend({
   const { t } = useTranslation();
   const id = useId();
   const actors = spendingByPerson(companies);
+  // System keys show their usage but never receive a share of the wasted or available fee.
+  const isSystem = (personId: string) => kinds[personId] === 'system';
   const people = actors.filter(
     (person) =>
-      kinds[person.id] !== 'system' &&
-      (hasMoney(person.costUsd, quote) ||
-        (allowances &&
-          hasFeeValue(
-            sumFeeValues(Object.values(allowances[person.id] ?? {})),
-            companies.some((company) => company.current),
-            quote
-          )))
+      hasMoney(person.costUsd, quote) ||
+      (!isSystem(person.id) &&
+        allowances &&
+        hasFeeValue(
+          sumFeeValues(Object.values(allowances[person.id] ?? {})),
+          companies.some((company) => company.current),
+          quote
+        ))
   );
   const [hovered, setHovered] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
@@ -103,7 +105,9 @@ export function PeopleSpend({
                 <strong>{name(person.id)}</strong>
                 <div className={styles.personPrice}>
                   <span>{price(person.costUsd, person.unpriced)}</span>
-                  <FeeTags value={feeValue} current={current} quote={quote} classes={styles} />
+                  {!isSystem(person.id) && (
+                    <FeeTags value={feeValue} current={current} quote={quote} classes={styles} />
+                  )}
                 </div>
               </div>
               <div className={styles.spendChart}>
@@ -145,7 +149,7 @@ export function PeopleSpend({
                   <div id={tooltipId} className={styles.spendTooltip} role="tooltip">
                     <span>{COMPANY_NAMES[selected.id] ?? selected.id}</span>
                     <b>{price(selected.costUsd, selected.unpriced)}</b>
-                    {selectedCompany && (
+                    {selectedCompany && !isSystem(person.id) && (
                       <FeeTags
                         value={
                           allowances?.[person.id]?.[selectedCompany.id] ??

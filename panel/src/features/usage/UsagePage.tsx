@@ -62,7 +62,8 @@ export function UsagePage() {
   const companies = data ? buildCompanyUsage(data, period, offset, now) : [];
   const recorded = data ? periodRows(data, period, offset, now) : { current: [], previous: [] };
   const kinds = { ...keyNames.kinds, ...data?.keyKinds };
-  const personIds = Object.keys(data?.keyLabels ?? {}).filter((id) => kinds[id] !== 'system');
+  // System keys still show their usage; allocatePersonFees keeps them out of wasted/available fees.
+  const personIds = Object.keys(data?.keyLabels ?? {});
   const allowances = allocatePersonFees(companies, personIds, kinds);
   const spending: Record<string, number> = {};
   for (const part of valueByModel(recorded.current)) {
