@@ -13,13 +13,13 @@ package chat_completions
 import (
 	"strings"
 
-	"github.com/tidwall/gjson"
+	"github.com/MoeForge/moego/ojson"
 )
 
-func claudeChatRequestWantsFast(root gjson.Result) bool {
-	if speed := root.Get("speed"); speed.Type == gjson.String && strings.EqualFold(strings.TrimSpace(speed.String()), "fast") {
+func claudeChatRequestWantsFast(root ojson.Result) bool {
+	if speed := root.Get("speed"); speed.Type == ojson.String && strings.EqualFold(strings.TrimSpace(speed.String()), "fast") {
 		return true
 	}
 	tier := root.Get("service_tier")
-	return tier.Type == gjson.String && strings.EqualFold(strings.TrimSpace(tier.String()), "priority")
+	return tier.Type == ojson.String && strings.EqualFold(strings.TrimSpace(tier.String()), "priority")
 }

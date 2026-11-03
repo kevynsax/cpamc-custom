@@ -66,6 +66,7 @@ type Handler struct {
 	clientPricing           *usagehistory.Pricing // CUSTOM (cpamc-custom)
 	siwcOAuthFactory        func(*config.Config) siwcOAuthService
 	siwcCommitMu            sync.Mutex
+	pluginLoginSaveMu       sync.Mutex
 }
 
 type configReloadSnapshot struct {

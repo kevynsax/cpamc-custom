@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MoeForge/moego/ojson"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
 	sdktranslator "github.com/router-for-me/CLIProxyAPI/v8/sdk/translator"
-	"github.com/tidwall/gjson"
 )
 
 func TestOpenAICompatDecisionsNative(t *testing.T) {
@@ -23,10 +23,10 @@ func TestOpenAICompatDecisionsNative(t *testing.T) {
 			t.Error("incorrect upstream route or credential")
 		}
 		body, _ := io.ReadAll(r.Body)
-		if gjson.GetBytes(body, "model").String() != "typesafe/jev-1.13" {
+		if ojson.GetBytes(body, "model").String() != "typesafe/jev-1.13" {
 			t.Error("openrouter slug rewritten")
 		}
-		if !gjson.GetBytes(body, "state").Exists() || !gjson.GetBytes(body, "questions.q").Exists() || gjson.GetBytes(body, "messages").Exists() {
+		if !ojson.GetBytes(body, "state").Exists() || !ojson.GetBytes(body, "questions.q").Exists() || ojson.GetBytes(body, "messages").Exists() {
 			t.Error("native request translated into chat")
 		}
 		_, _ = io.WriteString(w, `{"answers":{"q":{"type":"choice","choice":"yes"}},"usage":{"input_tokens":2,"output_tokens":1}}`)
@@ -36,7 +36,7 @@ func TestOpenAICompatDecisionsNative(t *testing.T) {
 	auth := &cliproxyauth.Auth{Provider: "openrouter", Attributes: map[string]string{"base_url": upstream.URL + "/api/v1", "api_key": "provider-fixture"}}
 	req := cliproxyexecutor.Request{Model: "typesafe/jev-1.13", Payload: []byte(`{"model":"typesafe/jev-1.13","state":{"fixture":true},"questions":{"q":{"type":"choice","options":{"yes":"yes"}}}}`)}
 	out, err := e.Execute(context.Background(), auth, req, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatOpenAI, Alt: "jev-decisions"})
-	if err != nil || !called || !gjson.GetBytes(out.Payload, "answers.q").Exists() {
+	if err != nil || !called || !ojson.GetBytes(out.Payload, "answers.q").Exists() {
 		t.Fatal(err, string(out.Payload))
 	}
 }
@@ -56,7 +56,7 @@ func TestJevUpstreamModel(t *testing.T) {
 func TestOpenAICompatDecisionsPayloadRulesAreFinal(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
-		if gjson.GetBytes(body, "model").String() != "configured-upstream-model" || gjson.GetBytes(body, "state.private").Exists() {
+		if ojson.GetBytes(body, "model").String() != "configured-upstream-model" || ojson.GetBytes(body, "state.private").Exists() {
 			t.Error("payload rules were overwritten or filtered fields restored")
 		}
 		_, _ = io.WriteString(w, `{"answers":{}}`)
@@ -141,7 +141,7 @@ func TestOpenAICompatDecisionsTypeSafeDirect(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 		body, _ := io.ReadAll(r.Body)
-		if r.Header.Get("Authorization") != "Bearer typesafe-fixture" || gjson.GetBytes(body, "model").String() != "jev-1.14.0" || !gjson.GetBytes(body, "questions.q").Exists() {
+		if r.Header.Get("Authorization") != "Bearer typesafe-fixture" || ojson.GetBytes(body, "model").String() != "jev-1.14.0" || !ojson.GetBytes(body, "questions.q").Exists() {
 			t.Errorf("unexpected upstream request: auth=%q body=%s", r.Header.Get("Authorization"), body)
 		}
 		_, _ = io.WriteString(w, `{"model":"jev-1.14.0","answers":{"q":{"type":"choice","choice":"yes","confidence":0.9}},"usage":{"input_tokens":2,"output_tokens":1}}`)
@@ -152,7 +152,7 @@ func TestOpenAICompatDecisionsTypeSafeDirect(t *testing.T) {
 	// The auth manager already resolved the client alias (typesafe/jev-1.14) to the upstream name.
 	req := cliproxyexecutor.Request{Model: "jev-1.14.0", Payload: []byte(`{"model":"typesafe/jev-1.14","state":{"fixture":true},"questions":{"q":{"type":"choice","criteria":{"yes":"yes"}}}}`)}
 	out, err := e.Execute(context.Background(), auth, req, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatOpenAI, Alt: "jev-decisions"})
-	if err != nil || !called || !gjson.GetBytes(out.Payload, "answers.q").Exists() {
+	if err != nil || !called || !ojson.GetBytes(out.Payload, "answers.q").Exists() {
 		t.Fatal(err, string(out.Payload))
 	}
 }

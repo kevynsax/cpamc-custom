@@ -9,13 +9,13 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/MoeForge/moego/ojson"
 	"github.com/gorilla/websocket"
 	"github.com/klauspost/compress/zstd"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
 	sdktranslator "github.com/router-for-me/CLIProxyAPI/v8/sdk/translator"
-	"github.com/tidwall/gjson"
 )
 
 const chatGPTEdgeBodyLimit = 1 << 20
@@ -51,8 +51,8 @@ func newChatGPTEdgeMock(t *testing.T, cap *edgeCapture) *httptest.Server {
 		cap.mu.Lock()
 		cap.encoding = r.Header.Get("Content-Encoding")
 		cap.wireLen = len(wire)
-		cap.model = gjson.GetBytes(body, "model").String()
-		cap.input = gjson.GetBytes(body, "input.0.content.0.text").String()
+		cap.model = ojson.GetBytes(body, "model").String()
+		cap.input = ojson.GetBytes(body, "input.0.content.0.text").String()
 		cap.mu.Unlock()
 		if len(wire) > chatGPTEdgeBodyLimit {
 			w.WriteHeader(http.StatusServiceUnavailable)
@@ -216,7 +216,7 @@ func TestCodexAutoExecutorSendsLargeRequestOverWebsocket(t *testing.T) {
 		if err != nil {
 			return
 		}
-		gotWSFrame = gjson.GetBytes(msg, "type").String() == "response.create"
+		gotWSFrame = ojson.GetBytes(msg, "type").String() == "response.create"
 		frameLen = len(msg)
 		_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.completed","response":{"id":"resp_1","object":"response","status":"completed","model":"gpt-5.5","output":[{"type":"message","role":"assistant","content":[{"type":"output_text","text":"ok"}]}],"usage":{"input_tokens":1,"output_tokens":1,"total_tokens":2}}}`))
 	}))

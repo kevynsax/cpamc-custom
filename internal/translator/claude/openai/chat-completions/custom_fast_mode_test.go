@@ -5,7 +5,7 @@ package chat_completions
 import (
 	"testing"
 
-	"github.com/tidwall/gjson"
+	"github.com/MoeForge/moego/ojson"
 )
 
 func TestCustomFastModeChatCompletionsMapping(t *testing.T) {
@@ -24,11 +24,11 @@ func TestCustomFastModeChatCompletionsMapping(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: convert request: %v", tc.name, err)
 		}
-		got := gjson.GetBytes(out, "speed").String() == "fast"
+		got := ojson.GetBytes(out, "speed").String() == "fast"
 		if got != tc.fast {
-			t.Errorf("%s: speed=fast is %v, want %v (out=%s)", tc.name, got, tc.fast, gjson.GetBytes(out, "speed").Raw)
+			t.Errorf("%s: speed=fast is %v, want %v (out=%s)", tc.name, got, tc.fast, ojson.GetBytes(out, "speed").Raw)
 		}
-		if gjson.GetBytes(out, "service_tier").Exists() {
+		if ojson.GetBytes(out, "service_tier").Exists() {
 			t.Errorf("%s: service_tier must not leak to Claude", tc.name)
 		}
 	}

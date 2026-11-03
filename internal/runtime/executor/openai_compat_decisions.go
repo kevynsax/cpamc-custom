@@ -12,12 +12,12 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/MoeForge/moego/ojson"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/thinking"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/util"
 	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/executor"
-	"github.com/tidwall/sjson"
 )
 
 // isJevModel accepts upstream Jev ids: OpenRouter's "typesafe/jev-*" slugs and TypeSafe's own "jev-*" names.
@@ -66,7 +66,7 @@ func (e *OpenAICompatExecutor) executeDecisions(ctx context.Context, auth *clipr
 	u.RawQuery = ""
 	u.Fragment = ""
 	model = jevUpstreamModel(u.Host, model)
-	payload, err := sjson.SetBytes(req.Payload, "model", model)
+	payload, err := ojson.SetBytes(req.Payload, "model", model)
 	if err != nil {
 		return resp, statusErr{code: 400, msg: "invalid decisions payload"}
 	}

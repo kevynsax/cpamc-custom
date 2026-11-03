@@ -15,10 +15,10 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/MoeForge/moego/ojson"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/interfaces"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagehistory"
 	coreusage "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
-	"github.com/tidwall/gjson"
 	"golang.org/x/net/context"
 )
 
@@ -65,11 +65,11 @@ func keySpeedError(ctx context.Context, providers []string, rawJSON []byte, inte
 // requestedSpeedMode mirrors the Codex translators: fast/priority and Claude's
 // speed "fast" become fast, ultrafast stays ultrafast; anything else is standard.
 func requestedSpeedMode(rawJSON []byte) string {
-	if speed := gjson.GetBytes(rawJSON, "speed"); speed.Type == gjson.String && strings.EqualFold(strings.TrimSpace(speed.String()), "fast") {
+	if speed := ojson.GetBytes(rawJSON, "speed"); speed.Type == ojson.String && strings.EqualFold(strings.TrimSpace(speed.String()), "fast") {
 		return usagehistory.KeySpeedFast
 	}
-	tier := gjson.GetBytes(rawJSON, "service_tier")
-	if tier.Type != gjson.String {
+	tier := ojson.GetBytes(rawJSON, "service_tier")
+	if tier.Type != ojson.String {
 		return ""
 	}
 	switch strings.ToLower(strings.TrimSpace(tier.String())) {
