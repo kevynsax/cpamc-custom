@@ -484,6 +484,15 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
   Prompt max 2000 chars. The `minimax/` prefix is required.
 - Key: same MiniMax openai-compatibility entry as TTS/images (`customMinimaxKey`).
 - Used by the `video-gen` skill (`--model hailuo`).
+- `model: "pika-h3-flex"` (also `spark/pika-h3-flex`, `pika`, `pika-flex`) routes to the
+  Spark ComfyUI behind llama-swap (`<spark base-url without /v1>/upstream/pika-h3-flex`), using
+  the `spark` openai-compatibility entry. Text or first-frame (`input_reference.image_url` as a
+  `data:` URL, png/jpeg/webp, max 20 MB) to video with audio, `seconds` 5–15 (default 5),
+  `size` aspect kept with a 1344 long edge (`resolution: "480p"` → 832), optional `seed`.
+  Ids are `pika_<uuid>`, kept in memory for 24 h. JSON bodies only. Errors are snake_case slugs.
+  Workflow mirrors Comfy's `video_pika_h3_flex_fl2va` template (int8 FL2VA trunk + Pika FL2VA
+  LoRA, nvfp4 Qwen3-VL text encoder, lcm + ManualSigmas six-step schedule, CFG 1).
+  Code: `internal/api/custom_videos_pika.go`.
 
 ### 16. OpenAI speed permission per API key
 
@@ -562,6 +571,7 @@ the same API-key route (only `gpt-live-1-codex` stays on the ChatGPT OAuth route
 | `internal/api/custom_speech.go` | new (TTS endpoint) |
 | `internal/api/custom_images.go` (+ `_test.go`) | new (MiniMax image endpoint) |
 | `internal/api/custom_videos.go` (+ `_test.go`) | new (MiniMax Hailuo V1 video endpoint) |
+| `internal/api/custom_videos_pika.go` | new (Pika H3 Flex on Spark ComfyUI via llama-swap) |
 | `internal/api/server_routes.go` | +1 route line (speech), +1 route line + comment (images), video dispatch wrappers + `/v1/videos/:id/content` |
 | `internal/api/handlers/management/custom_quota_providers.go` | new (MiniMax/Z.ai credential list) |
 | `panel/src/features/quota/providers/customApiKeyQuota.ts` (+ `tests/customApiKeyQuota.test.ts`) | new |

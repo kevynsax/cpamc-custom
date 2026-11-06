@@ -289,6 +289,10 @@ func (s *Server) customVideosCreateDispatch(upstream gin.HandlerFunc) gin.Handle
 	return func(c *gin.Context) {
 		ct := strings.ToLower(c.ContentType())
 		if strings.HasPrefix(ct, "multipart/") {
+			if model := strings.TrimSpace(c.PostForm("model")); customPikaIsModel(model) {
+				customPikaError(c, http.StatusBadRequest, "json_body_required")
+				return
+			}
 			if model := strings.TrimSpace(c.PostForm("model")); customVideosIsMinimaxModel(model) {
 				s.customVideosCreateFromForm(c)
 				return
@@ -302,6 +306,10 @@ func (s *Server) customVideosCreateDispatch(upstream gin.HandlerFunc) gin.Handle
 		if err == nil {
 			var peek struct {
 				Model string `json:"model"`
+			}
+			if json.Unmarshal(raw, &peek) == nil && customPikaIsModel(peek.Model) {
+				s.customPikaCreate(c, raw)
+				return
 			}
 			if json.Unmarshal(raw, &peek) == nil && customVideosIsMinimaxModel(peek.Model) {
 				s.customVideosCreate(c, raw)
@@ -350,6 +358,10 @@ func (s *Server) customVideosRetrieveDispatch(upstream gin.HandlerFunc) gin.Hand
 		if id == "" {
 			id = strings.TrimSpace(c.Param("request_id"))
 		}
+		if customPikaIsID(id) {
+			s.customPikaRetrieve(c, id)
+			return
+		}
 		if id != "" && (customVideoJobGet(id) != nil || customVideosLooksLikeMinimaxTaskID(id)) {
 			s.customVideosRetrieve(c, id)
 			return
@@ -363,6 +375,10 @@ func (s *Server) customVideosContentDispatch(upstream gin.HandlerFunc) gin.Handl
 		id := strings.TrimSpace(c.Param("video_id"))
 		if id == "" {
 			id = strings.TrimSpace(c.Param("request_id"))
+		}
+		if customPikaIsID(id) {
+			s.customPikaContent(c, id)
+			return
 		}
 		if id != "" && (customVideoJobGet(id) != nil || customVideosLooksLikeMinimaxTaskID(id)) {
 			s.customVideosContent(c, id)
