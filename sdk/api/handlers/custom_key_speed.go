@@ -7,6 +7,8 @@ package handlers
 // its level is fast or ultrafast, and ultrafast only when its level is ultrafast.
 // Requests above the key's level that would run on an OpenAI provider are rejected
 // with 403 before any credential is selected. Other providers are not affected.
+// The tier is read after the configured payload rules, so a model alias whose
+// override rule forces service_tier (e.g. gpt-6.1-sol-ultrafast) is checked too.
 
 import (
 	"encoding/json"
@@ -16,13 +18,23 @@ import (
 	"sync/atomic"
 
 	"github.com/MoeForge/moego/ojson"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/interfaces"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor/helps"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagehistory"
 	coreusage "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	"golang.org/x/net/context"
 )
 
 var keySpeedLookup atomic.Pointer[func(apiKey string) string]
+
+var keySpeedPayload atomic.Pointer[config.PayloadConfig]
+
+// SetKeySpeedPayloadConfig installs the payload rules the speed check applies
+// before reading the requested tier. Called on startup and every config reload.
+func SetKeySpeedPayloadConfig(payload config.PayloadConfig) {
+	keySpeedPayload.Store(&payload)
+}
 
 // SetKeySpeedLookup installs the function returning a client API key's speed level.
 // Without a lookup no speed restriction is enforced (embedded SDK use).
@@ -35,12 +47,13 @@ func SetKeySpeedLookup(lookup func(apiKey string) string) {
 }
 
 // keySpeedError rejects a request whose OpenAI service tier exceeds the key's level.
-func keySpeedError(ctx context.Context, providers []string, rawJSON []byte, internal bool) *interfaces.ErrorMessage {
+func keySpeedError(ctx context.Context, providers []string, model, requestedModel string, rawJSON []byte, headers http.Header, internal bool) *interfaces.ErrorMessage {
 	lookup := keySpeedLookup.Load()
 	if lookup == nil || internal || !usesOpenAIProvider(providers) {
 		return nil
 	}
-	mode := requestedSpeedMode(rawJSON)
+	finalBody := payloadWithConfiguredTier(model, requestedModel, rawJSON, headers)
+	mode := requestedSpeedMode(finalBody)
 	if mode == "" {
 		return nil
 	}
@@ -60,6 +73,18 @@ func keySpeedError(ctx context.Context, providers []string, rawJSON []byte, inte
 		Body:           body,
 		Headers:        http.Header{"Content-Type": []string{"application/json"}},
 	}
+}
+
+// payloadWithConfiguredTier applies the configured codex payload rules to a copy
+// of the client body, so the speed check sees a service_tier forced by config.
+func payloadWithConfiguredTier(model, requestedModel string, rawJSON []byte, headers http.Header) []byte {
+	payload := keySpeedPayload.Load()
+	if payload == nil || len(rawJSON) == 0 {
+		return rawJSON
+	}
+	cfg := &config.Config{Payload: *payload}
+	body := append([]byte(nil), rawJSON...)
+	return helps.ApplyPayloadConfigWithRequest(cfg, model, "codex", "", "", body, rawJSON, requestedModel, "", headers)
 }
 
 // requestedSpeedMode mirrors the Codex translators: fast/priority and Claude's

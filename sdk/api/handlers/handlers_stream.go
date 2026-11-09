@@ -307,7 +307,9 @@ func (h *BaseAPIHandler) executeStreamWithAuthManagerFormats(ctx context.Context
 		return nil, nil, errChan
 	}
 	providers = adjustExecutionProvidersForEntryProtocol(entryProtocol, providers)
-	if errMsg := keySpeedError(ctx, providers, rawJSON, execOptions.InternalSource); errMsg != nil { // CUSTOM (cpamc-custom)
+	// CUSTOM (cpamc-custom): per-key speed check on the payload-rule-resolved tier.
+	speedCheckHeaders := modelExecutionHeaders(ctx, execOptions.Headers)
+	if errMsg := keySpeedError(ctx, providers, normalizedModel, originalRequestedModel, rawJSON, speedCheckHeaders, execOptions.InternalSource); errMsg != nil { // CUSTOM (cpamc-custom)
 		errChan := make(chan *interfaces.ErrorMessage, 1)
 		errChan <- errMsg
 		close(errChan)

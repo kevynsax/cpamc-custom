@@ -16,9 +16,13 @@ const (
 var modeMultipliers = map[string]float64{"": 1, ModeFast: 2, ModeUltrafast: 6}
 
 // ServiceMode is the speed mode a record ran with; "" means standard.
-// The requested tier wins over the response because OpenAI reports "default"
-// even when ultrafast runs (openai/codex#54952).
+// The outbound tier (after payload rules, e.g. a config-forced ultrafast alias)
+// wins, then the client-requested tier, then the response, because OpenAI
+// reports "default" even when ultrafast runs (openai/codex#54952).
 func ServiceMode(record usage.Record) string {
+	if effective := normalizeMode(record.EffectiveServiceTier); effective != "" {
+		return effective
+	}
 	requested := normalizeMode(record.ServiceTier)
 	if requested == "" {
 		requested = normalizeMode(record.RequestServiceTier)

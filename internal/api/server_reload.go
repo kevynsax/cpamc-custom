@@ -16,6 +16,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/runtime/executor"
 	responsesclaude "github.com/router-for-me/CLIProxyAPI/v8/internal/translator/claude/openai/responses"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/util"
+	"github.com/router-for-me/CLIProxyAPI/v8/sdk/api/handlers"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/api/handlers/openai"
 	sdkAuth "github.com/router-for-me/CLIProxyAPI/v8/sdk/auth"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
@@ -200,6 +201,7 @@ func (s *Server) UpdateClientsContext(ctx context.Context, cfg *config.Config) b
 	s.cfgMu.Unlock()
 
 	s.handlers.UpdateClients(effectiveSDKConfig(cfg))
+	handlers.SetKeySpeedPayloadConfig(cfg.Payload) // CUSTOM (cpamc-custom)
 	s.handlers.SetPluginHost(s.pluginHost)
 	if s.pluginHost != nil {
 		s.pluginHost.SetModelExecutor(s.handlers)
