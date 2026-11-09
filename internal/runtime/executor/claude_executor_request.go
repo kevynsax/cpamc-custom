@@ -147,7 +147,7 @@ func isManagedClaudeBeta(beta string) bool {
 //	 7 context-management-2025-06-27
 //	 8 prompt-caching-scope-2026-01-05
 //	 9 mid-conversation-system-2026-04-07  models accepting a role=system turn
-//	10 per-turn-control-2026-07-01        opus-5-5 and fable-5-1, or requested
+//	10 per-turn-control-2026-07-01        opus-5-5, fable-5-1 and the 5.2 models, or requested
 //	11 timing-2026-09-09                  per-turn timing body, or requested
 //	12 mid-conversation-tool-changes-2026-07-01  same models as mid-conversation-system
 //	13 inline-tools-2026-09-15            inline tool_addition blocks, or requested
@@ -289,7 +289,7 @@ func claudeCanonicalModel(model string) string {
 	return model
 }
 
-// claudeModelHasPerTurnEffort reports models whose 2.1.280 catalog capability
+// claudeModelHasPerTurnEffort reports models whose 2.1.319 catalog capability
 // per_turn_effort puts per-turn-control-2026-07-01 on every first-party request.
 func isClaudeOpus55Model(model string) bool {
 	model = claudeCanonicalModel(model)
@@ -468,7 +468,15 @@ func applyClaudeCloakThinkingDisplayDoc(doc *ojson.Doc, callerOwned bool) bool {
 }
 
 func claudeModelHasPerTurnEffort(model string) bool {
-	return isClaudeOpus55Model(model) || strings.HasPrefix(claudeCanonicalModel(model), "claude-fable-5-1")
+	canonical := claudeCanonicalModel(model)
+	return isClaudeOpus55Model(model) || strings.HasPrefix(canonical, "claude-fable-5-1") || isClaude52Model(canonical) // CUSTOM (cpamc-custom): 5.2 lists per_turn_effort
+}
+
+// isClaude52Model reports Fable 5.2 and Mythos 5.2, whose Claude Code 2.1.319
+// catalog entries list per_turn_effort and per_turn_timing.
+func isClaude52Model(model string) bool {
+	canonical := claudeCanonicalModel(model)
+	return strings.HasPrefix(canonical, "claude-fable-5-2") || strings.HasPrefix(canonical, "claude-mythos-5-2")
 }
 
 // claudeModelHasPerTurnTiming reports models whose catalog lists per_turn_timing.
@@ -1456,7 +1464,7 @@ func applyClaudeHeadersWithNativeProfile(
 	identityHeader("Anthropic-Version", "2023-06-01")
 	identityHeader("Anthropic-Dangerous-Direct-Browser-Access", "true")
 	identityHeader("X-App", "cli")
-	// Values below match Claude Code 2.1.280 / @anthropic-ai/sdk 0.112.1.
+	// Values below match Claude Code 2.1.319 / @anthropic-ai/sdk 0.128.0.
 	identityHeader("X-Stainless-Retry-Count", "0")
 	identityHeader("X-Stainless-Runtime", "node")
 	identityHeader("X-Stainless-Lang", "js")

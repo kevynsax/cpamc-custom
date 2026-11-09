@@ -1,14 +1,17 @@
 package registry
 
-func customClaudeMythos51ModelInfo() *ModelInfo {
+// CUSTOM (cpamc-custom): verification-gated Mythos entries. Anthropic serves
+// Mythos only to verified accounts, so the public catalog does not list it.
+
+func customClaudeMythosModelInfo(id, displayName, description string, created int64) *ModelInfo {
 	return &ModelInfo{
-		ID:                  "claude-mythos-5-1",
+		ID:                  id,
 		Object:              "model",
-		Created:             1788220800,
+		Created:             created,
 		OwnedBy:             "anthropic",
 		Type:                "claude",
-		DisplayName:         "Claude Mythos 5.1",
-		Description:         "Claude Fable 5.1 for accounts verified through Anthropic's verification programs. Same specifications: 1M context, 128K output, adaptive thinking.",
+		DisplayName:         displayName,
+		Description:         description,
 		ContextLength:       1000000,
 		MaxCompletionTokens: 128000,
 		Thinking: &ThinkingSupport{
@@ -23,5 +26,11 @@ func customClaudeMythos51ModelInfo() *ModelInfo {
 }
 
 func WithClaudeBuiltins(models []*ModelInfo) []*ModelInfo {
-	return upsertModelInfos(models, customClaudeMythos51ModelInfo())
+	mythos51 := customClaudeMythosModelInfo("claude-mythos-5-1", "Claude Mythos 5.1",
+		"Claude Fable 5.1 for accounts verified through Anthropic's verification programs. Same specifications: 1M context, 128K output, adaptive thinking.",
+		1788220800)
+	mythos52 := customClaudeMythosModelInfo("claude-mythos-5-2", "Claude Mythos 5.2",
+		"Claude Fable 5.2 for accounts verified through Anthropic's verification programs. Same specifications: 1M context, 128K output, adaptive thinking.",
+		1794182400)
+	return upsertModelInfos(models, mythos51, mythos52)
 }

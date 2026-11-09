@@ -463,6 +463,14 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 - Key: same MiniMax openai-compatibility entry as TTS/images (`customMinimaxKey`).
 - Used by the `video-gen` skill (`--model hailuo`).
 
+### Claude Code 2.1.319 baseline and 5.2 models
+
+- The cloak and default device profile pose as Claude Code 2.1.319 (`@anthropic-ai/sdk` 0.128.0,
+  runtime v26.12.1), captured 2026-11-09. Anthropic requires 2.1.290+ for `claude-fable-5-2`.
+- `claude-mythos-5-2` is a verification-gated builtin next to `claude-mythos-5-1`
+  (`internal/registry/custom_claude_builtins.go`).
+- Fable 5.2 and Mythos 5.2 carry `per-turn-control-2026-07-01` like Fable 5.1 (catalog `per_turn_effort`).
+
 ### 16. OpenAI speed permission per API key
 
 - Each client API key has a speed level: `standard` (default for every key, including
