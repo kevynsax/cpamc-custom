@@ -112,7 +112,6 @@ describe('person allowances and compact financial UI', () => {
   test('friendly model names preserve versions and hide server file paths', () => {
     expect(friendlyModelName('gpt-6.1-sol')).toBe('GPT 6.1 Sol');
     expect(friendlyModelName('claude-opus-5-5')).toBe('Claude Opus 5.5');
-    expect(friendlyModelName('spark/qwen-coder')).toBe('Qwen 3.8 27B');
     expect(friendlyModelName('/models/qwen/Qwen3-VL-30B-A3B-Instruct-Q4_K_M.gguf')).not.toContain(
       '/models'
     );

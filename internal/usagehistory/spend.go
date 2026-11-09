@@ -27,7 +27,7 @@ func SpendMaxOffset(period string) int {
 
 // Spend sums API value per key, account and model for one week or month, using
 // the same rules as the Usage page: weeks start Thursday at 20:00 UTC-3,
-// months are UTC calendar months, and in-house rows use reference prices.
+// months are UTC calendar months.
 // providers optionally overrides the provider recorded on an account's rows.
 func (s *Store) Spend(period string, offset int, providers map[string]string) ([]SpendItem, error) {
 	now := s.now().UTC()
@@ -42,7 +42,7 @@ func (s *Store) Spend(period string, offset int, providers map[string]string) ([
 		end = limit
 	}
 	totals := map[string]*SpendItem{}
-	for _, row := range WithInHouseReferenceEstimates(rows) {
+	for _, row := range rows {
 		at := row.At
 		if at.IsZero() {
 			at, _ = time.Parse(DateLayout, row.Date)
@@ -54,14 +54,10 @@ func (s *Store) Spend(period string, offset int, providers map[string]string) ([
 		if override := providers[row.AccountID]; override != "" {
 			provider = override
 		}
-		model := row.Model
-		if alias := strings.TrimSpace(row.ModelAlias); alias != "" {
-			model = alias
-		}
-		key := strings.Join([]string{row.KeyID, row.AccountID, provider, model, row.Mode}, "\x00")
+		key := strings.Join([]string{row.KeyID, row.AccountID, provider, row.Model, row.Mode}, "\x00")
 		item := totals[key]
 		if item == nil {
-			item = &SpendItem{KeyID: row.KeyID, AccountID: row.AccountID, Provider: provider, Model: model, Mode: row.Mode}
+			item = &SpendItem{KeyID: row.KeyID, AccountID: row.AccountID, Provider: provider, Model: row.Model, Mode: row.Mode}
 			totals[key] = item
 		}
 		cost, unpriced := spendValue(row)
@@ -80,16 +76,13 @@ func (s *Store) Spend(period string, offset int, providers map[string]string) ([
 	return items, nil
 }
 
-// spendValue matches the Usage page: an estimated reference cost is priced, a row
-// without any cost counts every request as unpriced.
-func spendValue(row ReferenceRow) (float64, int64) {
-	if row.CostUSD != nil {
-		return *row.CostUSD, row.UnpricedRequests
+// spendValue matches the Usage page: a row without any cost counts every request
+// as unpriced.
+func spendValue(row Row) (float64, int64) {
+	if row.CostUSD == nil {
+		return 0, row.Requests
 	}
-	if row.ReferenceCostUSD != nil {
-		return *row.ReferenceCostUSD, 0
-	}
-	return 0, row.Requests
+	return *row.CostUSD, row.UnpricedRequests
 }
 
 // spendWindow uses fixed reporting boundaries, never provider quota-reset times.

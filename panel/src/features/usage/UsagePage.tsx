@@ -16,7 +16,6 @@ import { buildCompanyUsage, companyId, usageRange, type UsagePeriod } from './co
 import { CompanyPies } from './CompanyPies';
 import { PeopleSpend } from './PeopleSpend';
 import { ModelPriceCards } from './ModelPriceCards';
-import { withInHousePrices } from './inHousePrices';
 import { resolveUsageKeyNames } from './keyNames';
 import { useApiKeyNames } from '@/features/config/useApiKeyNames';
 import { PersonDetails } from './PersonDetails';
@@ -218,7 +217,7 @@ export function UsagePage() {
       )}
       {catalog && (
         <ModelPriceCards
-          data={withInHousePrices(catalog)}
+          data={catalog}
           spending={spending}
           quote={quote}
           busy={saving || loading}

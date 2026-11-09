@@ -64,7 +64,6 @@ export function companyId(provider: string): string {
         grok: 'xai',
         macbook: 'in_house',
         'home-gpu': 'in_house',
-        spark: 'in_house',
       } as Record<string, string>
     )[name] ?? name
   );

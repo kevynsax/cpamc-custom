@@ -238,14 +238,11 @@ export function createUsageFixture(
     }
   }
   if (options.includeInHouse) {
-    ['macbook', 'home-gpu', 'spark'].forEach((provider, index) => {
+    ['macbook', 'home-gpu'].forEach((provider, index) => {
       const id = hash(provider);
       payload.accounts[id] = { id, provider, plan: '', email: '' };
       const template = payload.rows[0];
-      const models =
-        provider === 'spark'
-          ? ['gpt-oss-120b', 'qwen-coder', 'qwen-vl']
-          : [provider === 'macbook' ? 'qwen2.5:3b' : 'qwen3-8b'];
+      const models = [provider === 'macbook' ? 'qwen2.5:3b' : 'qwen3-8b'];
       for (const model of models)
         for (const days of [1, 8, 32]) {
           const at = iso(time - days * DAY);

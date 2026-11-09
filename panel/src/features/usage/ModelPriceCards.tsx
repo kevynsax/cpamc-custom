@@ -101,9 +101,9 @@ function ModelPriceCard({
           </a>
         )}
       </header>
-      {(model.overridden || model.status === 'openrouter') && (
+      {model.overridden && (
         <span className={styles.modelStatus}>
-          {model.overridden ? t('client_usage.price_status_manual') : 'OpenRouter'}
+          {t('client_usage.price_status_manual')}
         </span>
       )}
       <form

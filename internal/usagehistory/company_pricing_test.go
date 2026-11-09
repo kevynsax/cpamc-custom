@@ -50,7 +50,7 @@ func TestQuotaWindowsPreserveIndependentDurationsAndLegacyWeekIDs(t *testing.T) 
 
 func TestResearchedInventoryAndNonTokenPrices(t *testing.T) {
 	models := ReferenceModels()
-	if len(models) != 68 {
+	if len(models) != 52 {
 		t.Fatalf("models=%d", len(models))
 	}
 	var pricing *Pricing

@@ -10,9 +10,9 @@ No gateway login, provider credentials, or inference requests are needed.
 
 The subscription lineup mirrors the server's quota view captured on 2026-10-17:
 Antigravity, Claude Max 20×, Codex Pro 100, Meta, MiniMax, two Grok Pro accounts,
-and Z.ai. Three additional synthetic `macbook`, `home-gpu`, and `spark` accounts
+and Z.ai. Two additional synthetic `macbook` and `home-gpu` accounts
 exercise the merged **In house** company. Identities and usage are synthetic.
-The page merges these eleven accounts into eight company cards below a per-person spending card, with current-week and calendar-month views, normalized/averaged quota
+The page merges these ten accounts into eight company cards below a per-person spending card, with current-week and calendar-month views, normalized/averaged quota
 families, plan weighting, prorated crossing cycles, and distinct available/wasted
 capacity. Incomplete company pies are hidden instead of rendering unknown or
 unattributed slices. Per-account progress uses synthetic `@example.test` emails.
@@ -30,8 +30,7 @@ slim quota tracks; Usage has a Wallet icon. The rich preview has three Person ke
 and one System key to exercise shared allowances and conserved waste allocation.
 Subscription values are reais-only; missing fees/quotas do not add explanatory rows.
 Waste and available tags are larger and category-specific. Progress-bar tooltips
-omit the client token name. The in-house fixture uses sourced OpenRouter references
-for known models; unlisted models stay unpriced.
+omit the client token name. In-house models stay unpriced.
 
 API-key names use the shared server key-name API (in-memory fake storage in this
 preview), including import-only migration of the old browser names. There is no

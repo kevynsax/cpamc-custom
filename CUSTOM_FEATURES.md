@@ -41,7 +41,7 @@ The distinction is accounting metadata only, not a different access permission.
 Keep the auth volume mounted across deployments; this does not synchronize
 independent gateway data directories.
 
-`macbook`, `home-gpu`, and `spark` are one **In house** company, retaining
+`macbook` and `home-gpu` are one **In house** company, retaining
 separate underlying accounts. Each company has a second donut showing known
 API-equivalent **price by model in reais**, weighted by recorded cost rather than
 token count. Its center and legend show reais, not token totals; unknown costs are
@@ -156,7 +156,7 @@ snapshot is available offline, refreshed every 24 hours while running; its date 
 visible. The public catalog can also be refreshed manually. Each minute/model/rate
 bucket records the rate and estimated cost at execution time, so later price changes
 never overwrite recorded history. Custom model rates override the catalog. Unknown/ambiguous
-models, incomplete accounting, missing cache rates (except the in-house read policy below)
+models, incomplete accounting, missing cache rates
 and unsupported service tiers stay unpriced. OpenAI speed modes are stored per row
 (`mode`: `fast` for `priority`/`fast`, `ultrafast`) and priced at OpenAI's published
 2x / 6x of the Standard rate, cache and long-context rates included. The requested
@@ -187,34 +187,12 @@ Open cycles contribute remaining capacity, not expired waste. Monthly budget sli
 are time-prorated estimates and must not be treated as an exact monthly token grant.
 
 Model-price cards cover the configured registry inventory. The researched snapshot
-`internal/usagehistory/model_reference.json` contains all 68 model IDs advertised by
-the live gateway on 2026-10-17: 34 published native API tariffs, four explicitly labeled
-family references, 16 OpenRouter reference entries (eight in-house models plus their
-`spark/` aliases), and 14 remaining unpriced entries. The OpenRouter snapshot comes
-from `https://openrouter.ai/api/v1/models`, using non-free, non-batch catalog entries
-and their published input/output/cache-read rates, in canonical USD per million
-before the normal Cross conversion to reais. The serving configuration was checked:
-`qwen-coder` is Qwen3.8-27B, not Coder Next; `qwen-vl` is Qwen3-VL-30B-A3B-Instruct;
-`nemotron-120b` is Nemotron-3-Super-120B-A12B. Missing exact OpenRouter models stay
-unset, never replaced with a neighboring model's price. For in-house OpenRouter
-comparisons, a missing cached-input read rate uses the regular input rate, not an
-invented free cache or a guessed discount; explicit published read discounts remain
-unchanged. Native providers, manual overrides and unknown cache-write rates keep
-their existing rules. These are counterfactual hosted prices, not electricity costs
-or a local subscription bill.
+`internal/usagehistory/model_reference.json` contains 52 model IDs (the live gateway
+inventory of 2026-10-17 minus the retired Spark models): 34 published native API tariffs,
+four explicitly labeled family references, and 14 unpriced entries (self-hosted,
+subscription-only, unpublished). Missing prices stay unset, never replaced with a
+neighboring model's price.
 
-Future executions snapshot that effective rate. Previously unpriced in-house rows
-also receive a separate read-time comparison when the recorded input/output/cache
-counters form a consistent OpenAI-compatible breakdown. Known GGUF response filenames
-resolve to their verified model, and `spark/` aliases normalize to one public model
-ID. The API adds `model_alias`, `reference_cost_usd` and `reference_price` while
-preserving the original `model`, `cost_usd`, `price` and `unpriced_requests` values.
-The panel uses the reference amount only when the recorded amount is absent, so the
-money-only charts no longer hide those calls. The projection does not write to disk,
-reprice non-null historical costs, backfill requests, or invent a different model's
-rate. A retained OpenRouter rate is used before the current bundled reference.
-The local panel can preview those sourced model-price cards against an older v8
-backend without changing its recorded usage or saved overrides.
 Each card links its public evidence. Image, video and voice rates retain their native
 units; they are never passed to token accounting without the corresponding metered
 quantities. Unknown prices do not mean free. Card edits preserve cache/context tiers;
@@ -238,8 +216,8 @@ All endpoints use existing v8 management authentication:
 - `GET /v8/management/observability/usage/spend?period=week|month&offset=N` returns
   compact API value totals per key, account, provider and model (`items`), plus
   `key_names` and `key_kinds`, for one period. Weeks start Thursday at 20:00 UTC-3
-  (23:00 UTC) for every account and months are UTC calendar months, exactly as on the Usage page;
-  in-house rows use the same reference estimates. `offset` is 0..50 weeks or 0..11
+  (23:00 UTC) for every account and months are UTC calendar months, exactly as on the Usage page.
+  `offset` is 0..50 weeks or 0..11
   months. Used by CPAMC Bar instead of downloading minute rows.
 - Both usage report routes are gzip-compressed when the client sends
   `Accept-Encoding: gzip` (the full `clients` report is ~16x smaller).
@@ -497,6 +475,11 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
   `codex`/`openai`: `service_tier` `fast`/`priority`/`ultrafast` or `speed: "fast"` above
   the key's level is rejected with 403 `service_tier_not_allowed` before credential
   selection. Other providers (Claude fast mode included) are not restricted.
+- The check reads the tier after applying the configured `payload` rules (protocol
+  `codex`), so an alias whose override rule forces `service_tier` (e.g.
+  `gpt-6.1-sol-ultrafast` → `ultrafast`) is checked like a client-sent tier. Usage
+  accounting likewise prefers the outbound tier (`EffectiveServiceTier`), so such an
+  alias is priced and shown as Ultrafast.
 - Hooks: one call in `executeWithAuthManagerFormats` (`handlers_execution.go`) and one in
   `executeStreamWithAuthManagerFormats` (`handlers_stream.go`); the lookup is installed in
   `StartClientUsageHistory`. If key metadata storage fails to open, every key stays standard.

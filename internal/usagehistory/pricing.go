@@ -265,18 +265,6 @@ func (p *Pricing) resolveStandard(record usage.Record) *Rates {
 			return nil
 		}
 	}
-	// CUSTOM (cpamc-custom): exact in-house models use the sourced OpenRouter
-	// counterfactual, not a native-vendor tariff or a guessed neighboring model.
-	for _, candidate := range []string{record.Alias, model, record.Model, inHouseReferenceModel(record.Provider, model)} {
-		if info, ok := referenceModels()[candidate]; ok && info.Status == "openrouter" {
-			if rate := researchedTokenRate(candidate); rate != nil {
-				if inHouseProvider(record.Provider) != "" {
-					rate = inHouseCacheRate(*rate)
-				}
-				return effectiveRate(*rate, record)
-			}
-		}
-	}
 	if fallback := researchedTokenRate(model); fallback != nil {
 		if p == nil || p.AsOf() <= fallback.AsOf {
 			return effectiveRate(*fallback, record)

@@ -137,7 +137,7 @@ func (p *Pricing) ModelReference(id, provider, canonical string, settings Settin
 
 func researchedTokenRate(model string) *Rates {
 	info, ok := referenceModels()[model]
-	if !ok || info.Kind != "tokens" || (info.Status != "published" && info.Status != "openrouter") {
+	if !ok || info.Kind != "tokens" || info.Status != "published" {
 		return nil
 	}
 	input, okInput := info.Prices["input"]

@@ -20,7 +20,6 @@ import { PersonDetails } from '../src/features/usage/PersonDetails';
 import { ModelValuePie } from '../src/features/usage/ModelValuePie';
 import { CompanyPies } from '../src/features/usage/CompanyPies';
 import { FeeTags } from '../src/features/usage/FeeTags';
-import { withInHousePrices } from '../src/features/usage/inHousePrices';
 import { SubscriptionFacts } from '../src/features/usage/SubscriptionFacts';
 import { createUsageFixture } from '../dev/usage/fixtures';
 import { normalizeKeyNames } from '../src/services/api/keyNames';
@@ -109,11 +108,11 @@ describe('usage reporting', () => {
     }
     expect(periodRows({ ...source, weeks: [] }, 'week', 0, now)).toEqual(selected);
   });
-  test('groups all three in-house providers without merging people or double-counting cache tokens', () => {
-    for (const provider of ['macbook', 'home-gpu', 'spark', 'openai-compatibility-spark'])
+  test('groups both in-house providers without merging people or double-counting cache tokens', () => {
+    for (const provider of ['macbook', 'home-gpu', 'openai-compatibility-home-gpu'])
       expect(companyId(provider)).toBe('in_house');
     const source = data(
-      ['macbook', 'home-gpu', 'spark'].map((provider, index) =>
+      ['macbook', 'home-gpu'].map((provider, index) =>
         row('2026-10-15T12:00:00Z', {
           accountId: String(index),
           provider: 'openai-compatibility',
@@ -123,23 +122,23 @@ describe('usage reporting', () => {
         })
       )
     );
-    source.accounts = ['macbook', 'home-gpu', 'spark'].map((provider, index) => ({
+    source.accounts = ['macbook', 'home-gpu'].map((provider, index) => ({
       id: String(index),
       provider,
       plan: '',
     }));
     const companies = buildCompanyUsage(source, 'month', 0, now);
     expect(companies).toHaveLength(1);
-    expect(companies[0].accounts).toHaveLength(3);
+    expect(companies[0].accounts).toHaveLength(2);
     const selected = periodRows(source, 'month', 0, now);
     const people = personDetails(selected.current, []);
     expect(people).toHaveLength(1);
-    expect(people[0].current.tokens).toBe(300);
-    expect(people[0].current.unpriced).toBe(3);
+    expect(people[0].current.tokens).toBe(200);
+    expect(people[0].current.unpriced).toBe(2);
     expect(people[0].companies.map((company) => company.id)).toEqual(['in_house']);
     expect(
       tokensByModel(selected.current, 'in_house').reduce((sum, part) => sum + part.value, 0)
-    ).toBe(300);
+    ).toBe(200);
   });
   test('preserves model/person/company totals and missing prices, including disappeared people', () => {
     const current = [
@@ -243,55 +242,6 @@ describe('usage reporting', () => {
     expect(person).toContain('data-value-pie=');
     expect(person).not.toContain('Infinity');
   });
-  test('a Spark reference estimate makes the In house money chart visible without quota tracking', () => {
-    const fixture = createUsageFixture(now);
-    const original = {
-      ...fixture.rows[0],
-      at: now.toISOString(),
-      date: now.toISOString().slice(0, 10),
-      provider: 'openai-compatible-spark',
-      model: '/models/Qwen3-VL-30B-A3B-Instruct-Q4_K_M.gguf',
-      model_alias: 'qwen-vl',
-      cost_usd: null,
-      reference_cost_usd: 0.00027,
-      requests: 1,
-      unpriced_requests: 1,
-      failed: 0,
-      input_tokens: 1000,
-      cached_tokens: 800,
-      output_tokens: 200,
-      total_tokens: 1200,
-    };
-    const data = normalizeClientUsage({
-      ...fixture,
-      rows: [original],
-      weeks: [],
-      accounts: { [original.account_id]: { provider: 'spark', plan: '', email: '' } },
-    });
-    const companies = buildCompanyUsage(data, 'month', 0, now);
-    const selected = periodRows(data, 'month', 0, now);
-    expect(companies[0].id).toBe('in_house');
-    expect(companies[0].costUsd).toBe(0.00027);
-    expect(companies[0].chartAvailable).toBe(false);
-    const rendered = html(
-      createElement(CompanyPies, {
-        data,
-        companies,
-        rows: selected.current,
-        names: {},
-        quote: { rate: 5, observedAt: Date.now() },
-        icons: {},
-        classes,
-      })
-    );
-    expect(rendered).toContain('In house');
-    expect(rendered).toContain('data-model-value-chart="in_house"');
-    expect(rendered).toContain('Qwen 3 VL 30B A3B');
-    expect(rendered).toContain('<svg');
-    expect(rendered).toContain('R$');
-    expect(original.cost_usd).toBeNull();
-    expect(original.unpriced_requests).toBe(1);
-  });
   test('price pies are weighted by cost, not token count, and never reprice unknown rows', () => {
     const rows = [
       row('2026-10-15T12:00:00Z', { model: 'expensive', totalTokens: 10, costUsd: 9 }),
@@ -338,24 +288,6 @@ describe('usage reporting', () => {
         })
       )
     ).toBe('');
-  });
-  test('local preview adds sourced OpenRouter cards without altering history or overrides', () => {
-    const source = normalizeClientUsage(createUsageFixture(now));
-    const model = source.models!.find((model) => model.id === 'qwen-coder')!;
-    model.status = 'self_hosted';
-    model.prices = {};
-    const before = JSON.stringify(source.rows);
-    const updated = withInHousePrices(source);
-    const card = updated.models!.find((model) => model.id === 'qwen-coder')!;
-    expect(card.prices.input).toBe(0.24);
-    expect(card.sources[0]).toBe('https://openrouter.ai/qwen/qwen3.8-27b');
-    expect(JSON.stringify(updated.rows)).toBe(before);
-    expect(source.models!.find((model) => model.id === 'qwen-coder')!.prices).toEqual({});
-    model.overridden = true;
-    model.prices = { input: 0, output: 0 };
-    expect(
-      withInHousePrices(source).models!.find((model) => model.id === 'qwen-coder')!.prices.input
-    ).toBe(0);
   });
   test('normalizes only fingerprinted server names, including clear tombstones', () => {
     const key = 'a'.repeat(64);

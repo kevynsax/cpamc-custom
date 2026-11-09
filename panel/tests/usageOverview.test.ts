@@ -311,9 +311,9 @@ describe('Cross conversion and model price cards', () => {
     ).toBeNull();
     expect(parseCrossQuote('bad')).toBeNull();
   });
-  test('all 68 configured models have researched provenance; unknown prices stay blank', () => {
+  test('all 52 configured models have researched provenance; unknown prices stay blank', () => {
     const models = fixture().models!;
-    expect(models).toHaveLength(68);
+    expect(models).toHaveLength(52);
     expect(
       models.every((model) => model.sources.every((source) => source.startsWith('https://')))
     ).toBe(true);
