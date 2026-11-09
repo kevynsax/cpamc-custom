@@ -463,6 +463,14 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 - Key: same MiniMax openai-compatibility entry as TTS/images (`customMinimaxKey`).
 - Used by the `video-gen` skill (`--model hailuo`).
 
+### Local GPU audio (home-gpu llama-swap)
+
+- `POST /v1/audio/speech` with model `chatterbox` and every `POST /v1/audio/transcriptions`
+  (Whisper Large v3 Turbo) are relayed unchanged to the `openai-compatibility` entry named
+  `home-gpu` (llama-swap on the home server RTX 4080), so they work outside the LAN with a
+  client API key. Other speech models keep their routes (MiniMax default, grok-tts* to xAI).
+- Code: `internal/api/custom_local_audio.go`. Missing `home-gpu` entry returns 503.
+
 ### Claude Code 2.1.319 baseline and 5.2 models
 
 - The cloak and default device profile pose as Claude Code 2.1.319 (`@anthropic-ai/sdk` 0.128.0,

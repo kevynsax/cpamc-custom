@@ -94,6 +94,10 @@ func (s *Server) customSpeechDispatch(upstream gin.HandlerFunc) gin.HandlerFunc 
 				upstream(c)
 				return
 			}
+			if customLocalSpeechModel(peek.Model) {
+				s.customLocalAudioRelay(c, "/audio/speech", raw)
+				return
+			}
 		}
 		s.customSpeech(c)
 	}

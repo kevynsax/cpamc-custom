@@ -76,7 +76,8 @@ func (s *Server) setupRoutes() {
 		v1.POST("/completions", openaiHandlers.Completions)
 		// CUSTOM (cpamc-custom): minimax/image-01* to MiniMax, every other model upstream
 		v1.POST("/images/generations", s.customImagesDispatch(openaiHandlers.ImagesGenerations))
-		v1.POST("/audio/speech", s.customSpeechDispatch(openaiHandlers.AudioSpeech)) // CUSTOM (cpamc-custom): MiniMax TTS default, grok-tts* to upstream
+		v1.POST("/audio/speech", s.customSpeechDispatch(openaiHandlers.AudioSpeech)) // CUSTOM (cpamc-custom): MiniMax TTS default, grok-tts* to upstream, chatterbox to home-gpu
+		v1.POST("/audio/transcriptions", s.customTranscriptions)                     // CUSTOM (cpamc-custom): whisper on home-gpu llama-swap
 		v1.POST("/images/edits", openaiHandlers.ImagesEdits)
 		// CUSTOM (cpamc-custom): minimax/* Hailuo V1 to MiniMax; every other model upstream (xAI native)
 		v1.POST("/videos", s.customVideosCreateDispatch(openaiHandlers.XAIVideosGenerations))
