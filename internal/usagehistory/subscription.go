@@ -1,6 +1,7 @@
 package usagehistory
 
 import (
+	"sort"
 	"strings"
 	"time"
 )
@@ -16,9 +17,6 @@ type cycleFamily struct {
 	Scope    string
 	Duration time.Duration
 }
-
-// capacityParts are account capacity slices that never belong to a key.
-var capacityParts = map[string]bool{"unidentified": true, "unknown": true, "remaining": true, "expired": true}
 
 // MonthlyPlanFee is the public monthly web price of a known plan. Ambiguous or
 // unidentified plans stay unknown.
@@ -74,16 +72,46 @@ func proratedPlanFee(monthly float64, window [2]time.Time) float64 {
 	return result
 }
 
-// subscriptionShares is each key's share of every account's quota capacity in the
-// window, using the Usage page rules: cycles are prorated by overlap, each
-// scope/duration family weighs the same, and unknown capacity is never a key's.
-func subscriptionShares(reports []WeeklyReport, window [2]time.Time, now time.Time) map[string]map[string]float64 {
+// duplicateWindowGap is how close two starts of one quota window must be to be the
+// same window recorded twice.
+const duplicateWindowGap = 15 * time.Minute
+
+// distinctWindows drops repeated recordings of one quota window: starts chained
+// within duplicateWindowGap are one window, kept from its latest observation.
+func distinctWindows(cycles []WeeklyReport) []WeeklyReport {
+	sort.Slice(cycles, func(i, j int) bool { return cycles[i].Start.Before(cycles[j].Start) })
+	kept := []WeeklyReport{}
+	var previous time.Time
+	for _, cycle := range cycles {
+		if len(kept) == 0 || cycle.Start.Sub(previous) > duplicateWindowGap {
+			kept = append(kept, cycle)
+			previous = cycle.Start
+			continue
+		}
+		previous = cycle.Start
+		last := &kept[len(kept)-1]
+		if cycle.LastObserved.After(last.LastObserved) {
+			*last = cycle
+		}
+	}
+	return kept
+}
+
+// subscriptionValues is each key's subscription value per account in the window.
+// Every quota window, including one ended early by a reset, is worth the plan fee
+// for its full length; a key gets its attributed quota percentage of it, prorated
+// by how much of the window falls inside the reporting period. Independent
+// scope/duration families measure the same plan and are averaged.
+func subscriptionValues(reports []WeeklyReport, monthlyFees map[string]float64, window [2]time.Time, now time.Time) map[string]map[string]float64 {
 	limit := window[1]
 	if now.Before(limit) {
 		limit = now
 	}
 	families := map[string]map[cycleFamily][]WeeklyReport{}
 	for _, report := range reports {
+		if _, priced := monthlyFees[report.AccountID]; !priced {
+			continue
+		}
 		if !report.Start.Before(limit) || !report.Reset.After(window[0]) {
 			continue
 		}
@@ -93,13 +121,11 @@ func subscriptionShares(reports []WeeklyReport, window [2]time.Time, now time.Ti
 		family := cycleFamily{Scope: report.Scope, Duration: report.Reset.Sub(report.Start)}
 		families[report.AccountID][family] = append(families[report.AccountID][family], report)
 	}
-	shares := map[string]map[string]float64{}
+	values := map[string]map[string]float64{}
 	for account, accountFamilies := range families {
-		normalized := map[string]float64{}
+		values[account] = map[string]float64{}
 		for _, cycles := range accountFamilies {
-			budget := 0.0
-			slices := map[string]float64{}
-			for _, cycle := range cycles {
+			for _, cycle := range distinctWindows(cycles) {
 				start := cycle.Start
 				if window[0].After(start) {
 					start = window[0]
@@ -109,57 +135,25 @@ func subscriptionShares(reports []WeeklyReport, window [2]time.Time, now time.Ti
 					end = window[1]
 				}
 				overlap := end.Sub(start).Seconds() / cycle.Reset.Sub(cycle.Start).Seconds()
-				if overlap <= 0 {
+				if overlap <= 0 || !cycle.AllocationAvailable {
 					continue
 				}
-				budget += overlap
 				percents := 0.0
-				if cycle.AllocationAvailable {
-					for _, person := range cycle.People {
-						percents += person.Percent
-					}
+				for _, person := range cycle.People {
+					percents += person.Percent
 				}
 				scale := 1.0
 				if percents > cycle.Used && percents > 0 {
 					scale = cycle.Used / percents
 				}
-				if cycle.AllocationAvailable {
-					for _, person := range cycle.People {
-						slices[person.KeyID] += overlap * person.Percent * scale / 100
-					}
+				windowFee := proratedPlanFee(monthlyFees[account], [2]time.Time{cycle.Start, cycle.Reset})
+				for _, person := range cycle.People {
+					values[account][person.KeyID] += windowFee * overlap * person.Percent * scale / 100 / float64(len(accountFamilies))
 				}
-				slices["unidentified"] += overlap * max(0, cycle.Used-min(cycle.Used, percents)) / 100
-				switch {
-				case !cycle.Closed:
-					slices["remaining"] += overlap * (100 - cycle.Used) / 100
-				case cycle.UnusedUpperBound == nil:
-					slices["unknown"] += overlap * (100 - cycle.Used) / 100
-				default:
-					slices["expired"] += overlap * *cycle.UnusedUpperBound / 100
-				}
-			}
-			if budget <= 0 {
-				continue
-			}
-			for key, value := range slices {
-				normalized[key] += value / budget / float64(len(accountFamilies))
-			}
-		}
-		total := 0.0
-		for _, value := range normalized {
-			total += value
-		}
-		if total <= 0 {
-			continue
-		}
-		shares[account] = map[string]float64{}
-		for key, value := range normalized {
-			if !capacityParts[key] {
-				shares[account][key] = value / total
 			}
 		}
 	}
-	return shares
+	return values
 }
 
 // windowPlans is the plan reported by the latest cycle of each account in the window.
@@ -173,36 +167,45 @@ func windowPlans(reports []WeeklyReport) map[string]string {
 	return plans
 }
 
-// assignSubscription gives every item its part of the key's subscription value on
-// that account: the prorated plan fee times the key's quota share, split across
-// the key's items by API value. Unknown fees, shares or API values stay unset.
-func assignSubscription(items []SpendItem, reports []WeeklyReport, accounts map[string]SpendAccount, window [2]time.Time, now time.Time) {
-	shares := subscriptionShares(reports, window, now)
+// monthlyFees is the known monthly fee of every account; explicit metadata wins
+// over published plan prices.
+func monthlyFees(reports []WeeklyReport, accounts map[string]SpendAccount) map[string]float64 {
 	plans := windowPlans(reports)
+	fees := map[string]float64{}
+	for id, account := range accounts {
+		if account.MonthlyFeeUSD != nil {
+			fees[id] = *account.MonthlyFeeUSD
+			continue
+		}
+		plan := account.Plan
+		if plan == "" {
+			plan = plans[id]
+		}
+		if monthly, known := MonthlyPlanFee(account.Provider, plan); known {
+			fees[id] = monthly
+		}
+	}
+	return fees
+}
+
+// assignSubscription gives every item its part of the key's subscription value on
+// that account, split across the key's items by API value. Accounts without a
+// known fee or quota observation stay unset.
+func assignSubscription(items []SpendItem, reports []WeeklyReport, accounts map[string]SpendAccount, window [2]time.Time, now time.Time) {
+	fees := monthlyFees(reports, accounts)
+	values := subscriptionValues(reports, fees, window, now)
 	costs := map[[2]string]float64{}
 	for _, item := range items {
 		costs[[2]string{item.KeyID, item.AccountID}] += item.CostUSD
 	}
 	for i := range items {
 		item := &items[i]
-		account := accounts[item.AccountID]
-		accountShares, measured := shares[item.AccountID]
+		accountValues, measured := values[item.AccountID]
 		cost := costs[[2]string{item.KeyID, item.AccountID}]
 		if !measured || cost <= 0 {
 			continue
 		}
-		plan := account.Plan
-		if plan == "" {
-			plan = plans[item.AccountID]
-		}
-		monthly, known := MonthlyPlanFee(item.Provider, plan)
-		if account.MonthlyFeeUSD != nil {
-			monthly, known = *account.MonthlyFeeUSD, true
-		}
-		if !known {
-			continue
-		}
-		value := proratedPlanFee(monthly, window) * accountShares[item.KeyID] * item.CostUSD / cost
+		value := accountValues[item.KeyID] * item.CostUSD / cost
 		item.SubscriptionUSD = &value
 	}
 }

@@ -55,9 +55,11 @@ not trigger a merge. Friendly model names replace raw slugs and server file path
 and model cards/legends sort by the selected period's spending, highest first.
 Company, person and model-price card collections use responsive CSS-column masonry.
 A segmented **API / Subscription** switch next to the total re-prices the person card,
-company pies and person details. Subscription value is the prorated plan fee times each
-key's quota share on the account (the same share the company pies use), split across that
-key's models by API value. Accounts without a known fee or quota observation stay unpriced.
+company pies and person details. Every quota window is worth the plan fee for its full
+length, even when a manual reset ends it early; each key gets its attributed quota
+percentage of each window that overlaps the period, split across its models by API value.
+Repeated recordings of one window (starts within 15 minutes) count once. Use that cannot
+be tied to a key stays out. Accounts without a known fee or quota observation stay unpriced.
 Model-price cards always use API value. CPAMC Bar has the same switch on its spend card.
 Usage uses the standard Lucide Wallet icon in both navigation and its page heading.
 Informational company/person cards and account rows are omitted when they have no
@@ -224,8 +226,8 @@ All endpoints use existing v8 management authentication:
   (23:00 UTC) for every account and months are UTC calendar months, exactly as on the Usage page.
   `offset` is 0..50 weeks or 0..11
   months. Used by CPAMC Bar instead of downloading minute rows. Each item also carries
-  `subscription_usd`: the prorated monthly plan fee times the key's quota share on that
-  account, split across the key's models by API value; `null` when the fee or quota is unknown.
+  `subscription_usd`: the key's attributed share of each quota window's full-length plan fee
+  on that account, split across its models by API value; `null` when the fee or quota is unknown.
 - Both usage report routes are gzip-compressed when the client sends
   `Accept-Encoding: gzip` (the full `clients` report is ~16x smaller).
 - `GET /v8/management/access/key-names` returns `{version: 2,
