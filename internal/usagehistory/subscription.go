@@ -47,7 +47,7 @@ func MonthlyPlanFee(provider, plan string) (float64, bool) {
 		if key == "pro" || strings.Contains(key, "pro200") {
 			return 200, true
 		}
-		if strings.Contains(key, "pro500") {
+		if key == "promax" || strings.Contains(key, "pro500") {
 			return 500, true
 		}
 		if key == "plus" {

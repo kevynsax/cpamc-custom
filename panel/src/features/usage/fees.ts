@@ -21,7 +21,7 @@ export function monthlyPlanFee(company: string, plan: string): number | null {
   if (company === 'openai') {
     if (key === 'prolite' || key.includes('pro100')) return 100;
     if (key === 'pro' || key.includes('pro200')) return 200;
-    if (key.includes('pro500')) return 500;
+    if (key === 'promax' || key.includes('pro500')) return 500;
     if (key === 'plus') return 20;
   }
   return null;
