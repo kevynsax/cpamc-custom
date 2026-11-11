@@ -104,6 +104,33 @@
     margin-bottom: 0;
   }
 }
+.basisSwitch {
+  display: inline-flex;
+  align-self: center;
+  margin-left: auto;
+  padding: 2px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  button {
+    border: 0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    cursor: pointer;
+    &[aria-pressed='true'] {
+      color: var(--text-primary);
+      background: var(--bg-secondary);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--text-primary);
+      outline-offset: 1px;
+    }
+  }
+}
 .feeTags {
   display: inline-flex;
   align-items: baseline;

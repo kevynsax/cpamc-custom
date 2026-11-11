@@ -147,6 +147,8 @@ describe('hide informational cards without usable money or percentages', () => {
       html(
         createElement(PeopleSpend, {
           data,
+          basis: 'api',
+          onBasisChange: () => {},
           companies: [company()],
           names: {},
           quote: quote(),

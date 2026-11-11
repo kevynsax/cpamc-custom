@@ -274,7 +274,16 @@ describe('interactive charts and restored spending card', () => {
       createElement(
         I18nextProvider,
         { i18n },
-        createElement(PeopleSpend, { data, companies, names, quote, appearance: {}, classes })
+        createElement(PeopleSpend, {
+          data,
+          basis: 'api',
+          onBasisChange: () => {},
+          companies,
+          names,
+          quote,
+          appearance: {},
+          classes,
+        })
       )
     );
     expect(spendHtml).toContain('API value by person');

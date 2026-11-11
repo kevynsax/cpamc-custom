@@ -11,9 +11,41 @@ import { companyUnusedValue, personUnusedValue, sumFeeValues } from './fees';
 import type { PersonAllowances } from './personAllocation';
 import type { ApiKeyKind } from '@/services/api/keyNames';
 import { hasFeeValue, hasMoney } from './visibility';
+import type { PriceBasis } from './subscriptionValue';
+
+const BASES: PriceBasis[] = ['api', 'subscription'];
+
+function BasisSwitch({
+  basis,
+  onChange,
+  classes: styles,
+}: {
+  basis: PriceBasis;
+  onChange: (basis: PriceBasis) => void;
+  classes: Record<string, string>;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className={styles.basisSwitch} role="group" aria-label={t('client_usage.basis_label')}>
+      {BASES.map((value) => (
+        <button
+          type="button"
+          key={value}
+          aria-pressed={basis === value}
+          title={t(`client_usage.basis_${value}_hint`)}
+          onClick={() => onChange(value)}
+        >
+          {t(`client_usage.basis_${value}`)}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function PeopleSpend({
   data,
+  basis,
+  onBasisChange,
   companies,
   names,
   quote,
@@ -23,6 +55,8 @@ export function PeopleSpend({
   classes: styles,
 }: {
   data: ClientUsageResponse;
+  basis: PriceBasis;
+  onBasisChange: (basis: PriceBasis) => void;
   companies: CompanyUsage[];
   names: Record<string, string>;
   quote: CrossQuote | null;
@@ -66,11 +100,13 @@ export function PeopleSpend({
   const maximum = Math.max(...people.map((person) => person.costUsd), Number.MIN_VALUE);
   const current = companies.some((company) => company.current);
   const unusedValue = sumFeeValues(companies.map(companyUnusedValue));
-  if (!people.length) return null;
+  // The subscription view keeps its card so the switch back to API stays reachable.
+  if (!people.length && basis === 'api') return null;
   return (
-    <Card title={<h2>{t('client_usage.spend_title')}</h2>} className={styles.peopleCard}>
+    <Card title={<h2>{t(`client_usage.spend_title_${basis}`)}</h2>} className={styles.peopleCard}>
       <div className={styles.headlineGroup}>
         <strong className={styles.headline}>{people.length ? price(total, missing) : '—'}</strong>
+        <BasisSwitch basis={basis} onChange={onBasisChange} classes={styles} />
         <FeeTags value={unusedValue} current={current} quote={quote} classes={styles} />
       </div>
       <ul className={styles.peopleSpend}>

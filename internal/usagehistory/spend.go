@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// SpendItem is one key's API value on one account and model during a period.
+// SpendItem is one key's API and subscription value on one account and model during a period.
 type SpendItem struct {
 	KeyID     string  `json:"key_id"`
 	AccountID string  `json:"account_id"`
@@ -15,6 +15,8 @@ type SpendItem struct {
 	Mode      string  `json:"mode,omitempty"`
 	CostUSD   float64 `json:"cost_usd"`
 	Unpriced  int64   `json:"unpriced"`
+	// SubscriptionUSD is the prorated plan fee times the key's quota share; null when unknown.
+	SubscriptionUSD *float64 `json:"subscription_usd"`
 }
 
 // SpendMaxOffset bounds how far back a week or month can be requested.
@@ -28,13 +30,18 @@ func SpendMaxOffset(period string) int {
 // Spend sums API value per key, account and model for one week or month, using
 // the same rules as the Usage page: weeks start Thursday at 20:00 UTC-3,
 // months are UTC calendar months.
-// providers optionally overrides the provider recorded on an account's rows.
-func (s *Store) Spend(period string, offset int, providers map[string]string) ([]SpendItem, error) {
+// accounts carries live credential metadata keyed by account fingerprint; its
+// provider overrides the provider recorded on an account's rows.
+func (s *Store) Spend(period string, offset int, accounts map[string]SpendAccount) ([]SpendItem, error) {
 	now := s.now().UTC()
 	from, to := spendDates(period, offset, now)
 	rows, err := s.Snapshot(from, to)
 	if err != nil {
 		return nil, err
+	}
+	reports, errReports := s.Reports(from, to)
+	if errReports != nil {
+		return nil, errReports
 	}
 	window := spendWindow(period, offset, now)
 	end := window[1]
@@ -51,7 +58,7 @@ func (s *Store) Spend(period string, offset int, providers map[string]string) ([
 			continue
 		}
 		provider := row.Provider
-		if override := providers[row.AccountID]; override != "" {
+		if override := accounts[row.AccountID].Provider; override != "" {
 			provider = override
 		}
 		key := strings.Join([]string{row.KeyID, row.AccountID, provider, row.Model, row.Mode}, "\x00")
@@ -73,6 +80,7 @@ func (s *Store) Spend(period string, offset int, providers map[string]string) ([
 	for _, key := range keys {
 		items = append(items, *totals[key])
 	}
+	assignSubscription(items, reports, accounts, window, now)
 	return items, nil
 }
 

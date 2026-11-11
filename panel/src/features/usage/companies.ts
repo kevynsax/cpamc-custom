@@ -16,6 +16,8 @@ export interface AccountCapacity {
   capacityWeight?: number;
   periodFeeUsd: number | null;
   monthlyFeeUsd?: number | null;
+  /** Each key's share of the account's quota capacity; null when no quota was observed. */
+  keyShares: Record<string, number> | null;
   cachedQuotas?: CachedUsageQuota[];
   quotaMeasured: boolean;
   chartAvailable: boolean;
@@ -40,6 +42,7 @@ export interface CompanyUsage {
   chartAvailable: boolean;
   current: boolean;
 }
+const CAPACITY_KEYS = new Set(['unidentified', 'unknown', 'remaining', 'expired']);
 const DAY = 86_400_000;
 const WEEK = 7 * DAY;
 export const COMPANY_NAMES: Record<string, string> = {
@@ -198,6 +201,11 @@ export function buildCompanyUsage(
       company.incomplete = true;
     }
     const accountPercent = (key: string) => (100 * (normalized.get(key) ?? 0)) / accountTotal;
+    const keyShareEntries = [...normalized]
+      .filter(([key]) => !CAPACITY_KEYS.has(key))
+      .map(([key, value]) => [key, value / accountTotal]);
+    const quotaObserved = !(normalized.size === 1 && normalized.has('unknown'));
+    const keyShares = quotaObserved ? Object.fromEntries(keyShareEntries) : null;
     const remaining = accountPercent('remaining'),
       expired = accountPercent('expired'),
       unknown = accountPercent('unknown');
@@ -229,6 +237,7 @@ export function buildCompanyUsage(
         range.start,
         range.end
       ),
+      keyShares,
       quotaMeasured,
       chartAvailable,
       used: Math.max(0, 100 - remaining - expired - unknown),

@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// GetClientUsageSpend returns per-key API value totals for one week or month.
+// GetClientUsageSpend returns per-key API and subscription value totals for one week or month.
 // CUSTOM (cpamc-custom): compact companion to /observability/usage/clients for
 // clients that only need totals, not minute rows or price tables.
 func (h *Handler) GetClientUsageSpend(c *gin.Context) {
@@ -23,18 +23,27 @@ func (h *Handler) GetClientUsageSpend(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "period must be week or month with a supported offset"})
 		return
 	}
-	providers := map[string]string{}
+	accounts := map[string]usagehistory.SpendAccount{}
 	h.mu.Lock()
 	manager := h.authManager
 	h.mu.Unlock()
 	if manager != nil {
 		for _, account := range manager.List() {
-			if account != nil {
-				providers[usagehistory.Fingerprint(account.ID)] = quotaViewProvider(account)
+			if account == nil {
+				continue
 			}
+			_, fee := h.clientUsageAccountInfo(account)
+			accounts[usagehistory.Fingerprint(account.ID)] = usagehistory.SpendAccount{Provider: quotaViewProvider(account), Plan: account.Attributes["plan_type"], MonthlyFeeUSD: fee}
 		}
 	}
-	items, err := h.clientUsage.Spend(period, offset, providers)
+	for id, cached := range h.clientCachedQuotas() {
+		account, known := accounts[id]
+		if known && account.Plan == "" {
+			account.Plan = cached.Plan
+			accounts[id] = account
+		}
+	}
+	items, err := h.clientUsage.Spend(period, offset, accounts)
 	if err != nil {
 		log.WithError(err).Error("Read client usage spend")
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "client usage history persistence unavailable"})

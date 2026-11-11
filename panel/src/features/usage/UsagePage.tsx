@@ -24,12 +24,14 @@ import { allocatePersonFees } from './personAllocation';
 import { useClientUsage } from './useClientUsage';
 import { useCrossQuote } from './useCrossQuote';
 import { withGrokAvailability } from './grokAvailability';
+import { withSubscriptionValue, type PriceBasis } from './subscriptionValue';
 import styles from './UsagePage.module.scss';
 
 export function UsagePage() {
   const { t } = useTranslation();
   const [period, setPeriod] = useState<UsagePeriod>('week');
   const [offset, setOffset] = useState(0);
+  const [basis, setBasis] = useState<PriceBasis>('api');
   const now = new Date(useNow());
   const range = usageRange(period, offset, now);
   const {
@@ -58,14 +60,17 @@ export function UsagePage() {
     ...data?.keyNames,
     ...keyNames.names,
   };
-  const companies = data ? buildCompanyUsage(data, period, offset, now) : [];
-  const recorded = data ? periodRows(data, period, offset, now) : { current: [], previous: [] };
+  const priced =
+    data && basis === 'subscription' ? withSubscriptionValue(data, period, offset, now) : data;
+  const companies = priced ? buildCompanyUsage(priced, period, offset, now) : [];
+  const recorded = priced ? periodRows(priced, period, offset, now) : { current: [], previous: [] };
+  const apiRecorded = data ? periodRows(data, period, offset, now) : { current: [] };
   const kinds = { ...keyNames.kinds, ...data?.keyKinds };
   // System keys still show their usage; allocatePersonFees keeps them out of wasted/available fees.
   const personIds = Object.keys(data?.keyLabels ?? {});
   const allowances = allocatePersonFees(companies, personIds, kinds);
   const spending: Record<string, number> = {};
-  for (const part of valueByModel(recorded.current)) {
+  for (const part of valueByModel(apiRecorded.current)) {
     const id = baseModelId(part.id);
     spending[id] = (spending[id] ?? 0) + part.value;
   }
@@ -178,9 +183,11 @@ export function UsagePage() {
           {t('client_usage.paused_title')}
         </h2>
       )}
-      {data && (
+      {priced && (
         <PeopleSpend
-          data={data}
+          data={priced}
+          basis={basis}
+          onBasisChange={setBasis}
           companies={companies}
           names={names}
           quote={quote}
@@ -190,9 +197,9 @@ export function UsagePage() {
           classes={styles}
         />
       )}
-      {data && (
+      {priced && (
         <CompanyPies
-          data={data}
+          data={priced}
           companies={companies}
           names={names}
           quote={quote}
@@ -203,11 +210,11 @@ export function UsagePage() {
           classes={styles}
         />
       )}
-      {data && (
+      {priced && (
         <PersonDetails
           current={recorded.current}
           previous={recorded.previous}
-          names={{ ...data.keyLabels, ...names }}
+          names={{ ...priced.keyLabels, ...names }}
           quote={quote}
           personIds={personIds}
           allowances={allowances}
