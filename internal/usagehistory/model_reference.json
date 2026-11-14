@@ -496,6 +496,28 @@
       "context_inclusive": false
     },
     {
+      "id": "gpt-6.1-terra",
+      "provider": "openai",
+      "kind": "tokens",
+      "status": "published",
+      "prices": {
+        "input": 1,
+        "output": 5,
+        "cache_read": 0.05,
+        "cache_write": 1.25,
+        "long_input": 2,
+        "long_output": 7.5,
+        "long_cache_read": 0.1,
+        "long_cache_write": 2.5
+      },
+      "sources": [
+        "https://developers.openai.com/api/docs/pricing"
+      ],
+      "checked_at": "2026-11-13",
+      "context_threshold": 272000,
+      "context_inclusive": false
+    },
+    {
       "id": "gpt-image-1.5",
       "provider": "openai",
       "kind": "image_tokens",
@@ -580,6 +602,57 @@
         "https://developers.openai.com/api/docs/pricing"
       ],
       "checked_at": "2026-10-17"
+    },
+    {
+      "id": "gpt-image-2.6",
+      "provider": "openai",
+      "kind": "image_tokens",
+      "status": "reference",
+      "prices": {
+        "input": 5,
+        "cache_read": 1.25,
+        "image_input": 8,
+        "image_cache_read": 2,
+        "output": 30
+      },
+      "sources": [
+        "https://developers.openai.com/api/docs/pricing"
+      ],
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "gpt-image-2.6-flare",
+      "provider": "openai",
+      "kind": "image_tokens",
+      "status": "published",
+      "prices": {
+        "input": 5,
+        "cache_read": 1.25,
+        "image_input": 8,
+        "image_cache_read": 2,
+        "output": 30
+      },
+      "sources": [
+        "https://developers.openai.com/api/docs/pricing"
+      ],
+      "checked_at": "2026-11-13"
+    },
+    {
+      "id": "gpt-image-2.6-sunburst",
+      "provider": "openai",
+      "kind": "image_tokens",
+      "status": "published",
+      "prices": {
+        "input": 5,
+        "cache_read": 1.25,
+        "image_input": 8,
+        "image_cache_read": 2,
+        "output": 30
+      },
+      "sources": [
+        "https://developers.openai.com/api/docs/pricing"
+      ],
+      "checked_at": "2026-11-13"
     },
     {
       "id": "gpt-live-1.1",

@@ -1,5 +1,5 @@
 import type { CachedUsageQuota, ClientUsageResponse, UsageWeek } from '@/services/api/clientUsage';
-import { monthlyPlanFee, proratedPlanFee } from './fees';
+import { proratedPlanFee } from './fees';
 
 export type UsagePeriod = 'week' | 'month';
 export interface PiePart {
@@ -80,7 +80,7 @@ export function planWeight(provider: string, plan: string): { weight: number; es
   }
   if (companyId(provider) === 'openai') {
     if (key === 'prolite' || key.includes('pro100')) return { weight: 5, estimated: false };
-    if (key.includes('pro500')) return { weight: 25, estimated: true };
+    if (key === 'promax' || key.includes('pro500')) return { weight: 25, estimated: true };
     if (key === 'pro' || key.includes('pro200')) return { weight: 10, estimated: true };
     if (key === 'plus' || key === 'team') return { weight: 1, estimated: false };
   }
@@ -145,6 +145,9 @@ export function buildCompanyUsage(
         Date.parse(week.reset) > range.start
     );
     const plan = account.plan || accountWeeks.find((week) => week.plan)?.plan || '';
+    // The fee recorded on the period's quota windows wins over the account's current one.
+    const windowFee = accountWeeks.find((week) => week.monthlyFeeUsd != null)?.monthlyFeeUsd;
+    const monthlyFeeUsd = windowFee ?? account.monthlyFeeUsd ?? null;
     const weight = planWeight(account.provider, plan);
     company.weightEstimated ||= weight.estimated;
     const families = new Map<string, UsageWeek[]>();
@@ -211,7 +214,7 @@ export function buildCompanyUsage(
       displayName: id === 'in_house' ? account.provider : account.email,
       plan,
       capacityWeight: weight.weight,
-      monthlyFeeUsd: account.monthlyFeeUsd ?? monthlyPlanFee(id, plan),
+      monthlyFeeUsd,
       cachedQuotas: account.cachedQuotas?.length
         ? account.cachedQuotas
         : data.weeks
@@ -224,11 +227,7 @@ export function buildCompanyUsage(
               periodSeconds:
                 cycle.periodSeconds ?? (Date.parse(cycle.reset) - Date.parse(cycle.start)) / 1000,
             })),
-      periodFeeUsd: proratedPlanFee(
-        account.monthlyFeeUsd ?? monthlyPlanFee(id, plan),
-        range.start,
-        range.end
-      ),
+      periodFeeUsd: proratedPlanFee(monthlyFeeUsd, range.start, range.end),
       quotaMeasured,
       chartAvailable,
       used: Math.max(0, 100 - remaining - expired - unknown),

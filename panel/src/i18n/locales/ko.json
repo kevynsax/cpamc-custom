@@ -120,7 +120,7 @@
     "basis_api": "API",
     "basis_subscription": "구독",
     "basis_api_hint": "기록된 사용량의 표준 토큰 API 가격",
-    "basis_subscription_hint": "기간에 비례한 월 요금 × 각 사용자의 할당량 비율",
+    "basis_subscription_hint": "각 할당량 창의 요금제 비용 × 해당 창에서 각 사용자의 비율",
     "spend_hint": "키 하나가 사용자 한 명입니다. 긴 막대는 더 높은 API 가치를 의미하며 더 큰 청구액이 아닙니다.",
     "subscription_title": "구독 사용량",
     "subscription_hint": "100% = 이 계정 {{plan}}의 한 주 전체 할당량입니다.",

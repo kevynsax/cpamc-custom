@@ -11,7 +11,8 @@ import { companyUnusedValue, personUnusedValue, sumFeeValues } from './fees';
 import type { PersonAllowances } from './personAllocation';
 import type { ApiKeyKind } from '@/services/api/keyNames';
 import { hasFeeValue, hasMoney } from './visibility';
-import type { PriceBasis } from './subscriptionValue';
+
+export type PriceBasis = 'api' | 'subscription';
 
 const BASES: PriceBasis[] = ['api', 'subscription'];
 

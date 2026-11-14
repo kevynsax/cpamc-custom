@@ -306,14 +306,21 @@ func (s *Store) RecordPriced(record usage.Record, rate *Rates) error {
 	row.OutputTokens += max(0, detail.OutputTokens)
 	row.CachedTokens += max(0, detail.CachedTokens, detail.CacheReadTokens)
 	row.TotalTokens += max(0, detail.TotalTokens)
-	if cost := EstimateCost(detail, rate); cost != nil {
+	cost := EstimateCost(detail, rate)
+	if !usage.GenerateEnabled(record.Generate) {
+		// A request that generates nothing has no API value; its price is not unknown.
+		none := 0.0
+		cost = &none
+	}
+	if cost == nil {
+		row.UnpricedRequests++
+	}
+	if cost != nil {
 		total := *cost
 		if row.CostUSD != nil {
 			total += *row.CostUSD
 		}
 		row.CostUSD = &total
-	} else {
-		row.UnpricedRequests++
 	}
 	s.days[date][key] = row
 	s.dirty[date] = true

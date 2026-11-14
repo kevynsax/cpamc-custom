@@ -120,7 +120,7 @@
     "basis_api": "API",
     "basis_subscription": "訂閱",
     "basis_api_hint": "已記錄用量的標準 Token API 價格",
-    "basis_subscription_hint": "按週期折算的月費 × 每人的配額占比",
+    "basis_subscription_hint": "每個配額視窗的方案費用 × 每人在該視窗的占比",
     "spend_hint": "一個金鑰代表一個人。長條越長表示 API 等值越高，不表示帳單更高。",
     "subscription_title": "訂閱用量",
     "subscription_hint": "100% = 此帳戶 {{plan}} 一整週的額度。",

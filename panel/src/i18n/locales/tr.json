@@ -2564,7 +2564,7 @@
     "basis_api": "API",
     "basis_subscription": "Abonelik",
     "basis_api_hint": "Kaydedilen kullanımın standart token API fiyatı",
-    "basis_subscription_hint": "Döneme oranlanan aylık plan ücreti × kişinin kota payı",
+    "basis_subscription_hint": "Her kota penceresinin plan ücreti × kişinin o penceredeki payı",
     "spend_hint": "Bir Anahtar Bir Kişidir. Daha Uzun Çubuklar Daha Büyük Bir Fatura Değil, Daha Fazla API Eşdeğeri Değer Anlamına Gelir.",
     "subscription_title": "Abonelik Kullanımı",
     "subscription_hint": "%100 = Bu Hesapta Tam Bir Haftalık {{plan}}.",

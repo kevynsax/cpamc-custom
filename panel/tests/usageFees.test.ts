@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { buildCompanyUsage } from '../src/features/usage/companies';
 import {
-  monthlyPlanFee,
   proratedPlanFee,
   companyUnusedValue,
   personUnusedValue,
@@ -13,9 +12,6 @@ import { createUsageFixture } from '../dev/usage/fixtures';
 const now = new Date('2026-10-17T12:00:00Z');
 describe('unused subscription-fee values', () => {
   test('uses subscription fees, never API token spending, and leaves unknown fees unset', () => {
-    expect(monthlyPlanFee('anthropic', 'Max 20x')).toBe(200);
-    expect(monthlyPlanFee('openai', 'prolite')).toBe(100);
-    expect(monthlyPlanFee('xai', 'GrokPro')).toBeNull();
     expect(
       proratedPlanFee(200, Date.parse('2026-10-12T00:00:00Z'), Date.parse('2026-10-19T00:00:00Z'))
     ).toBeCloseTo((200 * 7) / 31, 10);

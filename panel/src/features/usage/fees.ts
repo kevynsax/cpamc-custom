@@ -10,23 +10,6 @@ export interface UnusedFeeValue {
   available: FeeAmount;
 }
 
-// Public monthly web prices; ambiguous or unidentified plans deliberately stay unset.
-export function monthlyPlanFee(company: string, plan: string): number | null {
-  const key = plan.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (company === 'anthropic') {
-    if (key.includes('max20') || key.includes('max200')) return 200;
-    if (key.includes('max5') || key.includes('max100')) return 100;
-    if (key === 'pro' || key === 'claudepro') return 20;
-  }
-  if (company === 'openai') {
-    if (key === 'prolite' || key.includes('pro100')) return 100;
-    if (key === 'pro' || key.includes('pro200')) return 200;
-    if (key === 'promax' || key.includes('pro500')) return 500;
-    if (key === 'plus') return 20;
-  }
-  return null;
-}
-
 export function proratedPlanFee(
   monthlyUsd: number | null,
   start: number,

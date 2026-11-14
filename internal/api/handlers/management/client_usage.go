@@ -10,7 +10,6 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagehistory"
 	sdkhandlers "github.com/router-for-me/CLIProxyAPI/v8/sdk/api/handlers"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	log "github.com/sirupsen/logrus"
 )
@@ -81,30 +80,44 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "from and to must be inclusive UTC dates within the last 365 days"})
 		return
 	}
-	rows, err := h.clientUsage.Snapshot(from, to)
+	accounts := h.clientUsageAccounts()
+	subscriptions := usageSubscriptions(accounts)
+	valued, err := h.clientUsage.ValuedUsage(from, to, subscriptions)
 	if err != nil {
 		log.WithError(err).Error("Read client usage history")
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "client usage history persistence unavailable"})
 		return
 	}
-	weeks, errWeeks := h.clientUsage.Reports(from, to)
-	if errWeeks != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "weekly usage history unavailable"})
-		return
+	// Accounts whose credential is gone keep the provider and plan their history recorded.
+	for _, window := range valued.Windows {
+		account, known := accounts[window.AccountID]
+		if !known {
+			account = usageAccount{ID: window.AccountID, Provider: window.Provider}
+		}
+		if account.Plan == "" {
+			account.Plan = window.Plan
+		}
+		accounts[window.AccountID] = account
+	}
+	for _, row := range valued.Rows {
+		if _, known := accounts[row.AccountID]; !known {
+			accounts[row.AccountID] = usageAccount{ID: row.AccountID, Provider: row.Provider}
+		}
+	}
+	// An account without a fee on its credential shows the public price of its plan.
+	for id, account := range accounts {
+		if account.MonthlyFeeUSD != nil {
+			continue
+		}
+		fee, known := usagehistory.MonthlyPlanFee(account.Provider, account.Plan)
+		if !known {
+			continue
+		}
+		account.MonthlyFeeUSD = &fee
+		accounts[id] = account
 	}
 	settings := h.clientUsage.Settings()
 	labels := make(map[string]string)
-	accounts := map[string]gin.H{}
-	for _, week := range weeks {
-		if accounts[week.AccountID] == nil {
-			accounts[week.AccountID] = gin.H{"id": week.AccountID, "provider": week.Provider, "plan": week.Plan}
-		}
-	}
-	for _, row := range rows {
-		if accounts[row.AccountID] == nil {
-			accounts[row.AccountID] = gin.H{"id": row.AccountID, "provider": row.Provider}
-		}
-	}
 	keyLabels := make(map[string]string)
 	h.mu.Lock()
 	manager := h.authManager
@@ -124,40 +137,17 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 			if account == nil {
 				continue
 			}
-			id := usagehistory.Fingerprint(account.ID)
-			info := accounts[id]
-			if info == nil {
-				info = gin.H{"id": id}
-				accounts[id] = info
-			}
-			info["provider"] = quotaViewProvider(account)
-			info["disabled"] = account.Disabled || account.Status == coreauth.StatusDisabled
-			email, fee := h.clientUsageAccountInfo(account)
-			info["email"] = email
-			if fee != nil {
-				info["monthly_fee_usd"] = *fee
-			}
-			if plan := account.Attributes["plan_type"]; plan != "" {
-				info["plan"] = plan
-			}
 			label := account.Label
 			if label == "" {
 				label = account.FileName
 			}
 			// Account names come from current auth metadata, never from persisted secrets.
-			if label != "" {
-				labels[usagehistory.Fingerprint(account.ID)] = label
-				if account.Index != "" {
-					labels[usagehistory.Fingerprint(account.Index)] = label
-				}
+			if label == "" {
+				continue
 			}
-		}
-	}
-	for id, cached := range h.clientCachedQuotas() {
-		if info := accounts[id]; info != nil {
-			info["cached_quotas"] = cached.Quotas
-			if plan, _ := info["plan"].(string); plan == "" && cached.Plan != "" {
-				info["plan"] = cached.Plan
+			labels[usagehistory.Fingerprint(account.ID)] = label
+			if account.Index != "" {
+				labels[usagehistory.Fingerprint(account.Index)] = label
 			}
 		}
 	}
@@ -171,5 +161,7 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 		reference.DisplayName = model.DisplayName
 		models = append(models, reference)
 	}
-	writeCompressedJSON(c, http.StatusOK, gin.H{"models": models, "from": from, "to": to, "timezone": "UTC", "retention_days": usagehistory.RetentionDays, "collection_enabled": enabled, "rows": rows, "account_labels": labels, "key_labels": keyLabels, "key_names": h.clientUsage.KeyNames(), "key_kinds": h.clientKeyMetadata().Kinds, "weeks": weeks, "accounts": accounts, "settings": settings, "prices_as_of": catalogDate})
+	metadata := h.clientKeyMetadata()
+	report := gin.H{"models": models, "from": from, "to": to, "timezone": "UTC", "retention_days": usagehistory.RetentionDays, "collection_enabled": enabled, "rows": valued.Rows, "account_labels": labels, "key_labels": keyLabels, "key_names": metadata.Names, "key_kinds": metadata.Kinds, "weeks": valued.Windows, "accounts": accounts, "settings": settings, "prices_as_of": catalogDate}
+	writeCompressedJSON(c, http.StatusOK, report)
 }

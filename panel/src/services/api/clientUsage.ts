@@ -19,6 +19,8 @@ export interface ClientUsageRow {
   totalTokens: number;
   costUsd: number | null;
   unpriced: number;
+  /** The row's part of its quota windows' plan fee; absent when unknown. */
+  subscriptionUsd?: number;
 }
 
 export interface UsageRates {
@@ -53,6 +55,8 @@ export interface UsageWeek {
   scope: string;
   periodSeconds?: number;
   plan: string;
+  /** Monthly plan fee that prices this window; null when unknown. */
+  monthlyFeeUsd?: number | null;
   start: string;
   reset: string;
   people: PersonWeek[];
@@ -264,6 +268,9 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
             : typeof row.unpriced_requests === 'number'
               ? count(row, 'unpriced_requests')
               : 0,
+        ...(row.subscription_usd != null
+          ? { subscriptionUsd: count(row, 'subscription_usd') }
+          : {}),
       };
     }),
     weeks: array(data, 'weeks').map((value) => {
@@ -277,6 +284,7 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
           ? count(week, 'period_seconds')
           : (Date.parse(text(week, 'reset')) - Date.parse(text(week, 'start'))) / 1000,
         plan: text(week, 'plan'),
+        monthlyFeeUsd: nullableCount(week, 'monthly_fee_usd'),
         start: text(week, 'start'),
         reset: text(week, 'reset'),
         used: count(week, 'used'),

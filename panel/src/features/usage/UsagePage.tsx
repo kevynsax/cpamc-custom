@@ -14,7 +14,7 @@ import { useNow } from '@/hooks/useNow';
 import { useAuthStore, useConfigStore, useThemeStore } from '@/stores';
 import { buildCompanyUsage, companyId, usageRange, type UsagePeriod } from './companies';
 import { CompanyPies } from './CompanyPies';
-import { PeopleSpend } from './PeopleSpend';
+import { PeopleSpend, type PriceBasis } from './PeopleSpend';
 import { ModelPriceCards } from './ModelPriceCards';
 import { resolveUsageKeyNames } from './keyNames';
 import { useApiKeyNames } from '@/features/config/useApiKeyNames';
@@ -24,7 +24,6 @@ import { allocatePersonFees } from './personAllocation';
 import { useClientUsage } from './useClientUsage';
 import { useCrossQuote } from './useCrossQuote';
 import { withGrokAvailability } from './grokAvailability';
-import { withSubscriptionValue, type PriceBasis } from './subscriptionValue';
 import styles from './UsagePage.module.scss';
 
 export function UsagePage() {
@@ -60,8 +59,13 @@ export function UsagePage() {
     ...data?.keyNames,
     ...keyNames.names,
   };
-  const priced =
-    data && basis === 'subscription' ? withSubscriptionValue(data, period, offset, now) : data;
+  // The subscription view shows each row at the value the gateway gave it.
+  const subscriptionRows = (data?.rows ?? []).map((row) =>
+    row.subscriptionUsd === undefined
+      ? { ...row, costUsd: null, unpriced: Math.max(row.unpriced, row.requests, 1) }
+      : { ...row, costUsd: row.subscriptionUsd, unpriced: 0 }
+  );
+  const priced = data && basis === 'subscription' ? { ...data, rows: subscriptionRows } : data;
   const companies = priced ? buildCompanyUsage(priced, period, offset, now) : [];
   const recorded = priced ? periodRows(priced, period, offset, now) : { current: [], previous: [] };
   const apiRecorded = data ? periodRows(data, period, offset, now) : { current: [] };

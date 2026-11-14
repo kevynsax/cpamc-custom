@@ -34,7 +34,7 @@ omit the client token name. In-house models stay unpriced.
 
 API-key names use the shared server key-name API (in-memory fake storage in this
 preview), including import-only migration of the old browser names. There is no
-second people-name editor. Model-price cards use the 68-model inventory and researched
+second people-name editor. Model-price cards use the 56-model inventory and researched
 public references in `internal/usagehistory/model_reference.json`, including native
 image/second/character units. Missing tariffs remain blank, not zero. Reference-only
 media rates are not treated as metered token charges.

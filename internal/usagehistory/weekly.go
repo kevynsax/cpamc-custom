@@ -37,15 +37,17 @@ type PersonWeek struct {
 
 type WeeklyReport struct {
 	Cycle
-	People              []PersonWeek `json:"people"`
-	Used                float64      `json:"used"`
-	Unattributed        float64      `json:"unattributed"`
-	Remaining           float64      `json:"remaining"`
-	UnusedUpperBound    *float64     `json:"unused_upper_bound"`
-	LastObserved        time.Time    `json:"last_observed"`
-	Incomplete          bool         `json:"incomplete"`
-	Closed              bool         `json:"closed"`
-	AllocationAvailable bool         `json:"allocation_available"`
+	People []PersonWeek `json:"people"`
+	// MonthlyFeeUSD is the monthly plan fee that prices this window; null when unknown.
+	MonthlyFeeUSD       *float64  `json:"monthly_fee_usd"`
+	Used                float64   `json:"used"`
+	Unattributed        float64   `json:"unattributed"`
+	Remaining           float64   `json:"remaining"`
+	UnusedUpperBound    *float64  `json:"unused_upper_bound"`
+	LastObserved        time.Time `json:"last_observed"`
+	Incomplete          bool      `json:"incomplete"`
+	Closed              bool      `json:"closed"`
+	AllocationAvailable bool      `json:"allocation_available"`
 }
 
 func (s *Store) ObserveQuota(accountID, provider, scope, plan string, reset, at time.Time, used float64) error {
@@ -102,6 +104,17 @@ func (s *Store) ObserveQuotaWindow(accountID, provider, scope, plan string, rese
 func (s *Store) Weeks() ([]WeeklyReport, error) { return s.Reports("0000-01-01", "9999-12-31") }
 
 func (s *Store) Reports(from, to string) ([]WeeklyReport, error) {
+	before, after := paddedDates(from, to)
+	rows, err := s.Snapshot(before, after)
+	if err != nil {
+		return nil, err
+	}
+	return s.reports(rows, from, to)
+}
+
+// paddedDates widens an inclusive date range by the longest quota window, so every
+// window that touches the range has all of its rows.
+func paddedDates(from, to string) (string, string) {
 	before, after := from, to
 	if at, err := time.Parse(DateLayout, from); err == nil && from != "0000-01-01" {
 		before = at.AddDate(0, 0, -31).Format(DateLayout)
@@ -109,10 +122,12 @@ func (s *Store) Reports(from, to string) ([]WeeklyReport, error) {
 	if at, err := time.Parse(DateLayout, to); err == nil && to != "9999-12-31" {
 		after = at.AddDate(0, 0, 31).Format(DateLayout)
 	}
-	rows, err := s.Snapshot(before, after)
-	if err != nil {
-		return nil, err
-	}
+	return before, after
+}
+
+// reports builds the quota windows that touch the date range from rows covering
+// the padded range.
+func (s *Store) reports(rows []Row, from, to string) ([]WeeklyReport, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if errPrune := s.pruneCycles(); errPrune != nil {
@@ -214,7 +229,11 @@ func BuildWeek(cycle Cycle, rows []Row, now time.Time) WeeklyReport {
 				continue
 			}
 			if row.UnpricedRequests > 0 || row.CostUSD == nil {
-				unpriced = true
+				// Media models are billed in their own units; only text use of unknown
+				// price leaves the interval unattributed.
+				if !mediaModel(row.Model) {
+					unpriced = true
+				}
 				continue
 			}
 			costs[row.KeyID] += *row.CostUSD

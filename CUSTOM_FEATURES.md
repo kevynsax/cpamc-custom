@@ -55,11 +55,18 @@ not trigger a merge. Friendly model names replace raw slugs and server file path
 and model cards/legends sort by the selected period's spending, highest first.
 Company, person and model-price card collections use responsive CSS-column masonry.
 A segmented **API / Subscription** switch next to the total re-prices the person card,
-company pies and person details. Every quota window is worth the plan fee for its full
-length, even when a manual reset ends it early; each key gets its attributed quota
-percentage of each window that overlaps the period, split across its models by API value.
-Repeated recordings of one window (starts within 15 minutes) count once. Use that cannot
-be tied to a key stays out. Accounts without a known fee or quota observation stay unpriced.
+company pies and person details. The gateway computes subscription value once
+(`internal/usagehistory/subscription.go`) and returns it on every usage row; the panel and
+CPAMC Bar only sum it. Every quota window is worth the plan fee for its full length, even
+when a manual reset ends it early; each key gets its attributed quota percentage of the
+window, split across the key's rows in that window by API value. A row's value belongs to
+the moment the usage happened, so a period is the sum of its rows, like API value. A row
+covered by several independent windows (for example five-hour and weekly) is worth their
+average. Each window is priced with the plan recorded on it, so a plan change does not
+re-price earlier windows; an explicit `monthly_fee_usd` on the credential wins, and the
+account's current plan is the fallback. Repeated recordings of one window (starts within
+15 minutes) count once. Use that cannot be tied to a key stays out. Rows without a known
+fee, quota observation or API value stay unpriced.
 Model-price cards always use API value. CPAMC Bar has the same switch on its spend card.
 Usage uses the standard Lucide Wallet icon in both navigation and its page heading.
 Informational company/person cards and account rows are omitted when they have no
@@ -159,10 +166,11 @@ fields and the exchange-rate quote are not usage spending and do not get waste t
 
 Cost uses the canonical non-overlapping v2 token buckets (uncached input, cache reads,
 cache writes, and output including reasoning). A bundled native-vendor models.dev
-snapshot is available offline, refreshed every 24 hours while running; its date is
-visible. The public catalog can also be refreshed manually. Each minute/model/rate
+snapshot is available offline, refreshed at start when it is from an earlier day and
+every 24 hours while running; its date is visible. The public catalog can also be refreshed manually. Each minute/model/rate
 bucket records the rate and estimated cost at execution time, so later price changes
-never overwrite recorded history. Custom model rates override the catalog. Unknown/ambiguous
+never overwrite recorded history. Custom model rates override the catalog. A request sent with
+`generate: false` has no API value (zero, not unknown). Unknown/ambiguous
 models, incomplete accounting, missing cache rates
 and unsupported service tiers stay unpriced. OpenAI speed modes are stored per row
 (`mode`: `fast` for `priority`/`fast`, `ultrafast`) and priced at OpenAI's published
@@ -181,7 +189,9 @@ registered by opening Quota and refreshing the account; subsequently safe GET re
 are replayed around the clock every 10 minutes when usage collection is enabled.
 
 Between observations, measured quota increases are allocated by each key's share of
-priced API value in that interval. Usage is bucketed to UTC minutes, so attribution is
+priced API value in that interval. Text requests of unknown price leave the interval
+unattributed; image, audio and video tool records are billed in their own units and do not,
+and neither do requests sent with `generate: false`. Usage is bucketed to UTC minutes, so attribution is
 an estimate, especially at observation/reset boundaries. Pre-tracking consumption,
 unpriced intervals, gaps over 30 minutes, and consumption with no gateway activity
 stay unattributed. Counter decreases invalidate that week's allocation rather than
@@ -193,12 +203,15 @@ was within 15 minutes of reset; otherwise their leftover capacity stays unattrib
 Open cycles contribute remaining capacity, not expired waste. Monthly budget slices
 are time-prorated estimates and must not be treated as an exact monthly token grant.
 
-Model-price cards cover the configured registry inventory. The researched snapshot
-`internal/usagehistory/model_reference.json` contains 52 model IDs (the live gateway
-inventory of 2026-10-17 minus the retired Spark models): 34 published native API tariffs,
-four explicitly labeled family references, and 14 unpriced entries (self-hosted,
-subscription-only, unpublished). Missing prices stay unset, never replaced with a
-neighboring model's price.
+Model-price cards cover the configured registry inventory. A token model's card shows
+the same standard tariff its usage is priced with (`Pricing.standardRate`): the
+researched snapshot until the public catalog has a newer rate, then the catalog. A
+model missing from the snapshot therefore still gets its public catalog price, and an
+alias shows the price of the model it routes to. The researched snapshot
+`internal/usagehistory/model_reference.json` contains 56 model IDs: 37 published native
+API tariffs, five explicitly labeled family references, and 14 unpriced entries
+(self-hosted, subscription-only, unpublished). Missing prices stay unset, never replaced
+with a neighboring model's price.
 
 Each card links its public evidence. Image, video and voice rates retain their native
 units; they are never passed to token accounting without the corresponding metered
@@ -214,6 +227,9 @@ All endpoints use existing v8 management authentication:
   returns minute/model rows for inclusive UTC dates (default last 30 days), summarized
   reset-cycle reports under the legacy `weeks` field, account/key labels, accounts,
   configured model-price references, settings, collection status and catalog date.
+  Each row may carry `subscription_usd` (absent when unknown), each cycle report its
+  `monthly_fee_usd` (`null` when unknown), and each account its `monthly_fee_usd`
+  (explicit credential fee, else the public price of its current plan).
   `key_names` carries shared names (including clear tombstones), and `key_kinds`
   carries Person/System classifications. Models may include `display_name`. Accounts
   expose the current `disabled` credential flag. Each account may
@@ -226,8 +242,8 @@ All endpoints use existing v8 management authentication:
   (23:00 UTC) for every account and months are UTC calendar months, exactly as on the Usage page.
   `offset` is 0..50 weeks or 0..11
   months. Used by CPAMC Bar instead of downloading minute rows. Each item also carries
-  `subscription_usd`: the key's attributed share of each quota window's full-length plan fee
-  on that account, split across its models by API value; `null` when the fee or quota is unknown.
+  `subscription_usd`: the sum of the subscription value of the item's rows in the period;
+  `null` when none of them has one.
 - Both usage report routes are gzip-compressed when the client sends
   `Accept-Encoding: gzip` (the full `clients` report is ~16x smaller).
 - `GET /v8/management/access/key-names` returns `{version: 2,

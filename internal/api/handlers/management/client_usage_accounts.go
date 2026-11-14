@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagehistory"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 )
 
@@ -81,4 +82,54 @@ func (h *Handler) clientUsageAccountInfo(account *coreauth.Auth) (string, *float
 		fee = &value
 	}
 	return email, fee
+}
+
+// usageAccount is one upstream account as the usage reports show it.
+type usageAccount struct {
+	ID       string `json:"id"`
+	Provider string `json:"provider"`
+	Plan     string `json:"plan,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Disabled bool   `json:"disabled,omitempty"`
+	// MonthlyFeeUSD is the credential's explicit fee, else the public price of its plan.
+	MonthlyFeeUSD *float64            `json:"monthly_fee_usd,omitempty"`
+	CachedQuotas  []clientCachedQuota `json:"cached_quotas,omitempty"`
+}
+
+// clientUsageAccounts lists the live credentials by account fingerprint, with the
+// plan and quota last cached for each and the fee set on the credential, if any.
+func (h *Handler) clientUsageAccounts() map[string]usageAccount {
+	accounts := map[string]usageAccount{}
+	h.mu.Lock()
+	manager := h.authManager
+	h.mu.Unlock()
+	if manager == nil {
+		return accounts
+	}
+	cachedQuotas := h.clientCachedQuotas()
+	for _, credential := range manager.List() {
+		if credential == nil {
+			continue
+		}
+		id := usagehistory.Fingerprint(credential.ID)
+		email, fee := h.clientUsageAccountInfo(credential)
+		cached := cachedQuotas[id]
+		plan := credential.Attributes["plan_type"]
+		if plan == "" {
+			plan = cached.Plan
+		}
+		disabled := credential.Disabled || credential.Status == coreauth.StatusDisabled
+		provider := quotaViewProvider(credential)
+		accounts[id] = usageAccount{ID: id, Provider: provider, Plan: plan, Email: email, Disabled: disabled, MonthlyFeeUSD: fee, CachedQuotas: cached.Quotas}
+	}
+	return accounts
+}
+
+// usageSubscriptions is the metadata the usage store prices each account with.
+func usageSubscriptions(accounts map[string]usageAccount) map[string]usagehistory.AccountSubscription {
+	subscriptions := map[string]usagehistory.AccountSubscription{}
+	for id, account := range accounts {
+		subscriptions[id] = usagehistory.AccountSubscription{Provider: account.Provider, Plan: account.Plan, MonthlyFeeUSD: account.MonthlyFeeUSD}
+	}
+	return subscriptions
 }

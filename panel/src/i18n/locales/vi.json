@@ -120,7 +120,7 @@
     "basis_api": "API",
     "basis_subscription": "Gói đăng ký",
     "basis_api_hint": "Giá API token tiêu chuẩn của mức sử dụng đã ghi",
-    "basis_subscription_hint": "Phí gói tháng chia theo kỳ × tỷ lệ hạn mức của mỗi người",
+    "basis_subscription_hint": "Phí gói của từng cửa sổ hạn mức × tỷ lệ của mỗi người trong cửa sổ đó",
     "spend_hint": "Một khóa là một người. Thanh dài hơn biểu thị giá trị API cao hơn, không phải hóa đơn lớn hơn.",
     "subscription_title": "Mức sử dụng gói đăng ký",
     "subscription_hint": "100% = một tuần đầy đủ của {{plan}} trên tài khoản này.",

@@ -6,14 +6,33 @@ import { demoPeople } from './people';
 // the server's 2026-10-17 inventory. Prices come from the cited public sources.
 export const subscriptionLineup = [
   { provider: 'antigravity', label: 'Antigravity', plan: '', model: 'gemini-3.1-flash-image' },
-  { provider: 'claude', label: 'Claude Max 20×', plan: 'Claude Max 20×', model: 'claude-opus-4-8' },
-  { provider: 'codex', label: 'Codex Pro 100', plan: 'Pro 100', model: 'gpt-6.1-sol' },
+  {
+    provider: 'claude',
+    label: 'Claude Max 20×',
+    plan: 'Claude Max 20×',
+    model: 'claude-opus-4-8',
+    monthlyFeeUsd: 200,
+  },
+  {
+    provider: 'codex',
+    label: 'Codex Pro 100',
+    plan: 'Pro 100',
+    model: 'gpt-6.1-sol',
+    monthlyFeeUsd: 100,
+  },
   { provider: 'meta', label: 'Meta', plan: '', model: 'muse-spark-1.3-contributor' },
   { provider: 'minimax', label: 'MiniMax', plan: '', model: 'MiniMax-M3' },
   { provider: 'xai', label: 'Grok Pro 1', plan: 'Grok Pro', model: 'grok-4.7' },
   { provider: 'xai', label: 'Grok Pro 2', plan: 'Grok Pro', model: 'grok-4.7' },
   { provider: 'zai', label: 'Z.ai', plan: '', model: 'glm-5.3' },
 ] as const;
+interface DemoAccount {
+  id: string;
+  provider: string;
+  plan: string;
+  email: string;
+  monthly_fee_usd?: number;
+}
 const DAY = 86_400_000,
   WEEK = 7 * DAY;
 const hash = (value: string) =>
@@ -44,6 +63,7 @@ interface RawRow {
   total_tokens: number;
   cost_usd: number | null;
   unpriced_requests: number;
+  subscription_usd?: number;
 }
 interface RawPerson {
   key_id: string;
@@ -59,6 +79,7 @@ interface RawWeek {
   scope: string;
   period_seconds: number;
   plan: string;
+  monthly_fee_usd: number | null;
   start: string;
   reset: string;
   people: RawPerson[];
@@ -92,7 +113,7 @@ export function createUsageFixture(
     retention_days: 365,
     collection_enabled: options.collectionEnabled ?? true,
     prices_as_of: reference.checked_at,
-    accounts: {} as Record<string, { id: string; provider: string; plan: string; email: string }>,
+    accounts: {} as Record<string, DemoAccount>,
 
     account_labels: {} as Record<string, string>,
     key_labels: {} as Record<string, string>,
@@ -110,11 +131,13 @@ export function createUsageFixture(
   });
   subscriptionLineup.forEach((subscription, accountIndex) => {
     const accountId = hash(`account-${accountIndex}`);
+    const monthlyFee = 'monthlyFeeUsd' in subscription ? subscription.monthlyFeeUsd : null;
     payload.accounts[accountId] = {
       id: accountId,
       provider: subscription.provider,
       plan: subscription.plan,
       email: `${subscription.provider}-${accountIndex + 1}@example.test`,
+      ...(monthlyFee === null ? {} : { monthly_fee_usd: monthlyFee }),
     };
     payload.account_labels[accountId] = subscription.label;
     const scopes =
@@ -131,6 +154,7 @@ export function createUsageFixture(
           start = reset - WEEK;
         const used = 32 + ((accountIndex * 13 + scopeIndex * 7 + weekIndex * 17) % 62);
         const baseline = 0;
+        const weekRows: RawRow[] = [];
         const people: RawPerson[] = demoPeople.map(({ name }, personIndex) => {
           const weight = [1.5, 1.05, 0.75, 0.5][(personIndex + accountIndex) % 4];
           const uncached = Math.round(
@@ -153,7 +177,7 @@ export function createUsageFixture(
               ? Math.min(time - 2 * 3_600_000, start + (personIndex + 1) * DAY)
               : start + (personIndex + 1) * DAY;
           const requests = Math.round(180 * weight + accountIndex * 17);
-          payload.rows.push({
+          weekRows.push({
             date: iso(at).slice(0, 10),
             at: iso(at),
             model,
@@ -179,9 +203,14 @@ export function createUsageFixture(
           };
         });
         const total = people.reduce((sum, person) => sum + person.cost_usd, 0);
-        people.forEach((person) => {
+        people.forEach((person, personIndex) => {
           person.percent = total > 0 ? ((used - baseline) * person.cost_usd) / total : 0;
+          // Like the gateway: the key's quota share of the window's plan fee.
+          if (monthlyFee !== null && weekRows[personIndex].cost_usd !== null)
+            weekRows[personIndex].subscription_usd =
+              (((monthlyFee * 7) / 30) * person.percent) / 100 / scopes.length;
         });
+        payload.rows.push(...weekRows);
         if (subscription.provider === 'antigravity') continue;
         payload.weeks.push({
           id: `${accountId}|${scope}|${iso(reset)}`,
@@ -190,6 +219,7 @@ export function createUsageFixture(
           scope,
           period_seconds: WEEK / 1000,
           plan: subscription.plan,
+          monthly_fee_usd: monthlyFee,
           start: iso(start),
           reset: iso(reset),
           people,

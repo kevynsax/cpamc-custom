@@ -6,11 +6,25 @@ import (
 	"time"
 )
 
-// SpendAccount is the live credential metadata Spend needs for one account fingerprint.
-type SpendAccount struct {
+// AccountSubscription is the live credential metadata that prices one account fingerprint.
+type AccountSubscription struct {
 	Provider      string
 	Plan          string
 	MonthlyFeeUSD *float64
+}
+
+// ValuedRow is a usage row with its subscription value.
+type ValuedRow struct {
+	Row
+	// SubscriptionUSD is the row's part of the plan fee of the quota windows it ran
+	// in; absent when the fee, the quota or the row's API value is unknown.
+	SubscriptionUSD *float64 `json:"subscription_usd,omitempty"`
+}
+
+// ValuedUsage is the usage rows and quota windows of one date range, both priced.
+type ValuedUsage struct {
+	Rows    []ValuedRow
+	Windows []WeeklyReport
 }
 
 type cycleFamily struct {
@@ -55,6 +69,23 @@ func MonthlyPlanFee(provider, plan string) (float64, bool) {
 	return 0, false
 }
 
+// windowMonthlyFee is the monthly fee that prices one quota window: the credential's
+// explicit fee, else the public price of the plan recorded on the window, else of
+// the account's current plan.
+func windowMonthlyFee(report WeeklyReport, account AccountSubscription) (float64, bool) {
+	if account.MonthlyFeeUSD != nil {
+		return *account.MonthlyFeeUSD, true
+	}
+	provider := account.Provider
+	if provider == "" {
+		provider = report.Provider
+	}
+	if fee, known := MonthlyPlanFee(provider, report.Plan); known {
+		return fee, true
+	}
+	return MonthlyPlanFee(provider, account.Plan)
+}
+
 // proratedPlanFee spreads a monthly fee over the actual length of each UTC month in the window.
 func proratedPlanFee(monthly float64, window [2]time.Time) float64 {
 	result := 0.0
@@ -78,8 +109,10 @@ const duplicateWindowGap = 15 * time.Minute
 
 // distinctWindows drops repeated recordings of one quota window: starts chained
 // within duplicateWindowGap are one window, kept from its latest observation.
+// The result is ordered by start.
 func distinctWindows(cycles []WeeklyReport) []WeeklyReport {
-	sort.Slice(cycles, func(i, j int) bool { return cycles[i].Start.Before(cycles[j].Start) })
+	byStart := func(i, j int) bool { return cycles[i].Start.Before(cycles[j].Start) }
+	sort.Slice(cycles, byStart)
 	kept := []WeeklyReport{}
 	var previous time.Time
 	for _, cycle := range cycles {
@@ -97,22 +130,17 @@ func distinctWindows(cycles []WeeklyReport) []WeeklyReport {
 	return kept
 }
 
-// subscriptionValues is each key's subscription value per account in the window.
+// subscriptionRowValues is the subscription value of every row, by index; nil when
+// no priced quota window covers the row or its API value is unknown.
 // Every quota window, including one ended early by a reset, is worth the plan fee
-// for its full length; a key gets its attributed quota percentage of it, prorated
-// by how much of the window falls inside the reporting period. Independent
-// scope/duration families measure the same plan and are averaged.
-func subscriptionValues(reports []WeeklyReport, monthlyFees map[string]float64, window [2]time.Time, now time.Time) map[string]map[string]float64 {
-	limit := window[1]
-	if now.Before(limit) {
-		limit = now
-	}
+// for its full length. A key gets its attributed quota percentage of it, split
+// across the key's rows in the window by API value, so a row's value belongs to the
+// moment the usage happened. Independent scope/duration families measure the same
+// plan, so a row covered by several is worth their average.
+func subscriptionRowValues(rows []Row, reports []WeeklyReport) []*float64 {
 	families := map[string]map[cycleFamily][]WeeklyReport{}
 	for _, report := range reports {
-		if _, priced := monthlyFees[report.AccountID]; !priced {
-			continue
-		}
-		if !report.Start.Before(limit) || !report.Reset.After(window[0]) {
+		if report.MonthlyFeeUSD == nil {
 			continue
 		}
 		if families[report.AccountID] == nil {
@@ -121,91 +149,119 @@ func subscriptionValues(reports []WeeklyReport, monthlyFees map[string]float64, 
 		family := cycleFamily{Scope: report.Scope, Duration: report.Reset.Sub(report.Start)}
 		families[report.AccountID][family] = append(families[report.AccountID][family], report)
 	}
-	values := map[string]map[string]float64{}
+	byAccount := map[string][]int{}
+	for index, row := range rows {
+		if row.At.IsZero() || row.CostUSD == nil {
+			continue
+		}
+		byAccount[row.AccountID] = append(byAccount[row.AccountID], index)
+	}
+	sums := make([]float64, len(rows))
+	covering := make([]int, len(rows))
 	for account, accountFamilies := range families {
-		values[account] = map[string]float64{}
+		indexes := byAccount[account]
+		byTime := func(i, j int) bool { return rows[indexes[i]].At.Before(rows[indexes[j]].At) }
+		sort.SliceStable(indexes, byTime)
 		for _, cycles := range accountFamilies {
-			for _, cycle := range distinctWindows(cycles) {
-				start := cycle.Start
-				if window[0].After(start) {
-					start = window[0]
+			windows := distinctWindows(cycles)
+			for position, window := range windows {
+				end := window.Reset
+				// A reset starts the next window early; later usage belongs to that one.
+				if position+1 < len(windows) && windows[position+1].Start.Before(end) {
+					end = windows[position+1].Start
 				}
-				end := cycle.Reset
-				if window[1].Before(end) {
-					end = window[1]
-				}
-				overlap := end.Sub(start).Seconds() / cycle.Reset.Sub(cycle.Start).Seconds()
-				if overlap <= 0 || !cycle.AllocationAvailable {
-					continue
-				}
-				percents := 0.0
-				for _, person := range cycle.People {
-					percents += person.Percent
-				}
-				scale := 1.0
-				if percents > cycle.Used && percents > 0 {
-					scale = cycle.Used / percents
-				}
-				windowFee := proratedPlanFee(monthlyFees[account], [2]time.Time{cycle.Start, cycle.Reset})
-				for _, person := range cycle.People {
-					values[account][person.KeyID] += windowFee * overlap * person.Percent * scale / 100 / float64(len(accountFamilies))
-				}
+				valueWindow(window, end, rows, indexes, sums, covering)
 			}
 		}
+	}
+	values := make([]*float64, len(rows))
+	for index := range rows {
+		if covering[index] == 0 {
+			continue
+		}
+		value := sums[index] / float64(covering[index])
+		values[index] = &value
 	}
 	return values
 }
 
-// windowPlans is the plan reported by the latest cycle of each account in the window.
-func windowPlans(reports []WeeklyReport) map[string]string {
-	plans := map[string]string{}
-	for _, report := range reports {
-		if plans[report.AccountID] == "" {
-			plans[report.AccountID] = report.Plan
+// valueWindow adds one quota window's value to the rows it covers (indexes are one
+// account's priced rows ordered by time) and counts the window as covering them.
+// A window whose use cannot be tied to keys covers its rows with no value.
+func valueWindow(window WeeklyReport, end time.Time, rows []Row, indexes []int, sums []float64, covering []int) {
+	inWindow := func(i int) bool { return !rows[indexes[i]].At.Before(window.Start) }
+	first := sort.Search(len(indexes), inWindow)
+	costs := map[string]float64{}
+	var covered []int
+	for _, index := range indexes[first:] {
+		row := rows[index]
+		if !row.At.Before(end) {
+			break
 		}
-	}
-	return plans
-}
-
-// monthlyFees is the known monthly fee of every account; explicit metadata wins
-// over published plan prices.
-func monthlyFees(reports []WeeklyReport, accounts map[string]SpendAccount) map[string]float64 {
-	plans := windowPlans(reports)
-	fees := map[string]float64{}
-	for id, account := range accounts {
-		if account.MonthlyFeeUSD != nil {
-			fees[id] = *account.MonthlyFeeUSD
+		if !quotaScopeMatches(window.Scope, row.Model) {
 			continue
 		}
-		plan := account.Plan
-		if plan == "" {
-			plan = plans[id]
-		}
-		if monthly, known := MonthlyPlanFee(account.Provider, plan); known {
-			fees[id] = monthly
-		}
+		covered = append(covered, index)
+		costs[row.KeyID] += *row.CostUSD
 	}
-	return fees
-}
-
-// assignSubscription gives every item its part of the key's subscription value on
-// that account, split across the key's items by API value. Accounts without a
-// known fee or quota observation stay unset.
-func assignSubscription(items []SpendItem, reports []WeeklyReport, accounts map[string]SpendAccount, window [2]time.Time, now time.Time) {
-	fees := monthlyFees(reports, accounts)
-	values := subscriptionValues(reports, fees, window, now)
-	costs := map[[2]string]float64{}
-	for _, item := range items {
-		costs[[2]string{item.KeyID, item.AccountID}] += item.CostUSD
+	percents := map[string]float64{}
+	attributed := 0.0
+	for _, person := range window.People {
+		percents[person.KeyID] = person.Percent
+		attributed += person.Percent
 	}
-	for i := range items {
-		item := &items[i]
-		accountValues, measured := values[item.AccountID]
-		cost := costs[[2]string{item.KeyID, item.AccountID}]
-		if !measured || cost <= 0 {
+	scale := 1.0
+	if attributed > window.Used && attributed > 0 {
+		scale = window.Used / attributed
+	}
+	fullLength := [2]time.Time{window.Start, window.Reset}
+	fee := proratedPlanFee(*window.MonthlyFeeUSD, fullLength)
+	for _, index := range covered {
+		covering[index]++
+		row := rows[index]
+		keyCost := costs[row.KeyID]
+		if !window.AllocationAvailable || keyCost <= 0 {
 			continue
 		}
-		value := accountValues[item.KeyID] * item.CostUSD / cost
-		item.SubscriptionUSD = &value
+		sums[index] += fee * percents[row.KeyID] * scale / 100 * *row.CostUSD / keyCost
 	}
+}
+
+// ValuedUsage returns the rows and quota windows of the inclusive UTC date range.
+// accounts carries live credential metadata keyed by account fingerprint.
+func (s *Store) ValuedUsage(from, to string, accounts map[string]AccountSubscription) (ValuedUsage, error) {
+	before, after := paddedDates(from, to)
+	rows, err := s.Snapshot(before, after)
+	if err != nil {
+		return ValuedUsage{}, err
+	}
+	// Windows of the padded range are valued too, so a row's value does not depend on
+	// where the requested range ends.
+	reports, errReports := s.reports(rows, before, after)
+	if errReports != nil {
+		return ValuedUsage{}, errReports
+	}
+	valued := ValuedUsage{Rows: []ValuedRow{}, Windows: []WeeklyReport{}}
+	for index := range reports {
+		account := accounts[reports[index].AccountID]
+		fee, known := windowMonthlyFee(reports[index], account)
+		if known {
+			reports[index].MonthlyFeeUSD = &fee
+		}
+		resetDate := reports[index].Reset.UTC().Format(DateLayout)
+		startDate := reports[index].Start.UTC().Format(DateLayout)
+		if resetDate < from || startDate > to {
+			continue
+		}
+		valued.Windows = append(valued.Windows, reports[index])
+	}
+	values := subscriptionRowValues(rows, reports)
+	for index, row := range rows {
+		if row.Date < from || row.Date > to {
+			continue
+		}
+		valuedRow := ValuedRow{Row: row, SubscriptionUSD: values[index]}
+		valued.Rows = append(valued.Rows, valuedRow)
+	}
+	return valued, nil
 }

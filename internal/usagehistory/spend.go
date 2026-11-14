@@ -15,7 +15,7 @@ type SpendItem struct {
 	Mode      string  `json:"mode,omitempty"`
 	CostUSD   float64 `json:"cost_usd"`
 	Unpriced  int64   `json:"unpriced"`
-	// SubscriptionUSD is the prorated plan fee times the key's quota share; null when unknown.
+	// SubscriptionUSD is the subscription value of the item's rows; null when none has one.
 	SubscriptionUSD *float64 `json:"subscription_usd"`
 }
 
@@ -27,21 +27,17 @@ func SpendMaxOffset(period string) int {
 	return 50
 }
 
-// Spend sums API value per key, account and model for one week or month, using
-// the same rules as the Usage page: weeks start Thursday at 20:00 UTC-3,
-// months are UTC calendar months.
+// Spend sums API and subscription value per key, account and model for one week or
+// month, using the same rules as the Usage page: weeks start Thursday at 20:00
+// UTC-3, months are UTC calendar months.
 // accounts carries live credential metadata keyed by account fingerprint; its
 // provider overrides the provider recorded on an account's rows.
-func (s *Store) Spend(period string, offset int, accounts map[string]SpendAccount) ([]SpendItem, error) {
+func (s *Store) Spend(period string, offset int, accounts map[string]AccountSubscription) ([]SpendItem, error) {
 	now := s.now().UTC()
 	from, to := spendDates(period, offset, now)
-	rows, err := s.Snapshot(from, to)
+	valued, err := s.ValuedUsage(from, to, accounts)
 	if err != nil {
 		return nil, err
-	}
-	reports, errReports := s.Reports(from, to)
-	if errReports != nil {
-		return nil, errReports
 	}
 	window := spendWindow(period, offset, now)
 	end := window[1]
@@ -49,7 +45,7 @@ func (s *Store) Spend(period string, offset int, accounts map[string]SpendAccoun
 		end = limit
 	}
 	totals := map[string]*SpendItem{}
-	for _, row := range rows {
+	for _, row := range valued.Rows {
 		at := row.At
 		if at.IsZero() {
 			at, _ = time.Parse(DateLayout, row.Date)
@@ -67,9 +63,17 @@ func (s *Store) Spend(period string, offset int, accounts map[string]SpendAccoun
 			item = &SpendItem{KeyID: row.KeyID, AccountID: row.AccountID, Provider: provider, Model: row.Model, Mode: row.Mode}
 			totals[key] = item
 		}
-		cost, unpriced := spendValue(row)
+		cost, unpriced := spendValue(row.Row)
 		item.CostUSD += cost
 		item.Unpriced += unpriced
+		if row.SubscriptionUSD == nil {
+			continue
+		}
+		subscription := *row.SubscriptionUSD
+		if item.SubscriptionUSD != nil {
+			subscription += *item.SubscriptionUSD
+		}
+		item.SubscriptionUSD = &subscription
 	}
 	keys := make([]string, 0, len(totals))
 	for key := range totals {
@@ -80,7 +84,6 @@ func (s *Store) Spend(period string, offset int, accounts map[string]SpendAccoun
 	for _, key := range keys {
 		items = append(items, *totals[key])
 	}
-	assignSubscription(items, reports, accounts, window, now)
 	return items, nil
 }
 

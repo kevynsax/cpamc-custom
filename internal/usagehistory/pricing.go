@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -91,8 +90,15 @@ func OpenPricing(dir string) (*Pricing, error) {
 
 func (p *Pricing) AsOf() string { p.mu.RLock(); defer p.mu.RUnlock(); return p.catalog.AsOf }
 
-// Run refreshes public prices daily without adding upstream inference deadlines.
+// Run refreshes public prices at start when the catalog is from an earlier day, then
+// daily, without adding upstream inference deadlines.
 func (p *Pricing) Run(ctx context.Context) {
+	today := time.Now().UTC().Format(DateLayout)
+	if p.AsOf() < today {
+		if err := p.Refresh(ctx); err != nil {
+			log.WithError(err).Warn("Refresh public API price catalog")
+		}
+	}
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
 	for {
@@ -255,61 +261,100 @@ func (p *Pricing) resolveStandard(record usage.Record) *Rates {
 	if model == "" {
 		model = strings.TrimSpace(record.Model)
 	}
-	for _, candidate := range []string{record.Alias, model} {
-		if info, found := referenceModels()[candidate]; found && (info.Status == "self_hosted" || info.Status == "subscription_only" || info.Status == "unpublished") {
-			return nil
-		}
-	}
-	for _, unsupported := range []string{"audio", "realtime", "image", "video", "tts", "transcrib"} {
-		if strings.Contains(strings.ToLower(model), unsupported) {
-			return nil
-		}
-	}
-	if fallback := researchedTokenRate(model); fallback != nil {
-		if p == nil || p.AsOf() <= fallback.AsOf {
-			return effectiveRate(*fallback, record)
-		}
-	}
-	if p == nil {
+	if withoutTokenTariff(record.Alias) {
 		return nil
 	}
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-	vendor := ""
-	provider := strings.ToLower(record.Provider + " " + record.ExecutorType)
-	switch {
-	case strings.Contains(provider, "claude"):
-		vendor = "anthropic"
-	case strings.Contains(provider, "codex"):
-		vendor = "openai"
-	case strings.Contains(provider, "gemini"):
-		vendor = "google"
-	case strings.Contains(provider, "xai"):
-		vendor = "xai"
+	owner := record.Provider + " " + record.ExecutorType
+	rate := p.standardRate(owner, model)
+	if rate == nil {
+		return nil
 	}
-	if vendor != "" {
-		if rate, ok := p.catalog.Models[vendor+"/"+model]; ok {
-			return effectiveRate(rate, record)
+	return effectiveRate(*rate, record)
+}
+
+// withoutTokenTariff reports whether the researched snapshot says the model has no
+// public per-token tariff (self-hosted, subscription-only or unpublished).
+func withoutTokenTariff(model string) bool {
+	info, found := referenceModels()[model]
+	if !found {
+		return false
+	}
+	return info.Status == "self_hosted" || info.Status == "subscription_only" || info.Status == "unpublished"
+}
+
+// mediaModel reports whether a model is billed in images, seconds, minutes or
+// characters instead of text tokens.
+func mediaModel(model string) bool {
+	name := strings.ToLower(model)
+	for _, kind := range []string{"audio", "realtime", "image", "video", "tts", "transcrib"} {
+		if strings.Contains(name, kind) {
+			return true
 		}
 	}
-	if rate, ok := p.catalog.Models[model]; ok {
-		return effectiveRate(rate, record)
+	return false
+}
+
+// standardRate is a model's standard token tariff, shared by usage pricing and the
+// model-price cards: the researched snapshot until the public catalog is newer.
+// owner is the credential provider, executor or model owner.
+func (p *Pricing) standardRate(owner, model string) *Rates {
+	if withoutTokenTariff(model) || mediaModel(model) {
+		return nil
 	}
-	// Canonical model names may be routed through compatible/custom providers.
+	researched := researchedTokenRate(model)
+	if p == nil {
+		return researched
+	}
+	listed, found := p.catalogRate(owner, model)
+	if !found {
+		return researched
+	}
+	if researched != nil && listed.AsOf <= researched.AsOf {
+		return researched
+	}
+	return &listed
+}
+
+// catalogRate finds a model's public tariff: under its vendor, by its bare id, or
+// under the only vendor that lists it (canonical names routed through other providers).
+func (p *Pricing) catalogRate(owner, model string) (Rates, bool) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	vendorKey := priceVendor(owner) + "/" + model
+	if rate, ok := p.catalog.Models[vendorKey]; ok {
+		return rate, true
+	}
+	if rate, ok := p.catalog.Models[model]; ok {
+		return rate, true
+	}
 	var candidates []string
 	for key := range p.catalog.Models {
 		if strings.HasSuffix(key, "/"+model) {
 			candidates = append(candidates, key)
 		}
 	}
-	sort.Strings(candidates)
-	if len(candidates) == 1 {
-		return effectiveRate(p.catalog.Models[candidates[0]], record)
+	if len(candidates) != 1 {
+		return Rates{}, false
 	}
-	if fallback := researchedTokenRate(model); fallback != nil {
-		return effectiveRate(*fallback, record)
+	return p.catalog.Models[candidates[0]], true
+}
+
+// priceVendor maps a credential provider, executor or model owner to its vendor in
+// the public catalog. Owners such as openai, anthropic or meta already are vendors.
+func priceVendor(owner string) string {
+	trimmed := strings.TrimSpace(owner)
+	name := strings.ToLower(trimmed)
+	switch {
+	case strings.Contains(name, "claude"):
+		return "anthropic"
+	case strings.Contains(name, "codex"):
+		return "openai"
+	case strings.Contains(name, "gemini"), strings.Contains(name, "antigravity"):
+		return "google"
+	case strings.Contains(name, "xai"):
+		return "xai"
 	}
-	return nil
+	return name
 }
 
 func effectiveRate(rate Rates, record usage.Record) *Rates {

@@ -24,14 +24,16 @@ type ModelReference struct {
 	Overridden       bool               `json:"overridden"`
 }
 
+type referenceFile struct {
+	Models []ModelReference `json:"models"`
+}
+
 var referencesOnce sync.Once
 var references map[string]ModelReference
 
 func referenceModels() map[string]ModelReference {
 	referencesOnce.Do(func() {
-		var data struct {
-			Models []ModelReference `json:"models"`
-		}
+		var data referenceFile
 		references = map[string]ModelReference{}
 		if json.Unmarshal(referenceData, &data) != nil {
 			return
@@ -60,69 +62,42 @@ func cloneReference(model ModelReference) ModelReference {
 	return model
 }
 
+// ModelReference is the price card of a registry model. A token model shows the same
+// standard tariff usage is priced with, so a model missing from the researched
+// snapshot still gets its public catalog price. Manual settings win.
 func (p *Pricing) ModelReference(id, provider, canonical string, settings Settings) ModelReference {
-	model, ok := referenceModels()[id]
+	// An alias without its own entry is priced as the model it routes to.
+	name := id
+	model, ok := referenceModels()[name]
 	if !ok && canonical != "" {
-		model, ok = referenceModels()[canonical]
+		name = canonical
+		model, ok = referenceModels()[name]
 	}
 	if !ok {
-		model = ModelReference{ID: id, Provider: provider, Kind: "tokens", Status: "unpublished", Prices: map[string]float64{}, Sources: []string{}}
+		model = ModelReference{Kind: "tokens", Status: "unpublished", Prices: map[string]float64{}, Sources: []string{}}
 	}
 	model = cloneReference(model)
-	if p != nil && model.Kind == "tokens" && model.Status == "published" {
-		p.mu.RLock()
-		rate, found := p.catalog.Models[model.Provider+"/"+model.ID]
-		if found && p.catalog.AsOf > model.CheckedAt {
-			fields := map[string]float64{"input": rate.Input, "output": rate.Output}
-			if rate.CacheRead != nil {
-				fields["cache_read"] = *rate.CacheRead
-			}
-			if rate.CacheWrite != nil {
-				fields["cache_write"] = *rate.CacheWrite
-			}
-			if model.Provider == "anthropic" {
-				fields["cache_write_1h"] = 2 * rate.Input
-			}
-			if long := rate.LongContext; long != nil {
-				fields["long_input"] = long.Input
-				fields["long_output"] = long.Output
-				if long.CacheRead != nil {
-					fields["long_cache_read"] = *long.CacheRead
-				}
-				if long.CacheWrite != nil {
-					fields["long_cache_write"] = *long.CacheWrite
-				}
-			}
-			model.Prices = fields
-			model.ContextThreshold = rate.ContextOver
-			model.ContextInclusive = rate.ContextInclusive
-			model.CheckedAt = p.catalog.AsOf
-			model.Sources = []string{"https://models.dev/api.json"}
-		}
-		p.mu.RUnlock()
-	}
 	model.ID = id
 	model.Provider = provider
+	if model.Kind == "tokens" {
+		if rate := p.standardRate(provider, name); rate != nil {
+			model.Status = "published"
+			model.Prices = rateFields(*rate)
+			if priceVendor(provider) == "anthropic" {
+				model.Prices["cache_write_1h"] = 2 * rate.Input
+			}
+			model.ContextThreshold = rate.ContextOver
+			model.ContextInclusive = rate.ContextInclusive
+			model.CheckedAt = rate.AsOf
+			if strings.HasPrefix(rate.Source, "models.dev/") {
+				model.Sources = []string{"https://models.dev/api.json"}
+			}
+		}
+	}
 	if rates, found := settings.Prices[id]; found && model.Kind == "tokens" {
-		model.Prices = map[string]float64{"input": rates.Input, "output": rates.Output}
-		if rates.CacheRead != nil {
-			model.Prices["cache_read"] = *rates.CacheRead
-		}
-		if rates.CacheWrite != nil {
-			model.Prices["cache_write"] = *rates.CacheWrite
-		}
+		model.Prices = rateFields(rates)
 		model.ContextThreshold = rates.ContextOver
 		model.ContextInclusive = rates.ContextInclusive
-		if rates.LongContext != nil {
-			model.Prices["long_input"] = rates.LongContext.Input
-			model.Prices["long_output"] = rates.LongContext.Output
-			if rates.LongContext.CacheRead != nil {
-				model.Prices["long_cache_read"] = *rates.LongContext.CacheRead
-			}
-			if rates.LongContext.CacheWrite != nil {
-				model.Prices["long_cache_write"] = *rates.LongContext.CacheWrite
-			}
-		}
 		model.Overridden = true
 	}
 	if fields, found := settings.UnitPrices[id]; found {
@@ -133,6 +108,30 @@ func (p *Pricing) ModelReference(id, provider, canonical string, settings Settin
 		model.Overridden = true
 	}
 	return model
+}
+
+// rateFields flattens a token tariff into price-card fields.
+func rateFields(rate Rates) map[string]float64 {
+	fields := map[string]float64{"input": rate.Input, "output": rate.Output}
+	if rate.CacheRead != nil {
+		fields["cache_read"] = *rate.CacheRead
+	}
+	if rate.CacheWrite != nil {
+		fields["cache_write"] = *rate.CacheWrite
+	}
+	long := rate.LongContext
+	if long == nil {
+		return fields
+	}
+	fields["long_input"] = long.Input
+	fields["long_output"] = long.Output
+	if long.CacheRead != nil {
+		fields["long_cache_read"] = *long.CacheRead
+	}
+	if long.CacheWrite != nil {
+		fields["long_cache_write"] = *long.CacheWrite
+	}
+	return fields
 }
 
 func researchedTokenRate(model string) *Rates {
