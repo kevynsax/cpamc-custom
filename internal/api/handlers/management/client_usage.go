@@ -80,9 +80,15 @@ func (h *Handler) GetClientUsage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "from and to must be inclusive UTC dates within the last 365 days"})
 		return
 	}
+	// Subscription value is split inside reporting periods of this kind.
+	period := c.DefaultQuery("period", "week")
+	if period != "week" && period != "month" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "period must be week or month"})
+		return
+	}
 	accounts := h.clientUsageAccounts()
 	subscriptions := usageSubscriptions(accounts)
-	valued, err := h.clientUsage.ValuedUsage(from, to, subscriptions)
+	valued, err := h.clientUsage.ValuedUsage(from, to, period, subscriptions)
 	if err != nil {
 		log.WithError(err).Error("Read client usage history")
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "client usage history persistence unavailable"})

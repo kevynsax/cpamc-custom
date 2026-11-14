@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite';
 import type { IncomingMessage } from 'node:http';
-import { createUsageFixture, type DemoSettings } from './fixtures';
+import { assignSubscriptionValues, createUsageFixture, type DemoSettings } from './fixtures';
 import { demoPeople } from './people';
 
 export function validDemoSettings(value: unknown): value is DemoSettings {
@@ -139,6 +139,8 @@ export function usageDemoPlugin(): Plugin {
           ) {
             const from = url.searchParams.get('from') ?? fixture.from,
               to = url.searchParams.get('to') ?? fixture.to;
+            const period = url.searchParams.get('period') === 'month' ? 'month' : 'week';
+            assignSubscriptionValues(fixture, period);
             const models = fixture.models.map((model) => {
               const unit = fixture.settings.unit_prices?.[model.id];
               const rate = fixture.settings.prices[model.id];

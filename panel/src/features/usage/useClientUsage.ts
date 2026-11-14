@@ -6,12 +6,12 @@ import {
 } from '@/services/api/clientUsage';
 import { useAuthStore } from '@/stores';
 
-export function useClientUsage(from?: string, to?: string) {
+export function useClientUsage(from?: string, to?: string, period?: 'week' | 'month') {
   const apiBase = useAuthStore((state) => state.apiBase);
   const managementKey = useAuthStore((state) => state.managementKey);
   const connected = useAuthStore((state) => state.connectionStatus === 'connected');
   const connectionScope = JSON.stringify([apiBase, managementKey, connected]);
-  const scope = JSON.stringify([connectionScope, from, to]);
+  const scope = JSON.stringify([connectionScope, from, to, period]);
   const sequence = useRef(0),
     alive = useRef(false),
     mutating = useRef<string | null>(null);
@@ -45,7 +45,7 @@ export function useClientUsage(from?: string, to?: string) {
     const request = ++sequence.current;
     setStatus({ scope, loading: true, error: false });
     try {
-      const data = await clientUsageApi.get(from, to);
+      const data = await clientUsageApi.get(from, to, period);
       if (!matches() || request !== sequence.current) return false;
       setResult({ scope, connectionScope, data });
       setStatus({ scope, loading: false, error: false });
@@ -55,7 +55,7 @@ export function useClientUsage(from?: string, to?: string) {
         setStatus({ scope, loading: false, error: true });
       return false;
     }
-  }, [connected, matches, scope, connectionScope, from, to]);
+  }, [connected, matches, scope, connectionScope, from, to, period]);
   const refresh = useCallback(async () => {
     await reload();
   }, [reload]);

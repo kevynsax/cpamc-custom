@@ -35,7 +35,7 @@ func SpendMaxOffset(period string) int {
 func (s *Store) Spend(period string, offset int, accounts map[string]AccountSubscription) ([]SpendItem, error) {
 	now := s.now().UTC()
 	from, to := spendDates(period, offset, now)
-	valued, err := s.ValuedUsage(from, to, accounts)
+	valued, err := s.ValuedUsage(from, to, period, accounts)
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +46,7 @@ func (s *Store) Spend(period string, offset int, accounts map[string]AccountSubs
 	}
 	totals := map[string]*SpendItem{}
 	for _, row := range valued.Rows {
-		at := row.At
-		if at.IsZero() {
-			at, _ = time.Parse(DateLayout, row.Date)
-		}
+		at := rowInstant(row.Row)
 		if at.Before(window[0]) || !at.Before(end) {
 			continue
 		}
@@ -96,18 +93,39 @@ func spendValue(row Row) (float64, int64) {
 	return *row.CostUSD, row.UnpricedRequests
 }
 
-// spendWindow uses fixed reporting boundaries, never provider quota-reset times.
+// rowInstant is when a row's usage happened; rows without a time count at the start of their UTC day.
+func rowInstant(row Row) time.Time {
+	if !row.At.IsZero() {
+		return row.At
+	}
+	at, _ := time.Parse(DateLayout, row.Date)
+	return at
+}
+
+// reportingPeriod is the week or month that contains an instant. Boundaries are fixed,
+// never provider quota-reset times: weeks start Thursday at 23:00 UTC, months are UTC
+// calendar months.
+func reportingPeriod(period string, at time.Time) [2]time.Time {
+	at = at.UTC()
+	if period == "month" {
+		return [2]time.Time{monthStart(at, 0), monthStart(at, -1)}
+	}
+	daysSinceThursday := (int(at.Weekday()) - int(time.Thursday) + 7) % 7
+	start := time.Date(at.Year(), at.Month(), at.Day(), 23, 0, 0, 0, time.UTC).AddDate(0, 0, -daysSinceThursday)
+	if start.After(at) {
+		start = start.Add(-Week)
+	}
+	return [2]time.Time{start, start.Add(Week)}
+}
+
+// spendWindow is the reporting period offset periods before the one that contains now.
 func spendWindow(period string, offset int, now time.Time) [2]time.Time {
 	now = now.UTC()
 	if period == "month" {
 		return [2]time.Time{monthStart(now, offset), monthStart(now, offset-1)}
 	}
-	daysSinceThursday := (int(now.Weekday()) - int(time.Thursday) + 7) % 7
-	start := time.Date(now.Year(), now.Month(), now.Day(), 23, 0, 0, 0, time.UTC).AddDate(0, 0, -daysSinceThursday)
-	if start.After(now) {
-		start = start.Add(-Week)
-	}
-	start = start.Add(-time.Duration(offset) * Week)
+	current := reportingPeriod(period, now)
+	start := current[0].Add(-time.Duration(offset) * Week)
 	return [2]time.Time{start, start.Add(Week)}
 }
 

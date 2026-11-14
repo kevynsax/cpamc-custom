@@ -92,7 +92,60 @@ interface RawWeek {
   closed: boolean;
   allocation_available: boolean;
 }
+interface DemoUsage {
+  rows: RawRow[];
+  accounts: Record<string, DemoAccount>;
+}
 export type DemoSettings = ReturnType<typeof createUsageFixture>['settings'];
+
+/** The gateway's reporting period around an instant: UTC months, weeks from Thursday 23:00 UTC. */
+function demoPeriod(period: 'week' | 'month', at: number) {
+  const date = new Date(at);
+  if (period === 'month')
+    return {
+      start: Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1),
+      end: Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1),
+    };
+  const daysSinceThursday = (date.getUTCDay() + 3) % 7;
+  let start =
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23) -
+    daysSinceThursday * DAY;
+  if (start > at) start -= WEEK;
+  return { start, end: start + WEEK };
+}
+
+/** A monthly fee spread over the days of each UTC month in the range. */
+function demoPeriodFee(monthlyFee: number, start: number, end: number) {
+  let fee = 0;
+  let cursor = start;
+  while (cursor < end) {
+    const date = new Date(cursor);
+    const monthStart = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1);
+    const next = Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1);
+    const until = Math.min(next, end);
+    fee += (monthlyFee * (until - cursor)) / (next - monthStart);
+    cursor = until;
+  }
+  return fee;
+}
+
+/** Like the gateway: each account's fee for a whole reporting period, split across its rows by API value. */
+export function assignSubscriptionValues(usage: DemoUsage, period: 'week' | 'month') {
+  const periodOf = (row: RawRow) => demoPeriod(period, Date.parse(row.at));
+  const groupOf = (row: RawRow) => `${row.account_id}|${periodOf(row).start}`;
+  const totals = new Map<string, number>();
+  for (const row of usage.rows)
+    totals.set(groupOf(row), (totals.get(groupOf(row)) ?? 0) + (row.cost_usd ?? 0));
+  for (const row of usage.rows) {
+    delete row.subscription_usd;
+    const monthlyFee = usage.accounts[row.account_id]?.monthly_fee_usd;
+    const total = totals.get(groupOf(row)) ?? 0;
+    if (monthlyFee === undefined || row.cost_usd === null || total <= 0) continue;
+    const range = periodOf(row);
+    const periodFee = demoPeriodFee(monthlyFee, range.start, range.end);
+    row.subscription_usd = (periodFee * row.cost_usd) / total;
+  }
+}
 
 export function createUsageFixture(
   now = new Date(),
@@ -154,7 +207,6 @@ export function createUsageFixture(
           start = reset - WEEK;
         const used = 32 + ((accountIndex * 13 + scopeIndex * 7 + weekIndex * 17) % 62);
         const baseline = 0;
-        const weekRows: RawRow[] = [];
         const people: RawPerson[] = demoPeople.map(({ name }, personIndex) => {
           const weight = [1.5, 1.05, 0.75, 0.5][(personIndex + accountIndex) % 4];
           const uncached = Math.round(
@@ -177,7 +229,7 @@ export function createUsageFixture(
               ? Math.min(time - 2 * 3_600_000, start + (personIndex + 1) * DAY)
               : start + (personIndex + 1) * DAY;
           const requests = Math.round(180 * weight + accountIndex * 17);
-          weekRows.push({
+          payload.rows.push({
             date: iso(at).slice(0, 10),
             at: iso(at),
             model,
@@ -203,14 +255,9 @@ export function createUsageFixture(
           };
         });
         const total = people.reduce((sum, person) => sum + person.cost_usd, 0);
-        people.forEach((person, personIndex) => {
+        people.forEach((person) => {
           person.percent = total > 0 ? ((used - baseline) * person.cost_usd) / total : 0;
-          // Like the gateway: the key's quota share of the window's plan fee.
-          if (monthlyFee !== null && weekRows[personIndex].cost_usd !== null)
-            weekRows[personIndex].subscription_usd =
-              (((monthlyFee * 7) / 30) * person.percent) / 100 / scopes.length;
         });
-        payload.rows.push(...weekRows);
         if (subscription.provider === 'antigravity') continue;
         payload.weeks.push({
           id: `${accountId}|${scope}|${iso(reset)}`,
@@ -302,5 +349,6 @@ export function createUsageFixture(
     });
   }
   payload.rows = payload.rows.filter((row) => Date.parse(row.at) <= time);
+  assignSubscriptionValues(payload, 'week');
   return payload;
 }

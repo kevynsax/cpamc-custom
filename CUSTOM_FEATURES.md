@@ -57,16 +57,16 @@ Company, person and model-price card collections use responsive CSS-column mason
 A segmented **API / Subscription** switch next to the total re-prices the person card,
 company pies and person details. The gateway computes subscription value once
 (`internal/usagehistory/subscription.go`) and returns it on every usage row; the panel and
-CPAMC Bar only sum it. Every quota window is worth the plan fee for its full length, even
-when a manual reset ends it early; each key gets its attributed quota percentage of the
-window, split across the key's rows in that window by API value. A row's value belongs to
-the moment the usage happened, so a period is the sum of its rows, like API value. A row
-covered by several independent windows (for example five-hour and weekly) is worth their
-average. Each window is priced with the plan recorded on it, so a plan change does not
-re-price earlier windows; an explicit `monthly_fee_usd` on the credential wins, and the
-account's current plan is the fallback. Repeated recordings of one window (starts within
-15 minutes) count once. Use that cannot be tied to a key stays out. Rows without a known
-fee, quota observation or API value stay unpriced.
+CPAMC Bar only sum it. Both views price the same usage: the API view at token prices, the
+Subscription view at what the plans cost. Each account's fee for a whole reporting period
+(week or month) is split across the account's usage in that period by API value, so a
+period with any priced usage totals the full fee of that period, already while it is
+running, and quota left unused is paid for by those who used the account. Quota
+percentages and resets do not change the value. A monthly fee is prorated by the days of
+each UTC month in the period. The plan recorded on each quota window applies from that
+window's start until the next one starts, so a plan change re-prices only the time after
+it; an explicit `monthly_fee_usd` on the credential wins, and an account without recorded
+windows uses its current plan. Rows without a known fee or API value stay unpriced.
 Model-price cards always use API value. CPAMC Bar has the same switch on its spend card.
 Usage uses the standard Lucide Wallet icon in both navigation and its page heading.
 Informational company/person cards and account rows are omitted when they have no
@@ -223,11 +223,12 @@ pay-as-you-go API rate; Z.ai's promotional free cache storage is not a per-token
 price. Local aliases are not assigned invented hosted tariffs.
 
 All endpoints use existing v8 management authentication:
-- `GET /v8/management/observability/usage/clients?from=YYYY-MM-DD&to=YYYY-MM-DD`
+- `GET /v8/management/observability/usage/clients?from=YYYY-MM-DD&to=YYYY-MM-DD&period=week|month`
   returns minute/model rows for inclusive UTC dates (default last 30 days), summarized
   reset-cycle reports under the legacy `weeks` field, account/key labels, accounts,
   configured model-price references, settings, collection status and catalog date.
-  Each row may carry `subscription_usd` (absent when unknown), each cycle report its
+  Each row may carry `subscription_usd` (absent when unknown), valued within reporting
+  periods of the `period` kind (default `week`); each cycle report its
   `monthly_fee_usd` (`null` when unknown), and each account its `monthly_fee_usd`
   (explicit credential fee, else the public price of its current plan).
   `key_names` carries shared names (including clear tombstones), and `key_kinds`

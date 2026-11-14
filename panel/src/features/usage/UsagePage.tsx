@@ -42,7 +42,7 @@ export function UsagePage() {
     saving,
     refresh,
     saveSettings,
-  } = useClientUsage(usageRange(period, offset + 1, now).from, range.to);
+  } = useClientUsage(usageRange(period, offset + 1, now).from, range.to, period);
   const data = usageData && offset === 0 ? withGrokAvailability(usageData) : usageData;
   const quote = useCrossQuote();
   const theme = useThemeStore((state) => state.resolvedTheme);

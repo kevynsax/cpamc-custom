@@ -120,7 +120,7 @@
     "basis_api": "API",
     "basis_subscription": "Subscription",
     "basis_api_hint": "Standard token API price of the recorded usage",
-    "basis_subscription_hint": "Plan fee of each quota window, times each person's share of that window",
+    "basis_subscription_hint": "What the plans cost in this period, split by each person's share of the usage",
     "spend_hint": "One key is one person. Longer bars mean more API-equivalent value, not a larger bill.",
     "subscription_title": "Subscription use",
     "subscription_hint": "100% = one full week of {{plan}} on this account.",

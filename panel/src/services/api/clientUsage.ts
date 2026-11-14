@@ -19,7 +19,7 @@ export interface ClientUsageRow {
   totalTokens: number;
   costUsd: number | null;
   unpriced: number;
-  /** The row's part of its quota windows' plan fee; absent when unknown. */
+  /** The row's part of what its account's plan costs in its reporting period; absent when unknown. */
   subscriptionUsd?: number;
 }
 
@@ -311,9 +311,11 @@ export function normalizeClientUsage(value: unknown): ClientUsageResponse {
 }
 
 export const clientUsageApi = {
-  async get(from?: string, to?: string): Promise<ClientUsageResponse> {
+  /** `period` is the kind of reporting period subscription value is split in. */
+  async get(from?: string, to?: string, period?: 'week' | 'month'): Promise<ClientUsageResponse> {
+    const params = { from, to, period };
     return normalizeClientUsage(
-      await apiClient.get<unknown>('/observability/usage/clients', { params: { from, to } })
+      await apiClient.get<unknown>('/observability/usage/clients', { params })
     );
   },
   saveSettings: (settings: UsageSettings) =>
