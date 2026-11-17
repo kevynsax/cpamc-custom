@@ -51,6 +51,7 @@ func (s *Server) registerManagementV8Routes() {
 	v8.POST("/observability/usage/prices/refresh", s.mgmt.RefreshClientUsagePrices)
 	v8.GET("/observability/usage/snapshot", s.mgmt.GetUsageSnapshot) // CUSTOM (cpamc-custom): read-only quarterly-hour snapshot
 	v8.GET("/observability/usage/queue", s.mgmt.GetUsageQueue)
+	v8.GET("/observability/requests/in-flight", s.mgmt.GetInFlightRequests)
 
 	v8.GET("/credentials", s.mgmt.ListAuthFiles)
 	v8.POST("/credentials", s.mgmt.UploadAuthFileV8)
