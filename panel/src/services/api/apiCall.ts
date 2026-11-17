@@ -8,11 +8,15 @@ import { quotaCacheRoute } from './customQuotaApiCall'; // CUSTOM (cpamc-custom)
 
 // CUSTOM (cpamc-custom): quota-scoped calls use the backend cache endpoint; a stock
 // backend without it (404) transparently falls back to the direct proxy.
-const postApiCall = async (payload: ApiCallRequest, config?: AxiosRequestConfig) => {
+const postApiCall = async (
+  client: Pick<typeof apiClient, 'post'>,
+  payload: ApiCallRequest,
+  config?: AxiosRequestConfig
+) => {
   const route = quotaCacheRoute();
   if (route) {
     try {
-      return await apiClient.post<Record<string, unknown>>(
+      return await client.post<Record<string, unknown>>(
         route.path,
         { ...payload, force: route.force },
         config
@@ -21,7 +25,7 @@ const postApiCall = async (payload: ApiCallRequest, config?: AxiosRequestConfig)
       if ((err as { status?: number })?.status !== 404) throw err;
     }
   }
-  return apiClient.post<Record<string, unknown>>('/requests/api-call', payload, config);
+  return client.post<Record<string, unknown>>('/requests/api-call', payload, config);
 };
 import { isRecord } from '@/utils/helpers';
 
@@ -95,9 +99,9 @@ export const getApiCallErrorMessage = (result: ApiCallResult): string => {
   return message || 'Request failed';
 };
 
-export const apiCallApi = {
+const createApiCallApi = (client: Pick<typeof apiClient, 'post'>) => ({
   request: async (payload: ApiCallRequest, config?: AxiosRequestConfig): Promise<ApiCallResult> => {
-    const response = await postApiCall(payload, config); // CUSTOM (cpamc-custom)
+    const response = await postApiCall(client, payload, config); // CUSTOM (cpamc-custom)
     const statusCode = Number(response?.status_code ?? 0);
     const header = (response?.header ?? {}) as Record<string, string[]>;
     const { bodyText, body } = normalizeBody(response?.body);
@@ -109,4 +113,10 @@ export const apiCallApi = {
       body,
     };
   },
-};
+});
+
+export const apiCallApi = createApiCallApi(apiClient);
+
+/** Pin a mutation to its initiating connection, including response event ownership. */
+export const captureApiCallApi = (isCurrent?: () => boolean) =>
+  createApiCallApi(apiClient.captureConnection(isCurrent));
