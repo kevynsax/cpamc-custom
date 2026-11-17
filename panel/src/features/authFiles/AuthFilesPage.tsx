@@ -581,7 +581,6 @@ export function AuthFilesPage() {
       statusUpdating={statusUpdating}
       manualRefreshing={manualRefreshing}
       cooldownResetting={cooldownResetting}
-      quotaFilterType={activeQuotaFilter}
       statusBarCache={statusBarCache}
       entranceDelayMs={cardEntranceDelay(index)}
       onShowModels={showModels}
@@ -718,7 +717,7 @@ export function AuthFilesPage() {
           <StackedColumns
             stacked={layout !== 'even'}
             className={layout === 'even' ? gridClasses : undefined}
-            minColumnWidth={compactMode && !activeQuotaFilter ? 260 : 340}
+            minColumnWidth={compactMode ? 260 : 340}
             gap={16}
             items={pageItems.map((file, index) => ({
               key: getQuotaCacheKey(file),
