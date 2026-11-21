@@ -56,6 +56,8 @@ func (s *Server) setupRoutes() {
 	s.engine.HEAD("/healthz", healthzHandler)
 
 	s.engine.GET("/management.html", s.serveManagementControlPanel)
+	s.engine.GET("/setup", customSetupHandler)       // CUSTOM (cpamc-custom): public client setup kit
+	s.engine.GET("/setup/*file", customSetupHandler) // CUSTOM (cpamc-custom)
 	openaiHandlers := openai.NewOpenAIAPIHandler(s.handlers)
 	geminiHandlers := gemini.NewGeminiAPIHandler(s.handlers)
 	claudeCodeHandlers := claude.NewClaudeCodeAPIHandler(s.handlers)
@@ -79,8 +81,8 @@ func (s *Server) setupRoutes() {
 		v1.POST("/completions", openaiHandlers.Completions)
 		// CUSTOM (cpamc-custom): minimax/image-01* and minimax/MiniMax-H3-Image* to MiniMax, every other model upstream
 		v1.POST("/images/generations", s.customImagesDispatch(openaiHandlers.ImagesGenerations))
-		v1.POST("/audio/speech", s.customSpeechDispatch(openaiHandlers.AudioSpeech)) // CUSTOM (cpamc-custom): MiniMax TTS default, grok-tts* to upstream, chatterbox to home-gpu
-		v1.POST("/audio/transcriptions", s.customTranscriptions)                     // CUSTOM (cpamc-custom): whisper on home-gpu llama-swap
+		v1.POST("/audio/speech", s.customSpeechDispatch(openaiHandlers.AudioSpeech))      // CUSTOM (cpamc-custom): MiniMax TTS default, grok-tts* to upstream, chatterbox to home-gpu
+		v1.POST("/audio/transcriptions", s.customTranscriptions)                          // CUSTOM (cpamc-custom): whisper on home-gpu llama-swap
 		v1.POST("/images/edits", s.customImagesEditsDispatch(openaiHandlers.ImagesEdits)) // CUSTOM (cpamc-custom): minimax/MiniMax-H3-Image edits to MiniMax
 		// CUSTOM (cpamc-custom): minimax/* Hailuo V1 to MiniMax; every other model upstream (xAI native)
 		v1.POST("/videos", s.customVideosCreateDispatch(openaiHandlers.XAIVideosGenerations))

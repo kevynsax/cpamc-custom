@@ -1,0 +1,20 @@
+{
+  "inferenceProvider": "gateway",
+  "inferenceGatewayBaseUrl": "https://ai-models.kevyn.com.br",
+  "inferenceCredentialKind": "helper-script",
+  "inferenceGatewayAuthScheme": "bearer",
+  "inferenceCredentialHelper": "__HELPER__",
+  "inferenceCredentialHelperTtlSec": 300,
+  "modelDiscoveryEnabled": false,
+  "coworkEgressAllowedHosts": ["*"],
+  "defaultModelEffort": "high",
+  "inferenceModels": [
+    { "name": "claude-opus-5-5", "labelOverride": "Claude Opus 5.5", "maxEffort": "max", "supports1m": true, "prefer1m": true, "anthropicFamilyTier": "opus", "isFamilyDefault": true },
+    { "name": "claude-fable-5-2", "labelOverride": "Claude Fable 5.2", "maxEffort": "max", "supports1m": true, "prefer1m": true, "anthropicFamilyTier": "fable", "isFamilyDefault": true },
+    { "name": "claude-fable-5-dd-los-1.6-tpg", "labelOverride": "GPT 6.1 Sol", "maxEffort": "max", "supports1m": true, "prefer1m": true },
+    { "name": "claude-fable-5-dd-7.4-korg", "labelOverride": "Grok 4.7", "maxEffort": "xhigh" },
+    { "name": "claude-fable-5-dd-hgihx-noen-4-inimeg", "labelOverride": "Gemini 4 Neon", "maxEffort": "max", "supports1m": true, "prefer1m": true },
+    { "name": "claude-fable-5-dd-rotubirtnoc-0.1-rednow-esum", "labelOverride": "Muse Wonder 1.0", "maxEffort": "max", "supports1m": true, "prefer1m": true },
+    { "name": "claude-sonnet-5-5", "labelOverride": "Claude Sonnet 5.5", "maxEffort": "max", "supports1m": true, "prefer1m": true, "anthropicFamilyTier": "sonnet", "isFamilyDefault": true }
+  ]
+}

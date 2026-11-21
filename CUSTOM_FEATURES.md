@@ -635,3 +635,18 @@ git grep -n "CUSTOM (cpamc-custom)"   # every hook must still be present
 Conflicts most likely in `selector.go` (`authPriority`), `apiCall.ts`
 (`apiCallApi.request`), `providers/index.ts` (`QUOTA_ADAPTERS`), and `QuotaPage.tsx`
 (refresh-all effect). Re-apply the marked lines; keep upstream's surrounding changes.
+
+### 18. Client setup kit (`GET /setup`)
+
+- Public, no auth: `GET /setup` returns agent instructions (`internal/api/setup/README.md`);
+  `GET /setup/<file>` serves the installers (`install.sh` for macOS/Linux, `install.ps1` for Windows),
+  the Claude Code model-cache script, the Codex `cpamc` profile and model catalog, the Claude Desktop
+  third-party inference profile and the `image-gen`, `concise-responses` and `taste-skill` skills.
+  Files are embedded (`go:embed`, `custom_setup.go`); no secret lives in them.
+- The installer takes the person's client key, checks it against `/v1/models`, and never changes the
+  person's own Claude/Codex accounts: own Claude Code sign-in → only a `yolo` command with
+  `~/.claude-cpamc`; signed-in Claude Desktop → a Codex `cpamc` profile instead of Claude Desktop.
+- Models: Claude Opus 5.5, Claude Fable 5.2, GPT 6.1 Sol, Grok 4.7, Gemini 4 Neon, Muse Wonder 1.0,
+  Claude Sonnet 5.5. Change them in `claude-cpamc-models.mjs`, `claude-desktop.json` and
+  `codex-models.json` together.
+- The skill copies under `setup/skills/` come from `~/.claude/skills`; refresh them when those change.

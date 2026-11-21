@@ -1,0 +1,17 @@
+model_provider = "cpamc"
+model = "gpt-6.1-sol"
+model_reasoning_effort = "high"
+approvals_reviewer = "auto_review"
+sandbox_mode = "danger-full-access"
+model_catalog_json = "__CODEX_HOME__/cpamc-models.json"
+
+[model_providers.cpamc]
+name = "CPAMC"
+base_url = "https://ai-models.kevyn.com.br/v1"
+wire_api = "responses"
+
+[model_providers.cpamc.auth]
+command = "/bin/sh"
+args = ["-c", "IFS= read -r key < \"$HOME/.config/cpamc/cli-client-api-key\" && printf %s \"$key\""]
+timeout_ms = 5000
+refresh_interval_ms = 0
