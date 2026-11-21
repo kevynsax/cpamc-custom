@@ -28,6 +28,7 @@ import (
 
 const (
 	customImagesURL       = "https://api.minimax.io/v1/image_generation"
+	customImagesH3URL     = "https://api.minimax.io/v1/images/generations"
 	customImagesMaxPrompt = 1500
 	customImagesMaxN      = 9
 )
@@ -83,6 +84,17 @@ func customImagesSize(size string) (int, int, bool) {
 	return fit(w), fit(h), true
 }
 
+// customImagesH3Model returns MiniMax's H3-Image model id for a requested model, or "".
+func customImagesH3Model(model string) string {
+	switch strings.ToLower(strings.TrimSpace(model)) {
+	case "minimax/minimax-h3-image":
+		return "MiniMax-H3-Image"
+	case "minimax/minimax-h3-image-highspeed":
+		return "MiniMax-H3-Image-Highspeed"
+	}
+	return ""
+}
+
 func (s *Server) customImagesDispatch(upstream gin.HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		raw, err := io.ReadAll(c.Request.Body)
@@ -94,6 +106,10 @@ func (s *Server) customImagesDispatch(upstream gin.HandlerFunc) gin.HandlerFunc 
 			}
 			if json.Unmarshal(raw, &peek) == nil && customImagesMinimaxModel(peek.Model) != "" {
 				s.customImages(c, raw)
+				return
+			}
+			if h3 := customImagesH3Model(peek.Model); h3 != "" {
+				s.customImagesH3(c, raw, h3)
 				return
 			}
 		}
@@ -168,6 +184,39 @@ func (s *Server) customImages(c *gin.Context, raw []byte) {
 		return
 	}
 	c.JSON(http.StatusOK, out)
+}
+
+// customImagesH3 forwards an OpenAI-shaped request to MiniMax's OpenAI-compatible
+// H3-Image route. Only the model id changes; response_format defaults to b64_json
+// like OpenAI's images API. MiniMax's status and body are returned unchanged.
+func (s *Server) customImagesH3(c *gin.Context, raw []byte, model string) {
+	var req map[string]any
+	if err := json.Unmarshal(raw, &req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "invalid request body"}})
+		return
+	}
+	key := s.customMinimaxKey()
+	if key == "" {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": gin.H{"message": "no MiniMax credential configured"}})
+		return
+	}
+	req["model"] = model
+	if _, ok := req["response_format"]; !ok {
+		req["response_format"] = "b64_json"
+	}
+	body, _ := json.Marshal(req)
+
+	up, _ := http.NewRequestWithContext(c.Request.Context(), http.MethodPost, customImagesH3URL, bytes.NewReader(body))
+	up.Header.Set("Authorization", "Bearer "+key)
+	up.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(up)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": gin.H{"message": "image upstream request failed"}})
+		return
+	}
+	defer resp.Body.Close()
+	respRaw, _ := io.ReadAll(io.LimitReader(resp.Body, 256<<20))
+	c.Data(resp.StatusCode, "application/json", respRaw)
 }
 
 // customImagesTranslate converts a MiniMax image_generation response into the

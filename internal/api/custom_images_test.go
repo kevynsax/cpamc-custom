@@ -29,6 +29,20 @@ func TestCustomImagesMinimaxModel(t *testing.T) {
 	}
 }
 
+func TestCustomImagesH3Model(t *testing.T) {
+	cases := map[string]string{
+		"minimax/MiniMax-H3-Image":           "MiniMax-H3-Image",
+		"MINIMAX/minimax-h3-image-highspeed": "MiniMax-H3-Image-Highspeed",
+		"MiniMax-H3-Image":                   "",
+		"minimax/image-01":                   "",
+	}
+	for in, want := range cases {
+		if got := customImagesH3Model(in); got != want {
+			t.Errorf("customImagesH3Model(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
 func TestCustomImagesSize(t *testing.T) {
 	cases := []struct {
 		in   string

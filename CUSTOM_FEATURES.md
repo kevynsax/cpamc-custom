@@ -461,7 +461,14 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 - Ordinary upstream model releases and temporary catalog-availability fallbacks
   are maintenance, not custom product features.
 
-### 14. Image generation endpoint (MiniMax image-01)
+### 14. Image generation endpoint (MiniMax H3-Image and image-01)
+
+- `POST /v1/images/generations` with `model: "minimax/MiniMax-H3-Image"` (or
+  `minimax/MiniMax-H3-Image-Highspeed`) is forwarded to MiniMax's OpenAI-compatible
+  `/v1/images/generations` with the bare model id; the body and MiniMax's response pass through
+  unchanged, except `response_format` defaults to `b64_json`. `size` is `WxH` (655,360–20,000,000 px,
+  ratio 1:3–3:1) or `auto` with `aspect_ratio`/`area`; prompt max 32,000 chars; `n` max 10.
+  Not idempotent: never retry a request that may have reached MiniMax.
 
 - `POST /v1/images/generations` with `model: "minimax/image-01"` (or `minimax/image-01-live`)
   is translated to MiniMax's native `/v1/image_generation` and returned in OpenAI shape
