@@ -463,12 +463,14 @@ Implementation: `internal/api/custom_decisions.go`, `internal/runtime/executor/o
 
 ### 14. Image generation endpoint (MiniMax H3-Image and image-01)
 
-- `POST /v1/images/generations` with `model: "minimax/MiniMax-H3-Image"` (or
-  `minimax/MiniMax-H3-Image-Highspeed`) is forwarded to MiniMax's OpenAI-compatible
+- `POST /v1/images/generations` with `model: "minimax/MiniMax-H3-Image"` is forwarded to MiniMax's OpenAI-compatible
   `/v1/images/generations` with the bare model id; the body and MiniMax's response pass through
   unchanged, except `response_format` defaults to `b64_json`. `size` is `WxH` (655,360–20,000,000 px,
   ratio 1:3–3:1) or `auto` with `aspect_ratio`/`area`; prompt max 32,000 chars; `n` max 10.
   Not idempotent: never retry a request that may have reached MiniMax.
+- `POST /v1/images/edits` (multipart, OpenAI `images.edit` shape) with `model=minimax/MiniMax-H3-Image`
+  goes to MiniMax's `/v1/images/edits` the same way (`customImagesEditsDispatch`): 1–16 `image` files,
+  body ≤ 64 MiB, no `mask`. Every other model, and any non-multipart body, reaches the upstream edits handler.
 
 - `POST /v1/images/generations` with `model: "minimax/image-01"` (or `minimax/image-01-live`)
   is translated to MiniMax's native `/v1/image_generation` and returned in OpenAI shape

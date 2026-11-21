@@ -18,7 +18,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"strconv"
 	"strings"
 	"time"
@@ -29,8 +32,11 @@ import (
 const (
 	customImagesURL       = "https://api.minimax.io/v1/image_generation"
 	customImagesH3URL     = "https://api.minimax.io/v1/images/generations"
-	customImagesMaxPrompt = 1500
-	customImagesMaxN      = 9
+	customImagesH3EditURL = "https://api.minimax.io/v1/images/edits"
+	// customImagesH3EditMaxBody is MiniMax's own limit on an edit request body.
+	customImagesH3EditMaxBody = 64 << 20
+	customImagesMaxPrompt     = 1500
+	customImagesMaxN          = 9
 )
 
 type customImagesRequest struct {
@@ -89,8 +95,6 @@ func customImagesH3Model(model string) string {
 	switch strings.ToLower(strings.TrimSpace(model)) {
 	case "minimax/minimax-h3-image":
 		return "MiniMax-H3-Image"
-	case "minimax/minimax-h3-image-highspeed":
-		return "MiniMax-H3-Image-Highspeed"
 	}
 	return ""
 }
@@ -184,6 +188,128 @@ func (s *Server) customImages(c *gin.Context, raw []byte) {
 		return
 	}
 	c.JSON(http.StatusOK, out)
+}
+
+// customImagesEditsDispatch sends multipart edits for minimax/MiniMax-H3-Image to
+// MiniMax; every other model goes to the upstream edits handler.
+func (s *Server) customImagesEditsDispatch(upstream gin.HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !strings.HasPrefix(c.ContentType(), "multipart/form-data") {
+			upstream(c)
+			return
+		}
+		raw, err := io.ReadAll(io.LimitReader(c.Request.Body, customImagesH3EditMaxBody+1))
+		_ = c.Request.Body.Close()
+		c.Request.Body = io.NopCloser(bytes.NewReader(raw))
+		if err != nil || len(raw) > customImagesH3EditMaxBody {
+			upstream(c)
+			return
+		}
+		form, errForm := customImagesMultipart(c.Request.Header.Get("Content-Type"), raw)
+		if errForm != nil {
+			upstream(c)
+			return
+		}
+		h3 := customImagesH3Model(form.model)
+		if h3 == "" {
+			upstream(c)
+			return
+		}
+		s.customImagesH3Edit(c, form, h3)
+	}
+}
+
+// customImagesForm is a parsed multipart edit request, in field order.
+type customImagesForm struct {
+	model string
+	parts []customImagesPart
+}
+
+// customImagesPart is one multipart field or file.
+type customImagesPart struct {
+	name        string
+	fileName    string
+	contentType string
+	data        []byte
+}
+
+func customImagesMultipart(contentType string, raw []byte) (customImagesForm, error) {
+	var form customImagesForm
+	_, params, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return form, err
+	}
+	reader := multipart.NewReader(bytes.NewReader(raw), params["boundary"])
+	for {
+		part, errPart := reader.NextPart()
+		if errPart == io.EOF {
+			return form, nil
+		}
+		if errPart != nil {
+			return form, errPart
+		}
+		data, errRead := io.ReadAll(part)
+		if errRead != nil {
+			return form, errRead
+		}
+		if part.FormName() == "model" {
+			form.model = string(data)
+		}
+		form.parts = append(form.parts, customImagesPart{
+			name: part.FormName(), fileName: part.FileName(),
+			contentType: part.Header.Get("Content-Type"), data: data,
+		})
+	}
+}
+
+// customImagesH3Edit rebuilds the multipart body with MiniMax's model id and
+// response_format b64_json unless the caller chose one, then returns MiniMax's
+// status and body unchanged.
+func (s *Server) customImagesH3Edit(c *gin.Context, form customImagesForm, model string) {
+	key := s.customMinimaxKey()
+	if key == "" {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": gin.H{"message": "no MiniMax credential configured"}})
+		return
+	}
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	hasFormat := false
+	for _, part := range form.parts {
+		data := part.data
+		if part.name == "model" {
+			data = []byte(model)
+		}
+		if part.name == "response_format" {
+			hasFormat = true
+		}
+		header := textproto.MIMEHeader{}
+		disposition := fmt.Sprintf(`form-data; name=%q`, part.name)
+		if part.fileName != "" {
+			disposition += fmt.Sprintf(`; filename=%q`, part.fileName)
+		}
+		header.Set("Content-Disposition", disposition)
+		if part.contentType != "" {
+			header.Set("Content-Type", part.contentType)
+		}
+		field, _ := writer.CreatePart(header)
+		_, _ = field.Write(data)
+	}
+	if !hasFormat {
+		_ = writer.WriteField("response_format", "b64_json")
+	}
+	_ = writer.Close()
+
+	up, _ := http.NewRequestWithContext(c.Request.Context(), http.MethodPost, customImagesH3EditURL, &body)
+	up.Header.Set("Authorization", "Bearer "+key)
+	up.Header.Set("Content-Type", writer.FormDataContentType())
+	resp, err := http.DefaultClient.Do(up)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": gin.H{"message": "image upstream request failed"}})
+		return
+	}
+	defer resp.Body.Close()
+	respRaw, _ := io.ReadAll(io.LimitReader(resp.Body, 256<<20))
+	c.Data(resp.StatusCode, "application/json", respRaw)
 }
 
 // customImagesH3 forwards an OpenAI-shaped request to MiniMax's OpenAI-compatible

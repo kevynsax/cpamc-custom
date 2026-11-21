@@ -5,6 +5,7 @@ package api
 import (
 	"bytes"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -32,7 +33,8 @@ func TestCustomImagesMinimaxModel(t *testing.T) {
 func TestCustomImagesH3Model(t *testing.T) {
 	cases := map[string]string{
 		"minimax/MiniMax-H3-Image":           "MiniMax-H3-Image",
-		"MINIMAX/minimax-h3-image-highspeed": "MiniMax-H3-Image-Highspeed",
+		"MINIMAX/minimax-h3-image":           "MiniMax-H3-Image",
+		"minimax/MiniMax-H3-Image-Highspeed": "",
 		"MiniMax-H3-Image":                   "",
 		"minimax/image-01":                   "",
 	}
@@ -131,5 +133,40 @@ func TestCustomImagesDispatchPassesOtherModelsUpstream(t *testing.T) {
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodPost, "/v1/images/generations", bytes.NewReader([]byte(`{"model":"minimax/image-01"}`))))
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 without prompt, got %d", w.Code)
+	}
+}
+
+func TestCustomImagesEditsDispatch(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	s := &Server{}
+	var upstreamBody []byte
+	upstream := func(c *gin.Context) {
+		upstreamBody, _ = io.ReadAll(c.Request.Body)
+		c.Status(http.StatusTeapot)
+	}
+	r := gin.New()
+	r.POST("/v1/images/edits", s.customImagesEditsDispatch(upstream))
+	edit := func(model string) (*httptest.ResponseRecorder, []byte) {
+		var body bytes.Buffer
+		writer := multipart.NewWriter(&body)
+		_ = writer.WriteField("model", model)
+		_ = writer.WriteField("prompt", "apple")
+		file, _ := writer.CreateFormFile("image", "reference.png")
+		_, _ = file.Write([]byte("png bytes"))
+		_ = writer.Close()
+		request := httptest.NewRequest(http.MethodPost, "/v1/images/edits", bytes.NewReader(body.Bytes()))
+		request.Header.Set("Content-Type", writer.FormDataContentType())
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, request)
+		return w, body.Bytes()
+	}
+
+	w, sent := edit("gpt-image-2.5")
+	if w.Code != http.StatusTeapot || !bytes.Equal(upstreamBody, sent) {
+		t.Fatalf("other models must reach upstream unchanged: %d", w.Code)
+	}
+	// H3 with no MiniMax credential: handled locally, 503.
+	if w, _ = edit("minimax/MiniMax-H3-Image"); w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503 without MiniMax key, got %d", w.Code)
 	}
 }
