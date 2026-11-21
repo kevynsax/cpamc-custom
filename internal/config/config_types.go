@@ -1155,6 +1155,10 @@ type OpenAICompatibilityAPIKey struct {
 	// ProxyURL overrides the global proxy setting for this API key if provided.
 	ProxyURL string `yaml:"proxy-url,omitempty" json:"proxy-url,omitempty"`
 
+	// PlanType names the subscription plan this key belongs to, for providers whose
+	// API does not report it (for example MiniMax "go", "explore" or "build").
+	PlanType string `yaml:"plan-type,omitempty" json:"plan-type,omitempty"`
+
 	// ConnectionPool configures upstream connection reuse for this key, overriding
 	// the provider-group default field by field. Pools stay per credential, so
 	// opting in never shares connections with another key.

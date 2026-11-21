@@ -411,6 +411,9 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 			if key != "" {
 				attrs["api_key"] = key
 			}
+			if plan := strings.TrimSpace(entry.PlanType); plan != "" {
+				attrs["plan_type"] = plan
+			}
 			if hash := diff.ComputeOpenAICompatModelsHash(compat.Models); hash != "" {
 				attrs["models_hash"] = hash
 			}

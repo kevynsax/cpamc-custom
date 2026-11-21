@@ -59,7 +59,7 @@ func (h *Handler) CustomQuotaCredentials(c *gin.Context) {
 				label = provider
 			}
 			base := strings.TrimSpace(auth.Attributes["base_url"])
-			files = append(files, gin.H{
+			file := gin.H{
 				"id":           auth.ID,
 				"auth_index":   auth.Index,
 				"name":         label + " (api key)",
@@ -70,7 +70,11 @@ func (h *Handler) CustomQuotaCredentials(c *gin.Context) {
 				"runtime_only": true,
 				"quota_source": "api-key",
 				"disabled":     false,
-			})
+			}
+			if plan := strings.TrimSpace(auth.Attributes["plan_type"]); plan != "" {
+				file["plan_type"] = plan
+			}
+			files = append(files, file)
 		}
 	}
 	sort.Slice(files, func(i, j int) bool {
