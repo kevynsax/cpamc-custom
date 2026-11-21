@@ -5,13 +5,27 @@ client API key the person gave you. Follow these steps exactly. Never print, log
 
 ## 1. Ask first (macOS only)
 
-On a Mac, before running anything, ask the person:
+**What CPAMC Bar is:** a small macOS menu-bar app (a gauge icon next to the clock). Clicking it opens a
+panel that shows, for each AI subscription behind this gateway (Claude, ChatGPT/Codex, Google, Grok, Meta and
+others), how much usage is left in the current 5-hour and weekly windows and when each one resets. It is
+read-only: it uses the same key, cannot change anything on the gateway, and sends no prompts.
+
+**Why macOS may ask for an exception:** the app is not signed with an Apple Developer ID or notarized
+(there is no paid Apple Developer Program membership behind it). The installer downloads it with `curl`
+and clears the quarantine flag, so it normally opens without a warning. If macOS still blocks it
+("CPAMC Bar cannot be opened" or "Apple could not verify…"), the person has to allow it once:
+System Settings → Privacy & Security → scroll to the CPAMC Bar message → **Open Anyway**, then confirm.
+On older macOS versions, right-click (Control-click) the app in Applications → **Open** → **Open** also
+works. macOS may also show a **Login Items** notice; it must be allowed for the bar to start at login.
+
+On a Mac, before running anything, explain the two paragraphs above in one or two sentences and ask:
 
 > Do you want to see how much usage is left on each subscription, in the menu bar?
 
 If they say yes, ask:
 
-> I can download CPAMC Bar into Applications and have it start at login. Go ahead?
+> I can download CPAMC Bar into Applications and have it start at login. Because it isn't signed by
+> Apple, macOS may ask you to allow it once in System Settings → Privacy & Security. Go ahead?
 
 Only if they agree to both, add `--usage-bar` to the install command below. On Windows and Linux, skip
 these questions.
@@ -65,7 +79,9 @@ again; every file it changes is backed up first as `<file>.cpamc-bak-<time>`.
 - Claude Desktop: fully quit and reopen it; on the welcome screen choose **Continue** (no sign-in). The
   model picker shows the seven models above.
 - Report the installer's `- ...` summary lines to the person, plus any `WARNING` line.
-- Usage bar: point out the gauge icon in the menu bar; if macOS shows a Login Items notice, tell them to allow it.
+- Usage bar: point out the gauge icon in the menu bar. If it does not appear, macOS blocked the unsigned
+  app: walk them through Privacy & Security → **Open Anyway** (section 1), then run
+  `open "/Applications/CPAMC Bar.app"`. If macOS shows a Login Items notice, tell them to allow it.
 
 ## Rules for you
 

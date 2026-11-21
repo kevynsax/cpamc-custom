@@ -271,6 +271,7 @@ setup_usage_bar() {
   "$app/Contents/MacOS/CPAMCBar" --configure-from "$KEY_FILE"
   open "$app"
   note "CPAMC Bar installed in /Applications, shows usage left in the menu bar and starts at login"
+  note "CPAMC Bar is not signed by Apple (no Developer ID): if macOS blocks it, allow it in System Settings > Privacy & Security > Open Anyway"
   note "If macOS asks, allow CPAMC Bar in System Settings > General > Login Items"
 }
 if [ "$USAGE_BAR" -eq 1 ]; then
