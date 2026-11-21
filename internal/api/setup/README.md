@@ -3,12 +3,27 @@
 You were asked to set up the CPAMC gateway (`https://ai-models.kevyn.com.br`) on this computer, with a
 client API key the person gave you. Follow these steps exactly. Never print, log or commit the key.
 
-## 1. Run the installer
+## 1. Ask first (macOS only)
+
+On a Mac, before running anything, ask the person:
+
+> Do you want to see how much usage is left on each subscription, in the menu bar?
+
+If they say yes, ask:
+
+> I can download CPAMC Bar into Applications and have it start at login. Go ahead?
+
+Only if they agree to both, add `--usage-bar` to the install command below. On Windows and Linux, skip
+these questions.
+
+## 2. Run the installer
 
 macOS or Linux:
 
 ```bash
 curl -fsSL https://ai-models.kevyn.com.br/setup/install.sh | bash -s -- --key '<the key>'
+# Mac, when the person agreed to the usage bar:
+curl -fsSL https://ai-models.kevyn.com.br/setup/install.sh | bash -s -- --key '<the key>' --usage-bar
 ```
 
 Windows (PowerShell):
@@ -20,7 +35,7 @@ Windows (PowerShell):
 Add `--dry-run` / `-DryRun` first if you want to see the plan without changes. The installer is safe to run
 again; every file it changes is backed up first as `<file>.cpamc-bak-<time>`.
 
-## 2. What it does
+## 3. What it does
 
 1. Checks the key against the gateway (stops and changes nothing if it is rejected), then saves it to
    `~/.config/cpamc/cli-client-api-key` (owner-only).
@@ -39,13 +54,18 @@ again; every file it changes is backed up first as `<file>.cpamc-bak-<time>`.
    - Override with `--desktop claude|codex|none`.
 4. Skills `image-gen` (MiniMax H3 and other image models), `concise-responses` and `taste-skill`, in the
    gateway Claude config's `skills/` folder and in the Codex skills folder when Codex was set up.
+5. With `--usage-bar` (macOS): installs CPAMC Bar in `/Applications`, connects it read-only with the same
+   key (usage left per subscription, no management access), opens it and registers it to start at login.
+   Remove it later with `"/Applications/CPAMC Bar.app/Contents/MacOS/CPAMCBar" --remove-login-item` and
+   deleting the app.
 
-## 3. After it runs
+## 4. After it runs
 
 - Tell the person to open a **new** terminal and run `yolo`.
 - Claude Desktop: fully quit and reopen it; on the welcome screen choose **Continue** (no sign-in). The
   model picker shows the seven models above.
 - Report the installer's `- ...` summary lines to the person, plus any `WARNING` line.
+- Usage bar: point out the gauge icon in the menu bar; if macOS shows a Login Items notice, tell them to allow it.
 
 ## Rules for you
 
@@ -58,5 +78,5 @@ again; every file it changes is backed up first as `<file>.cpamc-bak-<time>`.
 ## Files
 
 All served from `https://ai-models.kevyn.com.br/setup/`: `install.sh`, `install.ps1`,
-`claude-cpamc-models.mjs`, `codex-profile.toml`, `codex-models.json`, `claude-desktop.json`, and
+`claude-cpamc-models.mjs`, `codex-profile.toml`, `codex-models.json`, `claude-desktop.json`, `cpamc-bar.zip`, and
 `skills/<skill>/...`.

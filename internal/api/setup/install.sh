@@ -18,12 +18,14 @@ GATEWAY="https://ai-models.kevyn.com.br"
 KEY=""
 DESKTOP="auto"
 DRY_RUN=0
+USAGE_BAR=0
 
 usage() {
   cat <<'EOF'
-Usage: install.sh --key <client key> [--desktop auto|claude|codex|none] [--dry-run]
+Usage: install.sh --key <client key> [--desktop auto|claude|codex|none] [--usage-bar] [--dry-run]
   --key       CPAMC client API key (also read from CPAMC_API_KEY)
   --desktop   auto (default): Codex when Claude Desktop is signed in, else Claude Desktop
+  --usage-bar macOS: install CPAMC Bar (usage left per subscription) and start it at login
   --dry-run   print the plan and change nothing
 EOF
 }
@@ -33,6 +35,7 @@ while [ $# -gt 0 ]; do
     --key) KEY="${2:-}"; shift 2 ;;
     --desktop) DESKTOP="${2:-}"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
+    --usage-bar) USAGE_BAR=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -251,6 +254,28 @@ for root in $SKILL_ROOTS; do
   [ "$DRY_RUN" -eq 1 ] || chmod 755 "$root/image-gen/scripts/generate-image.mjs"
   note "Skills image-gen, concise-responses, taste-skill in $root"
 done
+
+# --- 5. Usage bar (macOS, only when asked) -------------------------------------------------
+setup_usage_bar() {
+  local app="/Applications/CPAMC Bar.app"
+  if [ "$DRY_RUN" -eq 1 ]; then say "  would install $app and start it at login"; return; fi
+  local tmp; tmp="$(mktemp -d)"
+  fetch cpamc-bar.zip > "$tmp/cpamc-bar.zip"
+  ditto -x -k "$tmp/cpamc-bar.zip" "$tmp"
+  pkill -x CPAMCBar 2>/dev/null || true
+  rm -rf "$app"
+  ditto "$tmp/CPAMC Bar.app" "$app"
+  rm -rf "$tmp"
+  # Downloaded by curl, so macOS adds no quarantine; clear it anyway in case a proxy did.
+  xattr -dr com.apple.quarantine "$app" 2>/dev/null || true
+  "$app/Contents/MacOS/CPAMCBar" --configure-from "$KEY_FILE"
+  open "$app"
+  note "CPAMC Bar installed in /Applications, shows usage left in the menu bar and starts at login"
+  note "If macOS asks, allow CPAMC Bar in System Settings > General > Login Items"
+}
+if [ "$USAGE_BAR" -eq 1 ]; then
+  if [ "$OS" = "Darwin" ]; then setup_usage_bar; else note "--usage-bar is macOS only; skipped"; fi
+fi
 
 # --- Check ----------------------------------------------------------------------------------
 if [ "$DRY_RUN" -eq 0 ]; then
