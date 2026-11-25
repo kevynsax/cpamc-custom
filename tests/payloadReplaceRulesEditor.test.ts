@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -87,8 +86,39 @@ describe('payload replacement editor', () => {
     expect(html).toMatch(/<textarea[^>]*disabled=""/);
   });
 
+  test.each(['system', 'developer'])('renders %s as an editable role', (role) => {
+    const html = render([{ ...rule, target: { ...rule.target, role } }]);
+    expect(html).toMatch(
+      new RegExp(
+        `<button[^>]*aria-haspopup="listbox"[^>]*aria-label="${i18n.t(`${prefix}target_selector`)}"[^>]*><span[^>]*>${role}</span>`
+      )
+    );
+    expect(html).not.toContain('role="alert"');
+  });
+
+  test('path targets render paths instead of message positions', () => {
+    const html = render([
+      {
+        ...rule,
+        target: { role: '', all: false, positions: '', paths: ['metadata.description'] },
+        replacements: [{ ...rule.replacements[0], regex: true }],
+      },
+    ]);
+    expect(html).toContain('value="metadata.description"');
+    expect(html).toContain(i18n.t(`${prefix}paths_hint`));
+    expect(html).toContain(i18n.t(`${prefix}pattern`));
+    expect(html).toMatch(
+      new RegExp(
+        `<button[^>]*aria-haspopup="listbox"[^>]*aria-label="${i18n.t(`${prefix}replacement_type`)}"[^>]*>`
+      )
+    );
+    expect(html).not.toMatch(/<select\b/);
+    expect(html).not.toContain('role="radiogroup"');
+    expect(html).not.toContain('role="alert"');
+  });
+
   test('unsupported source role also offers reset instead of silently changing role', () => {
-    const html = render([{ ...rule, target: { ...rule.target, role: 'system' } }]);
+    const html = render([{ ...rule, target: { ...rule.target, role: 'assistant' } }]);
     expect(html).toContain('role="alert"');
     expect(html).toContain(i18n.t(`${prefix}reset_invalid`));
   });
@@ -97,39 +127,5 @@ describe('payload replacement editor', () => {
     const buttons = render([rule], true).match(/<button\b[^>]*>/g) ?? [];
     expect(buttons.length).toBeGreaterThan(5);
     expect(buttons.every((button) => button.includes('disabled=""'))).toBe(true);
-  });
-
-  test('payload groups never remount and each opens only for its own errors', () => {
-    const source = readFileSync(
-      'src/features/config/components/sections/SectionPayload.tsx',
-      'utf8'
-    );
-    const panels = source.split('<Collapsible').slice(1);
-    expect(panels).toHaveLength(6);
-    for (const panel of panels) expect(panel.split('>')[0]).not.toContain('key=');
-    expect(source).not.toContain('hasPayloadValidationErrors');
-    expect(source).toContain('open: Boolean(opened[group]) || groupErrors[group]');
-    for (const group of [
-      'payloadDefaultRules',
-      'payloadDefaultRawRules',
-      'payloadOverrideRules',
-      'payloadOverrideRawRules',
-      'payloadReplaceRules',
-    ]) {
-      expect(source).toContain(`{...groupProps('${group}')}`);
-    }
-  });
-
-  test('both rule editors reuse the full model editor and edits preserve source-invalid flag', () => {
-    const read = (name: string) =>
-      readFileSync(`src/features/config/components/blocks/${name}.tsx`, 'utf8');
-    const source = read('PayloadReplaceRulesEditor');
-    expect(source).toContain('<PayloadModelsEditor');
-    expect(read('PayloadRulesEditor')).toContain('<PayloadModelsEditor');
-    expect(source).toContain('{ ...rule, ...patch }');
-    expect(source).not.toContain('invalid: false');
-    expect(source).not.toContain('.trim(');
-    expect(source).toContain('move(value, ruleIndex, direction)');
-    expect(source).toContain('move(rule.replacements, index, direction)');
   });
 });

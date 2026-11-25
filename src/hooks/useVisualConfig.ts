@@ -1,5 +1,10 @@
+import {
+  readOAuthErrorRules,
+  writeOAuthErrorRules,
+  invalidOAuthRule,
+} from '@/features/config/visualOAuthErrorRules';
 import { useCallback, useMemo, useReducer } from 'react';
-import { isAlias, isMap, isScalar, isSeq, parse as parseYaml, parseDocument } from 'yaml';
+import { isAlias, isMap, isScalar, isSeq, parseDocument } from 'yaml';
 import type { Node, Pair, YAMLMap, YAMLSeq } from 'yaml';
 import type {
   DisableImageGenerationMode,
@@ -17,7 +22,8 @@ import type {
   VisualConfigValidationErrors,
   PayloadParamValidationErrorCode,
 } from '@/types/visualConfig';
-import { DEFAULT_VISUAL_VALUES } from '@/types/visualConfig';
+import { DEFAULT_VISUAL_VALUES, isPayloadReplaceRole } from '@/types/visualConfig';
+import { parseConfigDocument } from '@/services/api/configYaml';
 import { assertConfigListsUnchanged, ConfigDraftConflictError } from '@/services/api/configPatch';
 import {
   ADDITION_FIELDS,
@@ -158,6 +164,65 @@ function setStringListInDoc(doc: YamlDocument, path: YamlPath, values: string[])
   if (docHas(doc, path)) deletePathInDoc(doc, path);
 }
 
+function writeClientKeys(doc: YamlDocument, keys: string[]): void {
+  const path = ['access', 'api-keys'];
+  if (!keys.length) {
+    if (doc.hasIn(path)) doc.deleteIn(path);
+    return;
+  }
+  const seq = doc.getIn(path, true);
+  if (!isSeq(seq) || seq.anchor) {
+    doc.setIn(path, keys);
+    return;
+  }
+
+  // Reserve existing nodes by value first. A deletion can shift every later index;
+  // their quotes and comments belong to those keys, not to their old positions.
+  const indices = new Map<string, number[]>();
+  const finalAnchorIndex = new Map<string, number>();
+  for (let i = seq.items.length - 1; i >= 0; i--) {
+    const item = seq.items[i];
+    if (isScalar(item) && item.anchor && !finalAnchorIndex.has(item.anchor)) {
+      finalAnchorIndex.set(item.anchor, i);
+    }
+    if (!isScalar(item) || typeof item.value !== 'string') continue;
+    if (item.tag && item.tag !== 'tag:yaml.org,2002:str') continue;
+    const bucket = indices.get(item.value);
+    if (bucket) bucket.push(i);
+    else indices.set(item.value, [i]);
+  }
+  const matches = keys.map((key) => indices.get(key)?.pop());
+  const reserved = new Set(matches);
+  const seenFinalAnchors = new Set<string>();
+  seq.items = keys.map((key, index) => {
+    const match = matches[index];
+    if (match !== undefined) {
+      const item = seq.items[match];
+      if (isScalar(item) && item.anchor) {
+        // Aliases after the list resolve to the last definition, not the first.
+        // An earlier definition moved past it must not shadow it. In-list aliases
+        // are emitted as ordinary key strings, so they do not need the old name.
+        if (finalAnchorIndex.get(item.anchor) === match) seenFinalAnchors.add(item.anchor);
+        else if (seenFinalAnchors.has(item.anchor)) delete item.anchor;
+      }
+      return item;
+    }
+    const previous = seq.items[index];
+    if (!reserved.has(index) && isScalar(previous) && !previous.anchor) {
+      // A non-string tag or numeric format would be serialized with the new key.
+      if (
+        typeof previous.value !== 'string' ||
+        (previous.tag && previous.tag !== 'tag:yaml.org,2002:str')
+      ) {
+        return preserveNodeComments(previous, doc.createNode(key));
+      }
+      previous.value = key;
+      return previous;
+    }
+    return doc.createNode(key);
+  });
+}
+
 function setIntFromStringInDoc(doc: YamlDocument, path: YamlPath, value: unknown): void {
   const safe = typeof value === 'string' ? value : '';
   const trimmed = safe.trim();
@@ -251,6 +316,9 @@ export function getVisualConfigValidationErrors(
   return {
     ...validateVisualAdditions(values, dirtyFields),
     ...validateVisualServer(values),
+    oauthErrorRules: invalidOAuthRule(values.oauthErrorRules)
+      ? 'invalid_oauth_error_rules'
+      : undefined,
     port: getPortError(values.port),
     errorLogsMaxFiles: getNonNegativeIntegerError(values.errorLogsMaxFiles),
     logsMaxTotalSizeMb: getNonNegativeIntegerError(values.logsMaxTotalSizeMb),
@@ -643,23 +711,28 @@ function parsePayloadModelEntries(raw: unknown, idPrefix: string): PayloadRule['
 
 /** Returns translation leaf codes. Literal operands are deliberately never trimmed. */
 export function getPayloadReplaceValidationError(rule: PayloadReplaceRule): string | undefined {
-  if (rule.target.role !== 'user') return 'payload_replace_invalid_target';
+  const { role, all, paths } = rule.target;
   const positions = rule.target.positions.trim();
-  if (rule.target.all ? Boolean(positions) : !positions) {
-    return 'payload_replace_invalid_positions';
+  if (paths !== undefined) {
+    if (role || all || positions || !paths.length || paths.some((path) => !path.trim())) {
+      return 'payload_replace_invalid_paths';
+    }
+  } else {
+    if (!isPayloadReplaceRole(role)) return 'payload_replace_invalid_target';
+    if (
+      all
+        ? Boolean(positions)
+        : positions
+            .split(',')
+            .some(
+              (position) =>
+                !/^\d+$/.test(position.trim()) ||
+                !Number.isSafeInteger(Number(position)) ||
+                Number(position) < 1
+            )
+    )
+      return 'payload_replace_invalid_positions';
   }
-  if (
-    positions &&
-    positions
-      .split(',')
-      .some(
-        (position) =>
-          !/^\d+$/.test(position.trim()) ||
-          !Number.isSafeInteger(Number(position)) ||
-          Number(position) < 1
-      )
-  )
-    return 'payload_replace_invalid_positions';
   if (
     !rule.models.length ||
     rule.models.some(
@@ -671,7 +744,11 @@ export function getPayloadReplaceValidationError(rule: PayloadReplaceRule): stri
     )
   )
     return 'payload_replace_invalid_models';
-  if (rule.invalid || !rule.replacements.length || rule.replacements.some((entry) => !entry.from)) {
+  if (
+    rule.invalid ||
+    !rule.replacements.length ||
+    rule.replacements.some((entry) => !entry.regex && !entry.from)
+  ) {
     return 'payload_replace_invalid_replacements';
   }
   return undefined;
@@ -751,11 +828,14 @@ function parsePayloadReplaceRules(raw: unknown, document: YamlDocument): Payload
       !isSeq(replacementNodes) ||
       replacementNodes.items.some((node) => {
         const entry = resolve(node);
-        return (
+        if (
           !isMap(entry) ||
-          entry.items.length !== 1 ||
-          !isStringOperand(entry.items[0].key) ||
-          !isStringOperand(entry.items[0].value)
+          entry.items.some(({ key, value }) => !isStringOperand(key) || !isStringOperand(value))
+        )
+          return true;
+        return (
+          entry.items.length !== 1 &&
+          !(entry.items.length === 2 && mapPair(entry, 'pattern') && mapPair(entry, 'replacement'))
         );
       })
     )
@@ -767,6 +847,23 @@ function parsePayloadReplaceRules(raw: unknown, document: YamlDocument): Payload
     ) {
       invalid = true;
     }
+    const pathsNode = get(get(ruleNode, 'target'), 'paths');
+    const rawPaths = target?.paths;
+    const paths = Array.isArray(rawPaths)
+      ? rawPaths.map((path) => (typeof path === 'string' ? path : ''))
+      : rawPaths === undefined
+        ? undefined
+        : [];
+    if (
+      paths !== undefined &&
+      (!isSeq(pathsNode) ||
+        pathsNode.items.some((node) => !isStringOperand(resolve(node))) ||
+        (target?.role !== undefined && typeof target.role !== 'string') ||
+        Boolean(target?.role) ||
+        target?.all === true ||
+        (Array.isArray(target?.positions) && target.positions.length > 0))
+    )
+      invalid = true;
     const replacements = record?.replacements;
     if (!Array.isArray(replacements)) invalid = true;
     return {
@@ -780,12 +877,22 @@ function parsePayloadReplaceRules(raw: unknown, document: YamlDocument): Payload
           : target?.positions === undefined
             ? ''
             : String(target.positions),
+        ...(paths !== undefined && { paths }),
       },
       replacements: (Array.isArray(replacements) ? replacements : []).map((entry, entryIndex) => {
-        const pairs = Object.entries(asRecord(entry) ?? {});
+        const id = `replace-${index}-${entryIndex}`;
+        const replacement = asRecord(entry);
+        const pairs = Object.entries(replacement ?? {});
+        if (
+          pairs.length === 2 &&
+          typeof replacement?.pattern === 'string' &&
+          typeof replacement.replacement === 'string'
+        ) {
+          return { id, from: replacement.pattern, to: replacement.replacement, regex: true };
+        }
         if (pairs.length !== 1 || typeof pairs[0]?.[1] !== 'string') invalid = true;
         return {
-          id: `replace-${index}-${entryIndex}`,
+          id,
           from: pairs[0]?.[0] ?? '',
           to: typeof pairs[0]?.[1] === 'string' ? pairs[0][1] : '',
         };
@@ -990,17 +1097,21 @@ function syncStringSequence(
   doc: YamlDocument,
   map: YAMLMap,
   key: string,
-  baseline: string[] | undefined,
-  desired: string[] | undefined
+  desired: string[] | undefined,
+  normalize = (value: string) => value.trim()
 ): void {
-  const values = serializeStringListForYaml(desired);
+  const values = (desired ?? []).map(normalize).filter(Boolean);
   if (values.length === 0) {
     deleteMapValue(map, key);
     return;
   }
 
   const seq = ensureSeqValue(doc, map, key);
-  const available = (baseline ?? []).map((value, index) => ({ value: value.trim(), index }));
+  // Match actual nodes: the visual baseline omits blank rows, so its indices need not align.
+  const available = seq.items.map((node, index) => {
+    const scalar = isAlias(node) ? node.resolve(doc) : node;
+    return { value: isScalar(scalar) ? normalize(String(scalar.value ?? '')) : '', index };
+  });
   const used = new Set<number>();
   const items = values.map((value) => {
     const match = available.find((item) => item.value === value && !used.has(item.index));
@@ -1010,6 +1121,7 @@ function syncStringSequence(
       existing.value = value;
       return existing;
     }
+    if (isAlias(existing)) return existing;
     return doc.createNode(value);
   });
   replaceSequenceItems(seq, items);
@@ -1167,8 +1279,8 @@ function syncPayloadModels(
 
     syncConditionSequence(doc, modelMap, 'match', prior?.match, model.match);
     syncConditionSequence(doc, modelMap, 'not-match', prior?.notMatch, model.notMatch);
-    syncStringSequence(doc, modelMap, 'exist', prior?.exist, model.exist);
-    syncStringSequence(doc, modelMap, 'not-exist', prior?.notExist, model.notExist);
+    syncStringSequence(doc, modelMap, 'exist', model.exist);
+    syncStringSequence(doc, modelMap, 'not-exist', model.notExist);
     return modelMap;
   });
   replaceSequenceItems(seq, items);
@@ -1231,11 +1343,23 @@ function syncPayloadReplaceSequence(
       const prior = baseline.find((entry) => entry.id === rule.id);
       syncPayloadModels(doc, node, prior?.models ?? [], rule.models);
       const target = ensureMapValue(doc, node, 'target');
-      setMapValue(doc, target, 'role', rule.target.role);
-      setMapValue(doc, target, 'all', rule.target.all);
-      if (rule.target.all) deleteMapValue(target, 'positions');
-      else if (prior?.target.positions !== rule.target.positions || !mapPair(target, 'positions')) {
-        setMapValue(doc, target, 'positions', rule.target.positions.split(',').map(Number));
+      const { paths, role, all, positions } = rule.target;
+      if (paths !== undefined) {
+        for (const key of ['role', 'all', 'positions']) deleteMapValue(target, key);
+        if (
+          !mapPair(target, 'paths') ||
+          JSON.stringify(prior?.target.paths) !== JSON.stringify(paths)
+        ) {
+          syncStringSequence(doc, target, 'paths', paths, (path) => path);
+        }
+      } else {
+        deleteMapValue(target, 'paths');
+        setMapValue(doc, target, 'role', role);
+        setMapValue(doc, target, 'all', all);
+        if (all) deleteMapValue(target, 'positions');
+        else if (prior?.target.positions !== positions || !mapPair(target, 'positions')) {
+          setMapValue(doc, target, 'positions', positions.split(',').map(Number));
+        }
       }
       const replacements = ensureSeqValue(doc, node, 'replacements');
       const entryNodes = new Map(
@@ -1246,6 +1370,12 @@ function syncPayloadReplaceSequence(
         rule.replacements.map((entry) => {
           const existing = entryNodes.get(entry.id);
           const map = isMap(existing) ? existing : (doc.createNode({}) as YAMLMap);
+          if (entry.regex) {
+            if (map.items.length !== 2) map.items = [];
+            setMapValue(doc, map, 'pattern', entry.from);
+            setMapValue(doc, map, 'replacement', entry.to);
+            return map;
+          }
           const pair = map.items[0];
           if (pair) {
             if (isScalar(pair.key)) pair.key.value = entry.from;
@@ -1281,7 +1411,7 @@ function syncPayloadFilterSequence(
     const ruleMap = isMap(existing) ? existing : (doc.createNode({}) as YAMLMap);
     const prior = baseline.find((candidate) => candidate.id === rule.id);
     syncPayloadModels(doc, ruleMap, prior?.models ?? [], rule.models);
-    syncStringSequence(doc, ruleMap, 'params', prior?.params, rule.params);
+    syncStringSequence(doc, ruleMap, 'params', rule.params);
     return ruleMap;
   });
   replaceSequenceItems(seq, items);
@@ -1474,6 +1604,13 @@ function getNextDirtyFields(
     }
   };
 
+  if (Object.prototype.hasOwnProperty.call(patch, 'oauthErrorRules')) {
+    updateDirty(
+      'oauthErrorRules',
+      withoutEditorIds(nextValues.oauthErrorRules) ===
+        withoutEditorIds(baselineValues.oauthErrorRules)
+    );
+  }
   SERVER_FIELDS.forEach(({ key }) => {
     if (Object.prototype.hasOwnProperty.call(patch, key)) {
       updateDirty(key, JSON.stringify(nextValues[key]) === JSON.stringify(baselineValues[key]));
@@ -1697,7 +1834,7 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
     throw new Error(document.errors[0]?.message ?? 'Invalid YAML');
   }
 
-  const parsedRaw: unknown = parseYaml(yamlContent) || {};
+  const parsedRaw: unknown = document.toJS() || {};
   const parsed = asRecord(parsedRaw) ?? {};
   const v8Server = asRecord(parsed?.['server']);
   const v8Routing = asRecord(parsed?.['routing']);
@@ -1729,6 +1866,7 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
   const newValues: VisualConfigValues = {
     ...readVisualAdditions(document),
     ...readVisualServer(document),
+    oauthErrorRules: readOAuthErrorRules(v8Oauth?.['request-scoped-errors'], document),
     host: typeof v8Server?.['host'] === 'string' ? v8Server?.['host'] : '',
     port: String(v8Server?.['port'] ?? ''),
 
@@ -1848,6 +1986,17 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
   return newValues;
 }
 
+function editVisualDocument(yaml: string, edit: (doc: YamlDocument) => string) {
+  const doc = parseConfigDocument(yaml);
+  if (doc.errors.length) throw doc.errors[0];
+  if (doc.contents && !isMap(doc.contents))
+    throw new ConfigDraftConflictError([], 'unsafe_yaml_structure');
+  if (!isMap(doc.contents)) {
+    doc.contents = doc.createNode({}) as unknown as typeof doc.contents;
+  }
+  return edit(doc);
+}
+
 export function useVisualConfig() {
   const [state, dispatch] = useReducer(
     visualConfigReducer,
@@ -1917,12 +2066,9 @@ export function useVisualConfig() {
       if (visualValues.payloadReplaceRules.some((rule) => getPayloadReplaceValidationError(rule))) {
         throw new Error('Invalid payload.replace rules');
       }
-      try {
-        const doc = parseDocument(currentYaml);
-        if (doc.errors.length > 0) return currentYaml;
-        if (!isMap(doc.contents)) {
-          doc.contents = doc.createNode({}) as unknown as typeof doc.contents;
-        }
+      const invalidRule = invalidOAuthRule(visualValues.oauthErrorRules);
+      if (invalidRule) throw invalidRule;
+      return editVisualDocument(currentYaml, (doc) => {
         // YAML has no stable rule IDs. For rebased payload edits, retain the already
         // merged draft's AST as well as its ID snapshot. Inferring lineage solely
         // from server/draft contents is ambiguous (e.g. delete + rename + append),
@@ -1953,6 +2099,16 @@ export function useVisualConfig() {
           rebasedPayload?.serverYaml ?? baselineYaml,
           target === 'server'
         );
+        if (dirtyFields.has('oauthErrorRules')) {
+          writeOAuthErrorRules(
+            doc,
+            baselineValues.oauthErrorRules,
+            values.oauthErrorRules,
+            rebasedPayload?.yaml ?? baselineYaml,
+            rebasedPayload?.serverYaml ?? baselineYaml,
+            target === 'server'
+          );
+        }
         if (dirtyFields.has(ICE_KEY)) {
           writeICEServers(
             doc,
@@ -2042,11 +2198,7 @@ export function useVisualConfig() {
             .split('\n')
             .map((key) => key.trim())
             .filter(Boolean);
-          if (apiKeys.length > 0) {
-            doc.setIn(['access', 'api-keys'], apiKeys);
-          } else if (docHas(doc, ['access', 'api-keys'])) {
-            doc.deleteIn(['access', 'api-keys']);
-          }
+          writeClientKeys(doc, apiKeys);
         }
 
         const pluginsDirty =
@@ -2196,24 +2348,22 @@ export function useVisualConfig() {
         }
         if (dirtyFields.has('antigravitySensitiveWords')) {
           ensureMapInDoc(doc, ['oauth', 'providers', 'antigravity']);
-          setStringListInDoc(
-            doc,
-            ['oauth', 'providers', 'antigravity', 'sensitive-words'],
-            values.antigravitySensitiveWords
-          );
+          const antigravity = doc.getIn(['oauth', 'providers', 'antigravity'], true);
+          if (isMap(antigravity)) {
+            syncStringSequence(
+              doc,
+              antigravity,
+              'sensitive-words',
+              values.antigravitySensitiveWords
+            );
+          }
           deleteIfMapEmpty(doc, ['oauth', 'providers', 'antigravity']);
         }
         if (dirtyFields.has('devinSensitiveWords')) {
           ensureMapInDoc(doc, ['oauth', 'providers', 'devin']);
           const devin = doc.getIn(['oauth', 'providers', 'devin'], true);
           if (isMap(devin)) {
-            syncStringSequence(
-              doc,
-              devin,
-              'sensitive-words',
-              baselineValues.devinSensitiveWords,
-              values.devinSensitiveWords
-            );
+            syncStringSequence(doc, devin, 'sensitive-words', values.devinSensitiveWords);
           }
           deleteIfMapEmpty(doc, ['oauth', 'providers', 'devin']);
         }
@@ -2457,10 +2607,7 @@ export function useVisualConfig() {
           assertConfigListsUnchanged(rebasedPayload.serverYaml, draftYaml, currentYaml, paths);
         }
         return draftYaml;
-      } catch (error) {
-        if (error instanceof ConfigDraftConflictError) throw error;
-        return currentYaml;
-      }
+      });
     },
     [baselineValues, baselineYaml, dirtyFields, visualValues, rebasedPayload]
   );
