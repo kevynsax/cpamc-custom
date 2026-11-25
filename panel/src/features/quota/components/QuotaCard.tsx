@@ -11,7 +11,6 @@ import { IconChevronDown, IconRefreshCw } from '@/components/ui/icons';
 import type { ClaudeQuotaState, CodexQuotaState, ResolvedTheme, XaiQuotaState } from '@/types';
 import { grokDisplayQuota } from '@/utils/quota/grokAvailability';
 import type { UsageAccount } from '@/services/api/clientUsage';
-import { resolveQuotaErrorMessage } from '@/utils/quota';
 import { getQuotaDisplayName } from '@/utils/quota/identity';
 import {
   getAuthFileIcon,

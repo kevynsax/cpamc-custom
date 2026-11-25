@@ -198,13 +198,23 @@ func (s *Server) customImagesEditsDispatch(upstream gin.HandlerFunc) gin.Handler
 			upstream(c)
 			return
 		}
-		raw, err := io.ReadAll(io.LimitReader(c.Request.Body, customImagesH3EditMaxBody+1))
-		_ = c.Request.Body.Close()
-		c.Request.Body = io.NopCloser(bytes.NewReader(raw))
-		if err != nil || len(raw) > customImagesH3EditMaxBody {
+		// The configured request-body cap is enforced by the server middleware.
+		// Stop before it so an oversized body reaches that check instead of a parse error.
+		limit := int64(customImagesH3EditMaxBody)
+		if maxBytes := s.maxRequestBodyBytes(); maxBytes > 0 && maxBytes < limit {
+			limit = maxBytes
+		}
+		body := c.Request.Body
+		raw, err := io.ReadAll(io.LimitReader(body, limit+1))
+		if err != nil || int64(len(raw)) > limit {
+			// The prefix is not a complete request. Put the original reader back so
+			// the size limit answers 413 instead of a truncated multipart parse.
+			c.Request.Body = body
 			upstream(c)
 			return
 		}
+		_ = body.Close()
+		c.Request.Body = io.NopCloser(bytes.NewReader(raw))
 		form, errForm := customImagesMultipart(c.Request.Header.Get("Content-Type"), raw)
 		if errForm != nil {
 			upstream(c)
