@@ -13,6 +13,7 @@ import type {
   CodexQuotaState,
   DevinQuotaState,
   KimiQuotaState,
+  CopilotQuotaState,
   MetaQuotaState,
   PluginQuotaState,
   XaiQuotaState,
@@ -26,6 +27,7 @@ export type QuotaProviderType =
   | 'codex'
   | 'devin'
   | 'kimi'
+  | 'copilot'
   | 'meta'
   | 'plugin'
   | 'xai'
@@ -39,6 +41,7 @@ export interface QuotaStore {
   codexQuota: Record<string, CodexQuotaState>;
   devinQuota: Record<string, DevinQuotaState>;
   kimiQuota: Record<string, KimiQuotaState>;
+  copilotQuota: Record<string, CopilotQuotaState>;
   minimaxQuota: Record<string, KimiQuotaState>; // CUSTOM (cpamc-custom)
   zaiQuota: Record<string, KimiQuotaState>; // CUSTOM (cpamc-custom)
   metaQuota: Record<string, MetaQuotaState>;
@@ -49,6 +52,7 @@ export interface QuotaStore {
   setCodexQuota: (updater: QuotaUpdater<Record<string, CodexQuotaState>>) => void;
   setDevinQuota: (updater: QuotaUpdater<Record<string, DevinQuotaState>>) => void;
   setKimiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
+  setCopilotQuota: (updater: QuotaUpdater<Record<string, CopilotQuotaState>>) => void;
   setMinimaxQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
   setZaiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
   setMetaQuota: (updater: QuotaUpdater<Record<string, MetaQuotaState>>) => void;
@@ -70,5 +74,5 @@ export interface QuotaProviderData<TState, TData> {
   storeSetter: keyof QuotaStore;
   buildLoadingState: () => TState;
   buildSuccessState: (data: TData) => TState;
-  buildErrorState: (message: string, status?: number) => TState;
+  buildErrorState: (message: string, status?: number, cause?: unknown) => TState;
 }

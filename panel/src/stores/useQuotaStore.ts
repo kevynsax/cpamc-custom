@@ -12,6 +12,7 @@ import type {
   CodexQuotaState,
   DevinQuotaState,
   KimiQuotaState,
+  CopilotQuotaState,
   MetaQuotaState,
   PluginQuotaState,
   XaiQuotaState,
@@ -34,6 +35,7 @@ interface QuotaStoreState {
   codexCreditOverageOperations: Record<string, CodexCreditOverageOperation>;
   devinQuota: Record<string, DevinQuotaState>;
   kimiQuota: Record<string, KimiQuotaState>;
+  copilotQuota: Record<string, CopilotQuotaState>;
   minimaxQuota: Record<string, KimiQuotaState>; // CUSTOM (cpamc-custom)
   zaiQuota: Record<string, KimiQuotaState>; // CUSTOM (cpamc-custom)
   metaQuota: Record<string, MetaQuotaState>;
@@ -50,6 +52,7 @@ interface QuotaStoreState {
   setCodexQuota: (updater: QuotaUpdater<Record<string, CodexQuotaState>>) => void;
   setDevinQuota: (updater: QuotaUpdater<Record<string, DevinQuotaState>>) => void;
   setKimiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
+  setCopilotQuota: (updater: QuotaUpdater<Record<string, CopilotQuotaState>>) => void;
   setMinimaxQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
   setZaiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
   setMetaQuota: (updater: QuotaUpdater<Record<string, MetaQuotaState>>) => void;
@@ -75,6 +78,7 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
   codexCreditOverageOperations: {},
   devinQuota: {},
   kimiQuota: {},
+  copilotQuota: {},
   minimaxQuota: {},
   zaiQuota: {},
   metaQuota: {},
@@ -148,6 +152,8 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
     set((state) => ({
       kimiQuota: resolveUpdater(updater, state.kimiQuota),
     })),
+  setCopilotQuota: (updater) =>
+    set((state) => ({ copilotQuota: resolveUpdater(updater, state.copilotQuota) })),
   setMinimaxQuota: (updater) =>
     set((state) => ({ minimaxQuota: resolveUpdater(updater, state.minimaxQuota) })),
   setZaiQuota: (updater) => set((state) => ({ zaiQuota: resolveUpdater(updater, state.zaiQuota) })),
@@ -186,6 +192,7 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
           codexQuota: omitNames(state.codexQuota),
           devinQuota: omitNames(state.devinQuota),
           kimiQuota: omitNames(state.kimiQuota),
+          copilotQuota: omitNames(state.copilotQuota),
           minimaxQuota: omitNames(state.minimaxQuota),
           zaiQuota: omitNames(state.zaiQuota),
           metaQuota: omitNames(state.metaQuota),
@@ -202,6 +209,7 @@ export const useQuotaStore = create<QuotaStoreState>((set) => ({
         codexCreditOverage: {},
         devinQuota: {},
         kimiQuota: {},
+        copilotQuota: {},
         minimaxQuota: {},
         zaiQuota: {},
         metaQuota: {},

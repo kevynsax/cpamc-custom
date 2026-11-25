@@ -8,6 +8,7 @@ export const QUOTA_TAB_ORDER: readonly QuotaProviderType[] = [
   'xai',
   'kimi',
   'devin',
+  'copilot',
   'meta',
   'minimax', // CUSTOM (cpamc-custom)
   'zai', // CUSTOM (cpamc-custom)
