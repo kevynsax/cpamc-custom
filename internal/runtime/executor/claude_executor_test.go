@@ -1346,7 +1346,8 @@ func TestClaudeExecutor_ConfirmedSDKTSAgentSDKRequestPassesThroughWithRealProfil
 	if got := ojson.GetBytes(seenBody, "system.#").Int(); got != 3 {
 		t.Fatalf("system block count = %d, want 3: %s", got, seenBody)
 	}
-	if got := ojson.GetBytes(seenBody, "system.0.text").String(); !strings.HasPrefix(got, "x-anthropic-billing-header: cc_version=2.1.320.179; cc_entrypoint=sdk-ts; cch=") {
+	wantBillingPrefix := billingHeader + " cch="
+	if got := ojson.GetBytes(seenBody, "system.0.text").String(); !strings.HasPrefix(got, wantBillingPrefix) {
 		t.Fatalf("system.0.text = %q, want sdk-ts billing header with signed cch", got)
 	}
 	if got := ojson.GetBytes(seenBody, "system.1.text").String(); got != "You are Claude Code, Anthropic's official CLI for Claude, running within the Claude Agent SDK." {
@@ -1431,7 +1432,8 @@ func TestClaudeExecutor_ConfiguredNativeEntrypointPassesThroughWithRealProfile(t
 	if got := ojson.GetBytes(seenBody, "system.#").Int(); got != 3 {
 		t.Fatalf("system block count = %d, want 3: %s", got, seenBody)
 	}
-	if got := ojson.GetBytes(seenBody, "system.0.text").String(); !strings.HasPrefix(got, "x-anthropic-billing-header: cc_version=2.1.321.179; cc_entrypoint=t3-code; cch=") {
+	wantBillingPrefix := billingHeader + " cch="
+	if got := ojson.GetBytes(seenBody, "system.0.text").String(); !strings.HasPrefix(got, wantBillingPrefix) {
 		t.Fatalf("system.0.text = %q, want t3-code billing header with signed cch", got)
 	}
 	if got := ojson.GetBytes(seenBody, "system.1.text").String(); got != "You are a Claude agent, built on Anthropic's Claude Agent SDK." {

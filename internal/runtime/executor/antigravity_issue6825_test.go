@@ -24,6 +24,18 @@ import (
 
 const issue6825FirstRequest = `{"model":"gemini-3-flash","tool_choice":"auto","messages":[{"role":"user","content":"What time is it?"}],"tools":[{"type":"function","function":{"name":"get_time","parameters":{"type":"object","properties":{"tz":{"type":"string"}}}}}]}`
 
+// CUSTOM (cpamc-custom)
+type issue6825ToolFunction struct {
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
+}
+
+type issue6825ToolCall struct {
+	ID       string                `json:"id"`
+	Type     string                `json:"type"`
+	Function issue6825ToolFunction `json:"function"`
+}
+
 func TestIssue6825StreamToolIndicesAcrossChunks(t *testing.T) {
 	original := []byte(issue6825FirstRequest)
 	translated := sdktranslator.TranslateRequest(sdktranslator.FormatOpenAI, sdktranslator.FormatAntigravity, "gemini-3-flash", original, true)
@@ -37,8 +49,17 @@ func TestIssue6825StreamToolIndicesAcrossChunks(t *testing.T) {
 	for _, chunk := range chunks {
 		for _, out := range sdktranslator.TranslateStream(context.Background(), sdktranslator.FormatAntigravity, sdktranslator.FormatOpenAI, "gemini-3-flash", original, translated, []byte(chunk), &param) {
 			for _, call := range ojson.GetBytes(out, "choices.0.delta.tool_calls").Array() {
-				indices = append(indices, call.Get("index").Int())
-				arguments = append(arguments, call.Get("function.arguments").String())
+				indexValue := call.Get("index")
+				index := indexValue.Int()
+				if index < 0 || index > int64(len(arguments)) {
+					t.Fatalf("unexpected tool index %d", index)
+				}
+				if index == int64(len(arguments)) {
+					indices = append(indices, index)
+					arguments = append(arguments, "")
+				}
+				argumentValue := call.Get("function.arguments")
+				arguments[index] += argumentValue.String()
 			}
 		}
 	}
@@ -128,7 +149,7 @@ func (c *issue6825Conversation) callWithContext(ctx context.Context, payload []b
 		c.t.Fatalf("ExecuteStream: %v", errExecute)
 	}
 	message := []byte(`{"role":"assistant"}`)
-	var calls []map[string]any
+	var calls []issue6825ToolCall
 	var content, reasoning string
 	for chunk := range response.Chunks {
 		if chunk.Err != nil {
@@ -140,11 +161,27 @@ func (c *issue6825Conversation) callWithContext(ctx context.Context, payload []b
 			content += delta.Get("content").String()
 			reasoning += delta.Get("reasoning_content").String()
 			for _, call := range delta.Get("tool_calls").Array() {
-				index := int(call.Get("index").Int())
-				if index != len(calls) {
-					c.t.Fatalf("unexpected new tool index %d, want %d", index, len(calls))
+				indexValue := call.Get("index")
+				index := int(indexValue.Int())
+				if index < 0 || index > len(calls) {
+					c.t.Fatalf("unexpected tool index %d, have %d calls", index, len(calls))
 				}
-				calls = append(calls, map[string]any{"id": call.Get("id").String(), "type": "function", "function": map[string]string{"name": call.Get("function.name").String(), "arguments": call.Get("function.arguments").String()}})
+				if index == len(calls) {
+					entry := issue6825ToolCall{Type: "function"}
+					calls = append(calls, entry)
+				}
+				idValue := call.Get("id")
+				id := idValue.String()
+				if id != "" {
+					calls[index].ID = id
+				}
+				nameValue := call.Get("function.name")
+				name := nameValue.String()
+				if name != "" {
+					calls[index].Function.Name = name
+				}
+				argumentValue := call.Get("function.arguments")
+				calls[index].Function.Arguments += argumentValue.String()
 			}
 		}
 	}
