@@ -573,10 +573,6 @@ func shouldLogRequest(path string) bool {
 	if strings.HasPrefix(path, "/v0/management") || strings.HasPrefix(path, "/v8/management") || strings.HasPrefix(path, "/management") {
 		return false
 	}
-	// CUSTOM (cpamc-custom): the agy relay writes its own logs, and its path carries the client key.
-	if strings.HasPrefix(path, "/agy-relay/") {
-		return false
-	}
 
 	return true
 }

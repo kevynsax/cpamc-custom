@@ -58,7 +58,6 @@ func (s *Server) setupRoutes() {
 	s.engine.GET("/management.html", s.serveManagementControlPanel)
 	s.engine.GET("/setup", customSetupHandler)       // CUSTOM (cpamc-custom): public client setup kit
 	s.engine.GET("/setup/*file", customSetupHandler) // CUSTOM (cpamc-custom)
-	s.engine.Any("/agy-relay/*path", s.agyRelay)     // CUSTOM (cpamc-custom): pass-through relay for the agy CLI, keyed by client key
 	openaiHandlers := openai.NewOpenAIAPIHandler(s.handlers)
 	geminiHandlers := gemini.NewGeminiAPIHandler(s.handlers)
 	claudeCodeHandlers := claude.NewClaudeCodeAPIHandler(s.handlers)
