@@ -18,7 +18,6 @@ const models = [
   { id: 'claude-fable-5-2', display_name: 'Claude Fable 5.2' },
   { id: encodeGatewayModel('gpt-6.1-sol'), display_name: 'GPT 6.1 Sol' },
   { id: encodeGatewayModel('grok-4.7'), display_name: 'Grok 4.7' },
-  { id: encodeGatewayModel('gemini-4-neon-xhigh'), display_name: 'Gemini 4 Neon' },
   { id: encodeGatewayModel('muse-wonder-1.0-contributor'), display_name: 'Muse Wonder 1.0' },
   { id: 'claude-sonnet-5-5', display_name: 'Claude Sonnet 5.5' },
 ];

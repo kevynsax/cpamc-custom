@@ -3,8 +3,8 @@
 Use `scripts/generate-image.mjs` with Node.js. These requests are independent of chat reasoning:
 never add `complexity`, `reasoning`, `reasoning_effort`, or `thinking`. Rendering `quality` is supported
 only for GPT Image and is omitted by default. Use `--dry-run` to inspect the sanitized payload without
-spending on a generation. Give reference file paths to `--ref` rather than reading image pixels into
-a chat model that does not support image input.
+spending on a generation. Send reference image files to an edit endpoint rather than reading image pixels
+into a chat model that does not support image input.
 
 Gateway: `https://ai-models.kevyn.com.br/v1` (from `~/.pi/agent/models.json` → `providers.cpamc`).
 
@@ -20,7 +20,7 @@ Gateway: `https://ai-models.kevyn.com.br/v1` (from `~/.pi/agent/models.json` →
   - Prompt max 32,000 chars; `n` max 10. Prompt enhancement is on by default (`data[].revised_prompt`).
 - Response: `{ "data": [ { "b64_json", "size", "revised_prompt" } ] }` (JPEG by default). Failed images carry `error` instead.
 - Up to 600 s. Not idempotent: MiniMax charges for finished images even if the client gave up. Never retry automatically.
-- Reference edits: `POST /v1/images/edits` multipart (OpenAI `images.edit`), 1–16 `image` files, no `mask`. The helper's `--ref` still uses Nano Banana; call edits with `curl` like GPT Image edits.
+- Reference edits: `POST /v1/images/edits` multipart (OpenAI `images.edit`), 1–16 `image` files, no `mask`. Call edits with `curl` like GPT Image edits.
 - `MiniMax-H3-Image-Highspeed` is not available on the current MiniMax Go plan (error 2068); cpamc does not route it.
 
 ### `gpt-image-2.6` (alias `gpt`)
@@ -37,15 +37,6 @@ Gateway: `https://ai-models.kevyn.com.br/v1` (from `~/.pi/agent/models.json` →
 - Related ids: `grok-imagine-image`, `grok-imagine-image-quality`
 - Often returns JPEG bytes inside `b64_json`
 - Best for: stylized / alternate aesthetic
-
-### `gemini-3.1-flash-image` (Nano Banana 2; aliases `nano-banana`, `nano`, `banana`)
-
-- Endpoint: `POST /v1/chat/completions` (not `/images/generations`)
-- Body: normal chat messages; prompt should clearly ask to generate an image
-- Response image at: `choices[0].message.images[0].image_url.url` (data URL)
-- Also works on `/v1/responses`, but chat is simpler for the helper
-- Optional edit-ish follow-up: multimodal user content with text + `image_url` ref
-- Context window in pi models.json: 131072
 
 ## Muse Image (`muse-image-1.0`)
 
@@ -89,10 +80,9 @@ MiniMax has no OpenAI-compatible images route, so cpamc-custom adds one
 
 1. Default → `h3` (MiniMax H3-Image)
 2. Readable text in the image or GPT Image look → `gpt`
-3. Need Google/Nano Banana look or multimodal edit from a reference → `nano-banana`
-4. Want Grok aesthetic → `grok`
-5. Want Meta Muse → `muse` (requires the cpamc `image: true` config above)
-6. Older MiniMax image-01 → `minimax-image-01`
+3. Want Grok aesthetic → `grok`
+4. Want Meta Muse → `muse` (requires the cpamc `image: true` config above)
+5. Older MiniMax image-01 → `minimax-image-01`
 
 ## Auth
 

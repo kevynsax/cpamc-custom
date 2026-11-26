@@ -17,7 +17,7 @@ Image generation is a separate request, not a reasoning turn. The current chat s
 - Do not use a reasoning/model-setting command to retry a failed image request.
 - If a dedicated image tool is required by the current system instructions, use only its declared parameters. Do not invent a complexity parameter.
 
-**Reference images:** pass local file paths to the helper with `--ref`. Do not read an image into a text-only chat model to inspect it. In the reported failure, image-file reads preceded the failed assistant turn; the generation helper had not run. A claim that the image API was retried would therefore be incorrect.
+**Reference images:** send local files to an edit endpoint (see Matching an existing icon set). Do not read an image into a text-only chat model to inspect it. In the reported failure, image-file reads preceded the failed assistant turn; the generation helper had not run. A claim that the image API was retried would therefore be incorrect.
 
 ## Run the Node.js helper
 
@@ -37,23 +37,21 @@ The helper reads `providers.cpamc.baseUrl` and `apiKey` from `~/.pi/agent/models
 |---|---|---|
 | Default: MiniMax H3-Image (photoreal, up to 4K, strong prompt adherence) | `minimax/MiniMax-H3-Image` / `h3` (also `minimax`) | `/images/generations` |
 | Readable text in images, GPT Image look | `gpt-image-2.6` / `gpt` | `/images/generations` |
-| Reference-based generation or edits | `gemini-3.1-flash-image` / `nano` | `/chat/completions` |
 | Alternate stylization | `grok-imagine-image-2.0` / `grok` | `/images/generations` |
 | Meta Muse | `meta/muse-image-1.0` / `muse` | `/images/generations` |
 | Older MiniMax | `minimax/image-01` / `minimax-image-01` | `/images/generations` |
 
-`--ref` without `--model` selects Nano Banana. An incompatible explicit model fails before any request, rather than silently ignoring the reference. Unknown models also fail before any request; do not guess routes or silently switch to another paid backend.
+Unknown models fail before any request; do not guess routes or silently switch to another paid backend.
 
 See `references/models.md` for gateway-specific requirements.
 
 ### Options
 
 - `--prompt TEXT` or `--prompt-file PATH`
-- `--model ID_OR_ALIAS` (default `h3`; `nano` when `--ref` is given)
+- `--model ID_OR_ALIAS` (default `h3`)
 - `--out PATH` (default: unique file under `/tmp/pi-image-gen/`)
 - `--size 1024x1024` (images endpoint only; H3 accepts 655,360–20,000,000 px, ratio 1:3–3:1, e.g. `2048x2048`)
 - `--quality low|medium|high|auto` (GPT Image only; omitted by default)
-- `--ref PATH` (Nano Banana only)
 - `--transparent` (ImageMagick required): generate against magenta, remove that background, fit to a transparent PNG; preserve white details in the subject
 - `--icon-size 256`, `--icon-pad 6`, `--chroma-fuzz 12`
 - `--keep-raw PATH` (optional original render when removing its background)
@@ -62,12 +60,6 @@ See `references/models.md` for gateway-specific requirements.
 - `--json` (machine-readable result; no base64 dump)
 
 ```bash
-# Use existing artwork as a reference without feeding it to the chat model.
-node ~/.claude/skills/image-gen/scripts/generate-image.mjs \
-  --ref /absolute/path/to/reference.webp \
-  --prompt "Generate a settings icon matching this flat illustrated style. No scene, border or shadow." \
-  --transparent --out /tmp/settings-option-2.png
-
 # Check the exact request safely before generating.
 node ~/.claude/skills/image-gen/scripts/generate-image.mjs \
   --model gpt --prompt "A flat settings cog" --dry-run
@@ -91,7 +83,7 @@ A text description of a style is not enough: it drifts to a generic look. Send a
 
 ## Workflow
 
-1. Read the project's visual constraints and existing image paths. Only visually inspect references if the current model explicitly supports image input; otherwise give their paths to Nano Banana.
+1. Read the project's visual constraints and existing image paths. Only visually inspect references if the current model explicitly supports image input; otherwise send their paths to an edit endpoint.
 2. Write a concrete prompt: subject, composition, palette, flatness/detail level, small-size readability, background and what to avoid.
 3. Generate the requested number of distinct options. Keep unselected candidates under `/tmp`; do not replace the current app icon or commit alternatives before the user chooses.
 4. For transparent icons, use `--transparent`; do not key out white, which destroys white subject details. This mode needs a PNG output path.
@@ -103,6 +95,6 @@ Do not print base64 image data or place prompt sidecars in an application's runt
 ## Recover from errors
 
 - **Unsupported complexity:** determine which operation failed. If no helper result exists, do not claim the gateway helper failed. Use the helper's explicit image-only payload; leave chat reasoning unchanged. If the helper itself receives that error with no complexity parameter in its dry-run payload, report a gateway-side incompatibility instead of looping or changing chat settings.
-- **Text-only model cannot read an image:** stop image reads; use the file path as `--ref` or inspect metadata only.
+- **Text-only model cannot read an image:** stop image reads; send the file path to an edit endpoint or inspect metadata only.
 - **Missing credentials / unavailable route / rejected model:** report that blocker. Do not modify gateway, provider or deployment configuration as an image-generation workaround.
 - **No image in the response:** treat it as a failed generation, not a saved image. Do not fall back silently to a different endpoint/model.

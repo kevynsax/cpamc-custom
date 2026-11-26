@@ -58,7 +58,7 @@ again; every file it changes is backed up first as `<file>.cpamc-bak-<time>`.
    - If the person already uses Claude Code with **their own** account, `claude` stays exactly as it was and
      a new `yolo` command runs the gateway version with its own config folder `~/.claude-cpamc`.
    - Otherwise `claude` and `yolo` both run through the gateway.
-   - Models: Claude Opus 5.5 (default), Claude Fable 5.2, GPT 6.1 Sol, Grok 4.7, Gemini 4 Neon,
+   - Models: Claude Opus 5.5 (default), Claude Fable 5.2, GPT 6.1 Sol, Grok 4.7,
      Muse Wonder 1.0 and Claude Sonnet 5.5 (for small jobs).
 3. Desktop app — the one the person does **not** already use with their own account:
    - Claude Desktop signed in to a Claude account → leave it alone, set up **Codex** with a separate
@@ -77,7 +77,7 @@ again; every file it changes is backed up first as `<file>.cpamc-bak-<time>`.
 
 - Tell the person to open a **new** terminal and run `yolo`.
 - Claude Desktop: fully quit and reopen it; on the welcome screen choose **Continue** (no sign-in). The
-  model picker shows the seven models above.
+  model picker shows the six models above.
 - Report the installer's `- ...` summary lines to the person, plus any `WARNING` line.
 - Usage bar: point out the gauge icon in the menu bar. If it does not appear, macOS blocked the unsigned
   app: walk them through Privacy & Security → **Open Anyway** (section 1), then run

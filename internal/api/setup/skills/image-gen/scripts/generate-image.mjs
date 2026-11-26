@@ -11,8 +11,6 @@ const run = promisify(execFile);
 const aliases = new Map([
   ['h3', 'minimax/MiniMax-H3-Image'], ['minimax', 'minimax/MiniMax-H3-Image'], ['minimax-h3', 'minimax/MiniMax-H3-Image'],
   ['gpt', 'gpt-image-2.6'], ['gpt-image', 'gpt-image-2.6'],
-  ['nano', 'gemini-3.1-flash-image'], ['nano-banana', 'gemini-3.1-flash-image'],
-  ['banana', 'gemini-3.1-flash-image'], ['gemini', 'gemini-3.1-flash-image'],
   ['grok', 'grok-imagine-image-2.0'], ['grok-imagine', 'grok-imagine-image-2.0'],
   ['muse', 'meta/muse-image-1.0'], ['muse-image', 'meta/muse-image-1.0'], ['muse-image-1.0', 'meta/muse-image-1.0'],
   ['minimax-image-01', 'minimax/image-01'], ['minimax-image', 'minimax/image-01'], ['image-01', 'minimax/image-01'],
@@ -24,17 +22,15 @@ const imageModels = new Set([
   'meta/muse-image-1.0', 'minimax/image-01', 'minimax/image-01-live',
   'minimax/MiniMax-H3-Image',
 ]);
-const nano = 'gemini-3.1-flash-image';
 const flags = new Set(['help', 'json', 'transparent', 'dry-run']);
-const valued = new Set(['prompt', 'prompt-file', 'model', 'out', 'size', 'quality', 'ref', 'icon-size', 'icon-pad', 'chroma-fuzz', 'keep-raw', 'key-only']);
+const valued = new Set(['prompt', 'prompt-file', 'model', 'out', 'size', 'quality', 'icon-size', 'icon-pad', 'chroma-fuzz', 'keep-raw', 'key-only']);
 const outputMimes = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
 const chroma = '#FF00FF';
 const chromaPrompt = ' The entire background must be solid bright magenta #FF00FF, edge to edge, with no gradient, texture or shadow. Do not use magenta, pink or purple anywhere on the subject. The subject must not touch the image edges.';
 const help = `Generate images through cpamc without inheriting chat reasoning settings.
 
-node generate-image.mjs --prompt TEXT [--model h3|gpt|nano|grok|muse|minimax-image-01] [--out PATH]
+node generate-image.mjs --prompt TEXT [--model h3|gpt|grok|muse|minimax-image-01] [--out PATH]
   --prompt-file PATH      Read the prompt from a UTF-8 file
-  --ref PATH              Nano Banana reference (selects nano when --model is omitted)
   --size WxH              Images endpoint size (default 1024x1024)
   --quality LEVEL         GPT Image only: low, medium, high, auto (default omitted)
   --transparent           Chroma-key to transparent PNG using ImageMagick
@@ -92,13 +88,6 @@ function suffix(mime) {
   return extensions[mime];
 }
 
-async function referenceUrl(path) {
-  const bytes = await readFile(path);
-  const mime = imageMime(bytes);
-  const base64 = bytes.toString('base64');
-  return `data:${mime};base64,${base64}`;
-}
-
 async function requestFor(options) {
   if (options.prompt && options['prompt-file']) throw new Error('Use either --prompt or --prompt-file, not both');
   const text = options['prompt-file'] ? await readFile(options['prompt-file'], 'utf8') : options.prompt ?? '';
@@ -108,23 +97,13 @@ async function requestFor(options) {
     prompt = prompt.replace(/\b(?:pure |plain |solid )?white background\b\.?/gi, '').trim();
     prompt += chromaPrompt;
   }
-  const selected = options.model ?? (options.ref ? 'nano' : 'h3');
+  const selected = options.model ?? 'h3';
   const normalized = selected.toLowerCase();
   const model = aliases.get(normalized) ?? selected;
-  if (model !== nano && !imageModels.has(model)) throw new Error(`Unsupported image model: ${model}. Use a documented model or alias.`);
-  if (options.ref && model !== nano) throw new Error('--ref requires Nano Banana; omit --model or select --model nano');
+  if (!imageModels.has(model)) throw new Error(`Unsupported image model: ${model}. Use a documented model or alias.`);
   if (options.quality && !model.startsWith('gpt-image-')) throw new Error('--quality is a GPT Image rendering option; omit it for this model');
   const levels = ['low', 'medium', 'high', 'auto'];
   if (options.quality && !levels.includes(options.quality)) throw new Error('--quality must be low, medium, high or auto');
-  if (model === nano) {
-    if (options.size) throw new Error('--size is for the images endpoint; omit it for Nano Banana');
-    let content = prompt;
-    if (options.ref) {
-      const url = await referenceUrl(options.ref);
-      content = [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url } }];
-    }
-    return { endpoint: '/chat/completions', payload: { model, messages: [{ role: 'user', content }], max_tokens: 4096 } };
-  }
   let size = options.size ?? '1024x1024';
   const dimensions = /^(\d+)x(\d+)$/.exec(size);
   if (!dimensions) throw new Error('--size must be WxH, for example 1024x1024');
@@ -199,21 +178,13 @@ async function generate(request, config) {
     const safe = String(detail).replaceAll(config.key, '[redacted]').slice(0, 600);
     throw new Error(`HTTP ${response.status}: ${safe}`);
   }
-  let encoded;
-  if (request.endpoint === '/chat/completions') {
-    const message = data.choices?.[0]?.message;
-    const image = message?.images?.[0];
-    encoded = image?.image_url?.url ?? image?.url;
-    if (!encoded && typeof message?.content === 'string' && message.content.startsWith('data:image/')) encoded = message.content;
-  } else {
-    const first = data.data?.[0];
-    if (first?.b64_json) {
-      const bytes = Buffer.from(first.b64_json, 'base64');
-      const mime = imageMime(bytes);
-      return { bytes, mime };
-    }
-    encoded = first?.url;
+  const first = data.data?.[0];
+  if (first?.b64_json) {
+    const bytes = Buffer.from(first.b64_json, 'base64');
+    const mime = imageMime(bytes);
+    return { bytes, mime };
   }
+  const encoded = first?.url;
   if (typeof encoded !== 'string') throw new Error('The gateway returned no image. No output file was written.');
   const match = /^data:image\/[a-zA-Z0-9.+-]+;base64,([\s\S]+)$/.exec(encoded);
   if (!match) throw new Error('Expected an inline image data URL; remote URLs are not automatically fetched');
@@ -272,12 +243,6 @@ function outputPath(options, mime) {
 
 function preview(request, options) {
   const payload = structuredClone(request.payload);
-  const content = payload.messages?.[0]?.content;
-  if (Array.isArray(content)) {
-    for (const item of content) {
-      if (item.image_url) item.image_url.url = `[local reference: ${resolve(options.ref)}; image data omitted]`;
-    }
-  }
   const result = { dryRun: true, endpoint: request.endpoint, payload, transparent: Boolean(options.transparent), output: options.out ?? '(unique file under /tmp/pi-image-gen)' };
   const json = JSON.stringify(result, null, 2);
   console.log(json);
