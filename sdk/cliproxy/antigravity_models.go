@@ -112,7 +112,7 @@ func nextAntigravityFailureWithPolicy(previous antigravityFailureState, now time
 }
 
 func isAntigravityAuthDisabled(auth *coreauth.Auth) bool {
-	return auth != nil && (auth.Disabled || auth.Status == coreauth.StatusDisabled)
+	return auth != nil && (auth.Disabled || auth.Status == coreauth.StatusDisabled || auth.AgyProxyOnly()) // CUSTOM (cpamc-custom)
 }
 
 func isAntigravityRefreshTerminallyRejected(auth *coreauth.Auth) bool {

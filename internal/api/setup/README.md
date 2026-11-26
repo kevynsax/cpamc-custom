@@ -3,6 +3,12 @@
 You were asked to set up the CPAMC gateway (`https://ai-models.kevyn.com.br`) on this computer, with a
 client API key the person gave you. Follow these steps exactly. Never print, log or commit the key.
 
+## Antigravity (agy)
+
+For the agy terminal CLI and Antigravity app, follow [agy.md](/setup/agy.md).
+It has a separate proxy installer, account enrollment and CA trust step. Do not use
+the general model-API installation below for agy.
+
 ## 1. Ask first (macOS only)
 
 **What CPAMC Bar is:** a small macOS menu-bar app (a gauge icon next to the clock). Clicking it opens a

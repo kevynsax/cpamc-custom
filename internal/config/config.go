@@ -98,6 +98,8 @@ type Config struct {
 	// full to that client's request log under <logs>/clients/<name>.
 	// CUSTOM (cpamc-custom): see CUSTOM_FEATURES.md ("Google-account clients").
 	GoogleAccountClients []GoogleAccountClient `yaml:"google-account-clients" json:"google-account-clients"`
+	// CUSTOM (cpamc-custom)
+	AgyProxy AgyProxyConfig `yaml:"agy-proxy" json:"agy-proxy"`
 	// ClientRequestLogMaxTotalSizeMB limits the total size (in MB) of each client's request log.
 	// When exceeded, the oldest log files are deleted until within the limit. Set to 0 to disable.
 	// CUSTOM (cpamc-custom)

@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/agyproxy" // CUSTOM (cpamc-custom)
 	managementHandlers "github.com/router-for-me/CLIProxyAPI/v8/internal/api/handlers/management"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/api/middleware"
 	codexlive "github.com/router-for-me/CLIProxyAPI/v8/internal/client/codex/live"
@@ -76,6 +77,7 @@ type Server struct {
 	loggerToggle  func(bool)
 	// CUSTOM (cpamc-custom): full request logger of each Google-account client.
 	clientRequestLoggers atomic.Pointer[logging.ClientRequestLoggers]
+	agyProxy             atomic.Pointer[agyproxy.Proxy] // CUSTOM (cpamc-custom)
 
 	// configFilePath is the absolute path to the YAML config file for persistence.
 	configFilePath string
@@ -344,6 +346,14 @@ func (s *Server) Start() error {
 	}
 
 	cfg := s.getConfig()
+	// CUSTOM (cpamc-custom)
+	if errProxy := s.startAgyProxy(cfg); errProxy != nil {
+		if errClose := listener.Close(); errClose != nil {
+			log.WithError(errClose).Warn("close API listener")
+		}
+		return errProxy
+	}
+	defer s.stopAgyProxy()
 	useTLS := cfg != nil && cfg.TLS.Enable
 	if useTLS {
 		certPath := strings.TrimSpace(cfg.TLS.Cert)
@@ -459,6 +469,7 @@ func (s *Server) Start() error {
 //   - error: An error if the server fails to stop
 func (s *Server) Stop(ctx context.Context) error {
 	log.Debug("Stopping API server...")
+	s.stopAgyProxy() // CUSTOM (cpamc-custom)
 
 	if s.keepAliveEnabled {
 		select {

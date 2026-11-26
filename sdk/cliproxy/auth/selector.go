@@ -1260,6 +1260,9 @@ func isAuthBlockedForModelForRequest(ctx context.Context, auth *Auth, model stri
 	if auth == nil {
 		return true, blockReasonOther, time.Time{}
 	}
+	if auth.AgyProxyOnly() { // CUSTOM (cpamc-custom)
+		return true, blockReasonDisabled, time.Time{}
+	}
 	if auth.Disabled || auth.Status == StatusDisabled {
 		return true, blockReasonDisabled, time.Time{}
 	}
@@ -1478,6 +1481,9 @@ func isAuthBlockedByQuotaOrAuthForModel(auth *Auth, model string, now time.Time)
 
 func isAuthBlockedByQuotaOrAuthForModelForRequest(ctx context.Context, auth *Auth, model string, now time.Time, clientHeaders ...http.Header) bool {
 	if auth == nil {
+		return true
+	}
+	if auth.AgyProxyOnly() { // CUSTOM (cpamc-custom)
 		return true
 	}
 	if auth.Disabled || auth.Status == StatusDisabled {

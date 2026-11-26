@@ -45,7 +45,7 @@ func (e *AntigravityExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Au
 }
 
 func (e *AntigravityExecutor) ShouldPrepareRequestAuth(auth *cliproxyauth.Auth) bool {
-	if auth == nil {
+	if auth == nil || auth.AgyProxyOnly() { // CUSTOM (cpamc-custom)
 		return false
 	}
 	return antigravityProjectIDFromAuth(auth) == ""

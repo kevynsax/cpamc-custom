@@ -1,0 +1,14 @@
+/* CUSTOM (cpamc-custom) */
+.icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.speedHint {
+  margin: -8px 0 20px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}

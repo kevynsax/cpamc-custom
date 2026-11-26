@@ -34,6 +34,15 @@ server:
   # Server port
   port: 8317
 
+  # CUSTOM (cpamc-custom): optional dedicated TLS CONNECT listener for agy.
+  # Configure a valid server certificate and persistent private state directory.
+  # Follow /setup/agy.md; restart after changing these settings.
+  agy-proxy:
+    listen: ""
+    cert: ""
+    key: ""
+    state-dir: ""
+
   # Maximum allowed size (in bytes) for incoming HTTP request bodies.
   # Requests exceeding this limit are rejected with HTTP 413 Payload Too Large.
   # Default is 0 (disabled / no limit).

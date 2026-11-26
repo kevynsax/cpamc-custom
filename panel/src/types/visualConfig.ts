@@ -2,6 +2,12 @@ import type { ErrorRuleDraft } from '@/features/providers/errorRules';
 
 export type OAuthChannelRules = { channel: string; rules: ErrorRuleDraft[] };
 
+// CUSTOM (cpamc-custom)
+export type GoogleAccountClient = {
+  name: string;
+  apiKey: string;
+};
+
 export type PayloadParamValueType = 'string' | 'number' | 'boolean' | 'json';
 export type DisableImageGenerationMode = 'false' | 'true' | 'chat' | 'passthrough';
 export type RoutingStrategy = 'round-robin' | 'weighted-round-robin' | 'fill-first';
@@ -193,6 +199,7 @@ export type VisualConfigValues = {
   authDir: string;
   /** Client authentication keys at access.api-keys (never the upstream api-keys map). */
   apiKeysText: string;
+  googleAccountClients: GoogleAccountClient[];
   pluginsEnabled: boolean;
   pluginStoreSources: string[];
   pluginStoreAuth: PluginStoreAuthRule[];
@@ -302,6 +309,7 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
   rmPanelRepo: '',
   authDir: '',
   apiKeysText: '',
+  googleAccountClients: [],
   pluginsEnabled: false,
   pluginStoreSources: [],
   pluginStoreAuth: [],

@@ -23,6 +23,9 @@ const antigravityCountTokensMaxResponseBytes = 1 << 20
 
 // CountTokens counts tokens for the given request using the Antigravity API.
 func (e *AntigravityExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+	if auth.AgyProxyOnly() { // CUSTOM (cpamc-custom)
+		return cliproxyexecutor.Response{}, statusErr{code: http.StatusForbidden, msg: "agy-only account requires the HTTPS proxy"}
+	}
 	baseModel := thinking.ParseSuffix(req.Model).ModelName
 	if antigravityInTOSPause(e.cfg, auth) {
 		return cliproxyexecutor.Response{}, newAntigravityTOSPauseStatusErr()

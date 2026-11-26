@@ -335,7 +335,7 @@ func antigravityCreditsRetryEnabled(cfg *config.Config) bool {
 }
 
 func isAntigravityAuthDisabled(auth *cliproxyauth.Auth) bool {
-	return auth == nil || auth.Disabled || auth.Status == cliproxyauth.StatusDisabled
+	return auth == nil || auth.Disabled || auth.Status == cliproxyauth.StatusDisabled || auth.AgyProxyOnly() // CUSTOM (cpamc-custom)
 }
 
 func clearAntigravityCreditsFailureState(auth *cliproxyauth.Auth) {

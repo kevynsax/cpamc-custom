@@ -56,8 +56,8 @@ func (s *Server) setupRoutes() {
 	s.engine.HEAD("/healthz", healthzHandler)
 
 	s.engine.GET("/management.html", s.serveManagementControlPanel)
-	s.engine.GET("/setup", customSetupHandler)       // CUSTOM (cpamc-custom): public client setup kit
-	s.engine.GET("/setup/*file", customSetupHandler) // CUSTOM (cpamc-custom)
+	s.engine.GET("/setup", s.customAgySetup)       // CUSTOM (cpamc-custom): public client setup kit
+	s.engine.GET("/setup/*file", s.customAgySetup) // CUSTOM (cpamc-custom)
 	openaiHandlers := openai.NewOpenAIAPIHandler(s.handlers)
 	geminiHandlers := gemini.NewGeminiAPIHandler(s.handlers)
 	claudeCodeHandlers := claude.NewClaudeCodeAPIHandler(s.handlers)

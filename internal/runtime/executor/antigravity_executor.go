@@ -1060,6 +1060,9 @@ func (e *AntigravityExecutor) PrepareRequest(req *http.Request, auth *cliproxyau
 }
 
 func (e *AntigravityExecutor) prepareRequestWithAuth(req *http.Request, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+	if auth.AgyProxyOnly() { // CUSTOM (cpamc-custom)
+		return nil, statusErr{code: http.StatusForbidden, msg: "agy-only account requires the HTTPS proxy"}
+	}
 	if req == nil {
 		return auth, nil
 	}

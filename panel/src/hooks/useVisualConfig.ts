@@ -23,6 +23,11 @@ import type {
   PayloadParamValidationErrorCode,
 } from '@/types/visualConfig';
 import { DEFAULT_VISUAL_VALUES, isPayloadReplaceRole } from '@/types/visualConfig';
+import {
+  readGoogleAccountClients,
+  writeGoogleAccountClients,
+  GOOGLE_ACCOUNT_CLIENTS_PATH,
+} from '@/features/config/apiKeyAgy';
 import { parseConfigDocument } from '@/services/api/configYaml';
 import { assertConfigListsUnchanged, ConfigDraftConflictError } from '@/services/api/configPatch';
 import {
@@ -1611,6 +1616,11 @@ function getNextDirtyFields(
         withoutEditorIds(baselineValues.oauthErrorRules)
     );
   }
+  if (Object.prototype.hasOwnProperty.call(patch, 'googleAccountClients')) {
+    const nextClients = JSON.stringify(nextValues.googleAccountClients);
+    const baselineClients = JSON.stringify(baselineValues.googleAccountClients);
+    updateDirty('googleAccountClients', nextClients === baselineClients);
+  }
   SERVER_FIELDS.forEach(({ key }) => {
     if (Object.prototype.hasOwnProperty.call(patch, key)) {
       updateDirty(key, JSON.stringify(nextValues[key]) === JSON.stringify(baselineValues[key]));
@@ -1836,6 +1846,7 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
 
   const parsedRaw: unknown = document.toJS() || {};
   const parsed = asRecord(parsedRaw) ?? {};
+  const v8Access = asRecord(parsed.access);
   const v8Server = asRecord(parsed?.['server']);
   const v8Routing = asRecord(parsed?.['routing']);
   const v8RoutingRetry = asRecord(v8Routing?.['retry']);
@@ -1885,7 +1896,8 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
         : '',
 
     authDir: typeof v8Oauth?.['auth-dir'] === 'string' ? v8Oauth?.['auth-dir'] : '',
-    apiKeysText: parseApiKeysText(asRecord(parsed.access)?.['api-keys']),
+    apiKeysText: parseApiKeysText(v8Access?.['api-keys']),
+    googleAccountClients: readGoogleAccountClients(v8Access?.['google-account-clients']),
     pluginsEnabled: Boolean(plugins?.enabled),
     pluginStoreSources: parseStringList(plugins?.['store-sources']),
     pluginStoreAuth: parsePluginStoreAuthRules(plugins?.['store-auth']),
@@ -2202,6 +2214,9 @@ export function useVisualConfig() {
             .map((key) => key.trim())
             .filter(Boolean);
           writeClientKeys(doc, apiKeys);
+        }
+        if (dirtyFields.has('googleAccountClients')) {
+          writeGoogleAccountClients(doc, values.googleAccountClients);
         }
 
         const pluginsDirty =
@@ -2601,6 +2616,10 @@ export function useVisualConfig() {
         }
 
         const draftYaml = doc.toString({ indent: 2, lineWidth: 120, minContentWidth: 0 });
+        if (target === 'server' && dirtyFields.has('googleAccountClients')) {
+          const clientPaths = [GOOGLE_ACCOUNT_CLIENTS_PATH];
+          assertConfigListsUnchanged(baselineYaml, draftYaml, currentYaml, clientPaths);
+        }
         if (target === 'server' && rebasedPayload && hasPayloadDirtyFields(dirtyFields)) {
           // The retained AST preserves local lineage, but must never silently replace a
           // list another client changed after recovery (including unknown model fields).

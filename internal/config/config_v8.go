@@ -82,6 +82,7 @@ func buildV8Paths() []configPath {
 		{"remote-management", "management"}, {"api-keys", "access.api-keys"},
 		// CUSTOM (cpamc-custom): Google-account clients. See CUSTOM_FEATURES.md.
 		{"google-account-clients", "access.google-account-clients"},
+		{"agy-proxy", "server.agy-proxy"}, // CUSTOM (cpamc-custom)
 		{"credential-concurrency", "credentials.concurrency"}, {"credential-in-flight", "credentials.in-flight"},
 		{"force-model-prefix", "routing.force-model-prefix"},
 		{"request-retry", "routing.retry.request-retry"}, {"max-retry-credentials", "routing.retry.max-retry-credentials"},

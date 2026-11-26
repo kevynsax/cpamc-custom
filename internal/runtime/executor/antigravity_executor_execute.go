@@ -24,6 +24,9 @@ import (
 
 // Execute performs a non-streaming request to the Antigravity API.
 func (e *AntigravityExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (resp cliproxyexecutor.Response, err error) {
+	if auth.AgyProxyOnly() { // CUSTOM (cpamc-custom)
+		return resp, statusErr{code: http.StatusForbidden, msg: "agy-only account requires the HTTPS proxy"}
+	}
 	if helps.HasResponsesCompactionItem(req.Payload) {
 		expanded, errExpand := helps.ExpandAntigravityCompactionCapsules(req.Payload)
 		if errExpand != nil {

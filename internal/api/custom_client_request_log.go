@@ -19,9 +19,6 @@ import (
 // every config reload.
 func (s *Server) applyGoogleAccountClients(cfg *config.Config) {
 	handlers.SetGoogleAccountClients(cfg.GoogleAccountClients)
-	if s.requestLogger == nil {
-		return
-	}
 	logsDir := logging.ResolveLogDirectory(cfg)
 	configDir := filepath.Dir(s.configFilePath)
 	maxBytes := int64(cfg.ClientRequestLogMaxTotalSizeMB) * 1024 * 1024

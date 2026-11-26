@@ -672,3 +672,17 @@ Conflicts most likely in `selector.go` (`authPriority`), `apiCall.ts`
 - Local side (not in this repository): Google-account models live only in
   `~/.config/cpamc/agy-only-models.json`, and the `model-sync` skill refuses to put them in any other CLI.
 
+### 20. agy HTTPS proxy (`server.agy-proxy`)
+
+- Dedicated TLS CONNECT listener with HTTP/2 interception, a persistent private CA and
+  authenticated Google-account client keys (`internal/agyproxy`, `internal/api/custom_agy_proxy.go`).
+- Only Google's token refresh endpoint is answered locally: a client-bound synthetic refresh
+  credential retrieves the held account's current access token. Google's refresh token stays
+  in the normal auth manager; disabled accounts receive `invalid_grant`.
+- `agy_proxy_only` Antigravity credentials stay out of model routing, discovery and credit
+  probes while the existing OAuth refresh loop keeps them current. Other traffic is forwarded
+  unchanged and logged, with credentials masked, in the existing per-client store.
+- Authenticated bootstrap: `POST /v8/management/access/agy/bootstrap`. Public CA:
+  `/setup/agy-ca.pem`. Enrollment, macOS CLI/app installer and operating instructions:
+  `/setup/agy.md`. Users install the kit themselves; no automatic deployment or installation.
+

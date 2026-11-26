@@ -45,6 +45,9 @@ func (s *Service) registerModelsForAuthWithConfigAndCache(ctx context.Context, c
 	// not overwrite or remove the newer registration when it finishes last.
 	fence := newModelRegistrationFence(a, cfg)
 	s.cancelStaleAntigravityProbes(a.ID)
+	if a.AgyProxyOnly() { // CUSTOM (cpamc-custom)
+		return s.unregisterModelsForAuthFenced(a, fence)
+	}
 	if a.Disabled {
 		if s != nil && s.coreManager != nil {
 			if current, ok := s.coreManager.GetByID(a.ID); ok && current != nil && !current.Disabled {
