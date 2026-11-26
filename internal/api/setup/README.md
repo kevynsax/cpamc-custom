@@ -6,8 +6,12 @@ client API key the person gave you. Follow these steps exactly. Never print, log
 ## Antigravity (agy)
 
 For the agy terminal CLI and Antigravity app, follow [agy.md](/setup/agy.md).
-It has a separate proxy installer, account enrollment and CA trust step. Do not use
-the general model-API installation below for agy.
+It has a separate proxy installer, account enrollment and CA trust step. An administrator
+downloads the bootstrap file from **Configuration → AGY setup file** beside the saved AGY
+key, after selecting the Google account. You need both this private file and its client
+key on the destination Mac. Use the file promptly; its access token expires. Follow the
+installation command in agy.md and never request the management key or Google's refresh
+token. Do not use the general model-API installation below for agy.
 
 ## 1. Ask first (macOS only)
 

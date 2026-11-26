@@ -682,7 +682,10 @@ Conflicts most likely in `selector.go` (`authPriority`), `apiCall.ts`
 - `agy_proxy_only` Antigravity credentials stay out of model routing, discovery and credit
   probes while the existing OAuth refresh loop keeps them current. Other traffic is forwarded
   unchanged and logged, with credentials masked, in the existing per-client store.
-- Authenticated bootstrap: `POST /v8/management/access/agy/bootstrap`. Public CA:
+- Saved AGY keys offer **AGY setup file**, an account picker and private bootstrap download.
+  The authenticated `GET /v8/management/access/agy/accounts` exposes only AGY-only account
+  identities and readiness; token issuance stays at `POST /v8/management/access/agy/bootstrap`.
+  Reissuing replaces that client's prior grant. Unsaved keys must be saved first. Public CA:
   `/setup/agy-ca.pem`. Enrollment, macOS CLI/app installer and operating instructions:
   `/setup/agy.md`. Users install the kit themselves; no automatic deployment or installation.
 

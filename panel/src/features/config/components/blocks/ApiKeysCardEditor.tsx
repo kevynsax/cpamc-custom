@@ -18,6 +18,7 @@ import { generateSecureApiKey } from '@/utils/apiKey';
 import { maskApiKey } from '@/utils/format';
 import { isValidApiKeyCharset } from '@/utils/validation';
 import { ApiKeyStrengthMeter } from './ApiKeyStrengthMeter';
+import { AgySetupButton } from './AgySetupButton';
 import styles from './Blocks.module.scss';
 
 type ApiKeysCardEditorProps = {
@@ -34,7 +35,7 @@ type ApiKeyEntryProps = {
   name: string;
   kind: ApiKeyKind;
   speed: ApiKeySpeed;
-  agy: boolean;
+  agyClient?: GoogleAccountClient;
   disabled: boolean;
   onCopy: (key: string) => Promise<void>;
   onEdit: (keyId: string) => void;
@@ -52,7 +53,7 @@ type ApiKeyEntriesProps = KeyMetadata & {
 };
 
 function ApiKeyEntry(props: ApiKeyEntryProps) {
-  const { apiKey, keyId, index, name, kind, speed, agy, disabled, onCopy, onEdit, onDelete } =
+  const { apiKey, keyId, index, name, kind, speed, agyClient, disabled, onCopy, onEdit, onDelete } =
     props;
   const { t } = useTranslation();
   const copy = async () => {
@@ -64,7 +65,7 @@ function ApiKeyEntry(props: ApiKeyEntryProps) {
   const remove = () => {
     onDelete(keyId);
   };
-  const usageKey = agy
+  const usageKey = agyClient
     ? 'config_management.visual.api_keys.purpose_agy'
     : `config_management.visual.api_keys.speed_${speed}`;
   return (
@@ -82,6 +83,7 @@ function ApiKeyEntry(props: ApiKeyEntryProps) {
         <span className={styles.apiKeyValue}>{maskApiKey(apiKey)}</span>
       </span>
       <span className={styles.apiKeyActions}>
+        {agyClient && <AgySetupButton client={agyClient} disabled={disabled} />}
         <Button variant="ghost" size="sm" onClick={copy} disabled={disabled}>
           {t('common.copy')}
         </Button>
@@ -122,7 +124,7 @@ function ApiKeyEntries(props: ApiKeyEntriesProps) {
   const renderEntry = (apiKey: string, index: number) => {
     const fingerprint = keyIds[index];
     const matchesKey = (client: GoogleAccountClient) => client.apiKey === apiKey;
-    const agy = googleAccountClients.some(matchesKey);
+    const agyClient = googleAccountClients.find(matchesKey);
     return (
       <ApiKeyEntry
         key={keyIds[index]}
@@ -132,7 +134,7 @@ function ApiKeyEntries(props: ApiKeyEntriesProps) {
         name={names[fingerprint] ?? ''}
         kind={kinds[fingerprint] ?? 'person'}
         speed={speeds[fingerprint] ?? 'standard'}
-        agy={agy}
+        agyClient={agyClient}
         disabled={disabled}
         onCopy={onCopy}
         onEdit={onEdit}

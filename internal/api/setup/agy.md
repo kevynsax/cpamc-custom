@@ -26,6 +26,20 @@ its Google-account authorization; no source-editor change is needed. Existing cl
 keep their client identity when their label or key is edited. Deleting a key or changing
 it back to **General** removes its AGY authorization when the configuration is saved.
 
+For an enrolled account, click **AGY setup file** beside the saved key, select the
+Google account, then **Download setup file**. Disabled accounts cannot be selected;
+accounts waiting for token refresh can be reloaded shortly. If no account appears,
+complete the one-time enrollment below on the Mac already signed into agy, then
+return here and click **Reload accounts**. The picker lists only AGY-only accounts
+and does not change account credentials or run model requests.
+
+The downloaded `agy-bootstrap-<client>.json` is the bootstrap file used by the Mac
+installer's `--bootstrap` argument. Transfer it and the corresponding client key
+securely to the new Mac. It includes a short-lived access token and CPAMC's synthetic
+refresh credential, not Google's real refresh token or the management key. Install
+promptly, then delete the file. If it expires, download a fresh one from the panel.
+Each download replaces that client's previous AGY login: use a separate key per Mac.
+
 Configure v8 YAML (use a valid TLS certificate for the proxy hostname):
 
 ```yaml

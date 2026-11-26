@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/MoeForge/moego/json"
+	"github.com/MoeForge/moego/ojson"
 	"github.com/gin-gonic/gin"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/agyproxy"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
@@ -93,5 +94,22 @@ func (s *Server) customAgyBootstrap(c *gin.Context) {
 		c.String(http.StatusBadRequest, "%s", errBootstrap.Error())
 		return
 	}
+	c.Data(http.StatusOK, "application/json", data)
+}
+
+func (s *Server) customAgyAccounts(c *gin.Context) {
+	c.Header("Cache-Control", "no-store")
+	proxy := s.agyProxy.Load()
+	if proxy == nil {
+		c.Status(http.StatusServiceUnavailable)
+		return
+	}
+	accounts := proxy.Accounts()
+	doc := ojson.NewDocString("{}")
+	if errSet := doc.Set("accounts", accounts); errSet != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	data := doc.Bytes()
 	c.Data(http.StatusOK, "application/json", data)
 }
