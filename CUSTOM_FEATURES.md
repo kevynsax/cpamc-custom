@@ -669,7 +669,13 @@ Conflicts most likely in `selector.go` (`authPriority`), `apiCall.ts`
   go first.
 - Read them with the management key: `GET /v8/management/observability/logs/clients` (clients, file
   count, bytes), `GET .../clients/<name>` (files, newest first), `GET .../clients/<name>/<file>`.
-- Local side (not in this repository): `agy` uses its own key from `~/.config/cpamc/agy-api-key`;
-  Google-account models live only in `~/.config/cpamc/agy-only-models.json` and the `model-sync`
-  skill refuses to put them in any other CLI.
+- `agy relay`: `/agy-relay/<client key>/...` forwards the agy CLI's own Cloud Code calls to
+  `daily-cloudcode-pa.googleapis.com` unchanged (agy keeps its own Google sign-in; cpamc adds no credential
+  and strips ingress hop headers such as `X-Forwarded-For`). agy uses it through
+  `CLOUD_CODE_URL=https://<gateway>/agy-relay/<key>`. Each exchange is written to
+  `<logs>/clients/<name>/agy-relay-*.log` and read with the endpoints above. Unknown keys get 404; the key is
+  masked in the access log and the relay is excluded from the generic request log
+  (`internal/api/custom_agy_relay.go`).
+- Local side (not in this repository): Google-account models live only in
+  `~/.config/cpamc/agy-only-models.json`, and the `model-sync` skill refuses to put them in any other CLI.
 

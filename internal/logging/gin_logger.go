@@ -49,6 +49,10 @@ func GinLogrusLogger() gin.HandlerFunc {
 		if strings.HasPrefix(path, "/v8/management/oauth/") {
 			raw = ""
 		}
+		// CUSTOM (cpamc-custom): the agy relay path carries the client key.
+		if strings.HasPrefix(path, "/agy-relay/") {
+			path = "/agy-relay/<key>/" + path[strings.LastIndex(path, "/")+1:]
+		}
 
 		// Only generate request ID for AI API paths
 		var requestID string
