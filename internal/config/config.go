@@ -93,6 +93,16 @@ type Config struct {
 	// When exceeded, the oldest error log files are deleted. Default is 10. Set to 0 to disable cleanup.
 	ErrorLogsMaxFiles int `yaml:"error-logs-max-files" json:"error-logs-max-files"`
 
+	// GoogleAccountClients names the client API keys allowed to use the models cpamc serves
+	// through a Google account. Every request made with one of these keys is written in
+	// full to that client's request log under <logs>/clients/<name>.
+	// CUSTOM (cpamc-custom): see CUSTOM_FEATURES.md ("Google-account clients").
+	GoogleAccountClients []GoogleAccountClient `yaml:"google-account-clients" json:"google-account-clients"`
+	// ClientRequestLogMaxTotalSizeMB limits the total size (in MB) of each client's request log.
+	// When exceeded, the oldest log files are deleted until within the limit. Set to 0 to disable.
+	// CUSTOM (cpamc-custom)
+	ClientRequestLogMaxTotalSizeMB int `yaml:"client-request-log-max-total-size-mb" json:"client-request-log-max-total-size-mb"`
+
 	// UsageStatisticsEnabled defaults to true; an explicit false disables usage collection.
 	UsageStatisticsEnabled bool `yaml:"usage-statistics-enabled" json:"usage-statistics-enabled"`
 

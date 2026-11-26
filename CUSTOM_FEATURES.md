@@ -646,7 +646,30 @@ Conflicts most likely in `selector.go` (`authPriority`), `apiCall.ts`
 - The installer takes the person's client key, checks it against `/v1/models`, and never changes the
   person's own Claude/Codex accounts: own Claude Code sign-in → only a `yolo` command with
   `~/.claude-cpamc`; signed-in Claude Desktop → a Codex `cpamc` profile instead of Claude Desktop.
-- Models: Claude Opus 5.5, Claude Fable 5.2, GPT 6.1 Sol, Grok 4.7, Gemini 4 Neon, Muse Wonder 1.0,
+- Models: Claude Opus 5.5, Claude Fable 5.2, GPT 6.1 Sol, Grok 4.7, Muse Wonder 1.0,
   Claude Sonnet 5.5. Change them in `claude-cpamc-models.mjs`, `claude-desktop.json` and
   `codex-models.json` together.
 - The skill copies under `setup/skills/` come from `~/.claude/skills`; refresh them when those change.
+
+### 19. Google-account clients (`access.google-account-clients`)
+
+- A Google account was suspended for a TOS violation on 2026-11-25 after a client other than
+  `agy` (Antigravity CLI) sent it requests through cpamc. Models served through a Google account
+  (providers `antigravity`, `gemini-cli`, `aistudio`) are now reserved for the listed clients.
+- `access.google-account-clients` lists `{name, api-key}` pairs; the key must also be in
+  `access.api-keys`. Any other key gets 403 `google_account_model_not_allowed` before a credential is
+  selected (`sdk/api/handlers/custom_google_account_clients.go`, hooks in `handlers_execution.go` and
+  `handlers_stream.go`). Once a client is listed, a request without a key is rejected too.
+- Every request made with a client's key is logged in full, whatever `request-log` says, to
+  `<logs>/clients/<name>/`: the client's request (headers with keys masked, body), each upstream
+  request cpamc sends, each upstream response and the response the client got
+  (`internal/logging/custom_client_request_log.go`, `internal/api/custom_client_request_log.go`).
+  The purpose is to copy agy's exact requests into other clients later.
+- `observability.logs.client-request-log-max-total-size-mb` caps each client's folder; oldest files
+  go first.
+- Read them with the management key: `GET /v8/management/observability/logs/clients` (clients, file
+  count, bytes), `GET .../clients/<name>` (files, newest first), `GET .../clients/<name>/<file>`.
+- Local side (not in this repository): `agy` uses its own key from `~/.config/cpamc/agy-api-key`;
+  Google-account models live only in `~/.config/cpamc/agy-only-models.json` and the `model-sync`
+  skill refuses to put them in any other CLI.
+

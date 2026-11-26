@@ -143,6 +143,14 @@ access:
     - "your-api-key-2"
     - "your-api-key-3"
 
+  # Client API keys allowed to use the models served through a Google account (providers
+  # antigravity, gemini-cli and aistudio). Every other key gets 403 for those models. Each key
+  # must also be listed in api-keys. Every request made with one of these keys is logged in full
+  # under <logs>/clients/<name>, even with request-log off.
+  # google-account-clients:
+  #   - name: "agy"
+  #     api-key: "your-api-key-1"
+
 # Optional credential concurrency and observation contracts.
 
 # credentials:
@@ -1385,6 +1393,10 @@ observability:
 
     # Record proxy request/response logs. Management requests are excluded.
     request-log: false
+
+    # Maximum total size (MB) of each Google-account client's request log (see
+    # access.google-account-clients). The oldest files are deleted first. Set to 0 to disable.
+    client-request-log-max-total-size-mb: 0
 
   usage:
     # Enabled by default. Set false to explicitly disable usage collection.

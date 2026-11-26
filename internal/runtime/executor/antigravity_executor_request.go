@@ -224,7 +224,7 @@ func (e *AntigravityExecutor) buildRequestForModelDoc(ctx context.Context, auth 
 		bodyReader io.Reader = bytes.NewReader(finalPayload)
 		payloadLog []byte
 	)
-	if e.cfg != nil && e.cfg.RequestLog {
+	if helps.RequestLogCaptureEnabled(ctx, e.cfg) { // CUSTOM (cpamc-custom)
 		payloadLog = append([]byte(nil), finalPayload...)
 	}
 

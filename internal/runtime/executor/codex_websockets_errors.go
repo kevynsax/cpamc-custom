@@ -349,7 +349,7 @@ func recordWebsocketDialRetryFailure(ctx context.Context, cfg *config.Config, ws
 		helps.RecordAPIWebsocketError(ctx, cfg, "dial_retry", errDial)
 		return bodyErr
 	}
-	if cfg != nil && !cfg.CommercialMode && !cfg.RequestLog {
+	if !helps.RequestLogCaptureEnabled(ctx, cfg) { // CUSTOM (cpamc-custom)
 		helps.RecordAPIRequest(ctx, cfg, websocketUpgradeRequestLog(wsReqLog))
 	}
 	helps.RecordAPIWebsocketError(ctx, cfg, "dial_retry", errDial)

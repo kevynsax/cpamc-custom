@@ -211,6 +211,7 @@ func (s *Server) UpdateClientsContext(ctx context.Context, cfg *config.Config) b
 
 	s.handlers.UpdateClients(effectiveSDKConfig(cfg))
 	handlers.SetKeySpeedPayloadConfig(cfg.Payload) // CUSTOM (cpamc-custom)
+	s.applyGoogleAccountClients(cfg)               // CUSTOM (cpamc-custom)
 	s.handlers.SetPluginHost(s.interceptorHost)
 	if s.pluginHost != nil {
 		s.pluginHost.SetModelExecutor(s.handlers)

@@ -520,7 +520,7 @@ func (h *OpenAIResponsesAPIHandler) ResponsesWebsocket(c *gin.Context) {
 	codexResponseSteering := false
 	if h != nil {
 		if cfg := h.CurrentConfig(); cfg != nil {
-			requestLogEnabled = cfg.RequestLog
+			requestLogEnabled = cfg.RequestLog || logging.ClientRequestLogEnabled(c.Request.Context()) // CUSTOM (cpamc-custom)
 			codexResponseSteering = cfg.CodexResponseSteering
 		}
 	}

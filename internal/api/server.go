@@ -74,6 +74,8 @@ type Server struct {
 	// requestLogger is the request logger instance for dynamic configuration updates.
 	requestLogger logging.RequestLogger
 	loggerToggle  func(bool)
+	// CUSTOM (cpamc-custom): full request logger of each Google-account client.
+	clientRequestLoggers atomic.Pointer[logging.ClientRequestLoggers]
 
 	// configFilePath is the absolute path to the YAML config file for persistence.
 	configFilePath string
@@ -212,7 +214,7 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 			requestLogger = optionState.requestLoggerFactory(cfg, configFilePath)
 		}
 		if requestLogger != nil {
-			engine.Use(middleware.RequestLoggingMiddleware(requestLogger))
+			engine.Use(middleware.RequestLoggingMiddleware(requestLogger, s.clientRequestLoggerSelector())) // CUSTOM (cpamc-custom)
 			if setter, ok := requestLogger.(interface{ SetEnabled(bool) }); ok {
 				toggle = setter.SetEnabled
 			}
@@ -233,6 +235,7 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 	s.exampleAPIKeySafeModeActive.Store(s.exampleAPIKeySafeModeRequired(cfg))
 	s.handlers.SetPluginHost(s.interceptorHost)
 	handlers.SetKeySpeedPayloadConfig(cfg.Payload) // CUSTOM (cpamc-custom)
+	s.applyGoogleAccountClients(cfg)               // CUSTOM (cpamc-custom)
 	if optionState.pluginHost != nil {
 		optionState.pluginHost.SetModelExecutor(s.handlers)
 		optionState.pluginHost.SetAuthManager(authManager)

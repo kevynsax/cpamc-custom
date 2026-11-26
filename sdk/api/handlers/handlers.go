@@ -693,6 +693,8 @@ func (h *BaseAPIHandler) GetContextWithCancel(handler interfaces.APIHandler, c *
 	if requestCtx != nil {
 		parentCtx = httptransport.InheritDecorator(parentCtx, requestCtx)
 		parentCtx = logging.InheritDeferredCapture(parentCtx, requestCtx)
+		// CUSTOM (cpamc-custom): a Google-account client's request stays marked for its handlers.
+		parentCtx = logging.InheritClientRequestLog(parentCtx, requestCtx)
 	}
 	if c != nil && logging.DeferredAPICaptureFromContext(parentCtx) == nil && !logging.DeferredAPIRequestCaptureDisabled(parentCtx) {
 		if value, exists := c.Get(logging.DeferredAPIResponseContextKey); exists {
@@ -760,7 +762,8 @@ func (h *BaseAPIHandler) GetContextWithCancel(handler interfaces.APIHandler, c *
 		if c != nil {
 			logging.SetResponseStatus(cancelCtx, c.Writer.Status())
 		}
-		if cfg := h.CurrentConfig(); cfg != nil && cfg.RequestLog && len(params) == 1 {
+		// CUSTOM (cpamc-custom): a Google-account client's request log also waits for the upstream response.
+		if cfg := h.CurrentConfig(); cfg != nil && (cfg.RequestLog || logging.ClientRequestLogEnabled(cancelCtx)) && len(params) == 1 {
 			if captured, exists := c.Get(logging.APIResponseCapturedContextKey); exists {
 				if capturedBool, ok := captured.(bool); ok && capturedBool {
 					cancel()

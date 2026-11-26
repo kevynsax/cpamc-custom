@@ -67,6 +67,10 @@ func (h *BaseAPIHandler) executeWithAuthManagerFormats(ctx context.Context, entr
 		return nil, nil, errMsg
 	}
 	providers = adjustExecutionProvidersForEntryProtocol(entryProtocol, providers)
+	// CUSTOM (cpamc-custom): Google-account models are for the configured clients only.
+	if errMsg := googleAccountKeyError(ctx, providers); errMsg != nil {
+		return nil, nil, errMsg
+	}
 	// CUSTOM (cpamc-custom): per-key speed check on the payload-rule-resolved tier.
 	speedCheckHeaders := modelExecutionHeaders(ctx, execOptions.Headers)
 	if errMsg := keySpeedError(ctx, providers, normalizedModel, originalRequestedModel, rawJSON, speedCheckHeaders, execOptions.InternalSource); errMsg != nil { // CUSTOM (cpamc-custom)
@@ -152,6 +156,10 @@ func (h *BaseAPIHandler) executeCountWithAuthManager(ctx context.Context, handle
 		return nil, nil, errMsg
 	}
 	providers = adjustExecutionProvidersForEntryProtocol(handlerType, providers)
+	// CUSTOM (cpamc-custom): Google-account models are for the configured clients only.
+	if errMsg := googleAccountKeyError(ctx, providers); errMsg != nil {
+		return nil, nil, errMsg
+	}
 	reqMeta := requestExecutionMetadata(ctx)
 	addCallerScopeMetadata(reqMeta, execOptions.CallerScope)
 	reqMeta[coreexecutor.RequestedModelMetadataKey] = originalRequestedModel

@@ -95,6 +95,9 @@ func validateStartupConfig(data []byte, optional bool) (*startupConfig, error) {
 	if errValidate := validateTrustedProxies(cfg.TrustedProxies); errValidate != nil {
 		return nil, errValidate
 	}
+	if errValidate := validateGoogleAccountClients(cfg.GoogleAccountClients); errValidate != nil { // CUSTOM (cpamc-custom)
+		return nil, errValidate
+	}
 
 	cfg.CredentialConcurrency = cfg.CredentialConcurrency.WithDefaults()
 	if errValidate := cfg.CredentialInFlight.Validate(); errValidate != nil {
@@ -131,6 +134,10 @@ func validateStartupConfig(data []byte, optional bool) (*startupConfig, error) {
 
 	if cfg.LogsMaxTotalSizeMB < 0 {
 		cfg.LogsMaxTotalSizeMB = 0
+	}
+
+	if cfg.ClientRequestLogMaxTotalSizeMB < 0 { // CUSTOM (cpamc-custom)
+		cfg.ClientRequestLogMaxTotalSizeMB = 0
 	}
 
 	if cfg.ErrorLogsMaxFiles < 0 {

@@ -33,11 +33,18 @@ const (
 // It captures detailed information about the request and response, including headers and body,
 // and uses the provided RequestLogger to record this data. When full request logging is disabled,
 // large and unknown-size bodies are spooled to disk and retained only for error logs.
-func RequestLoggingMiddleware(logger logging.RequestLogger) gin.HandlerFunc {
+// CUSTOM (cpamc-custom): a selector may choose another logger for a request.
+func RequestLoggingMiddleware(logger logging.RequestLogger, selectors ...RequestLoggerSelector) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if logger == nil {
 			c.Next()
 			return
+		}
+
+		// CUSTOM (cpamc-custom): a selector may log this request with another logger.
+		requestLogger := logger
+		for _, selectLogger := range selectors {
+			requestLogger = selectLogger(c, requestLogger)
 		}
 
 		if shouldSkipMethodForRequestLogging(c.Request) {
@@ -51,7 +58,7 @@ func RequestLoggingMiddleware(logger logging.RequestLogger) gin.HandlerFunc {
 			return
 		}
 
-		loggerEnabled := logger.IsEnabled()
+		loggerEnabled := requestLogger.IsEnabled()
 		hasMatchedRoute := c.FullPath() != ""
 		captureBody := hasMatchedRoute && shouldCaptureRequestBody(loggerEnabled, c.Request)
 
@@ -63,7 +70,7 @@ func RequestLoggingMiddleware(logger logging.RequestLogger) gin.HandlerFunc {
 		}
 
 		// Create response writer wrapper
-		wrapper := NewResponseWriterWrapper(c.Writer, logger, requestInfo)
+		wrapper := NewResponseWriterWrapper(c.Writer, requestLogger, requestInfo)
 		wrapper.ginContext = c
 		if !loggerEnabled {
 			wrapper.logOnErrorOnly = true
@@ -73,8 +80,8 @@ func RequestLoggingMiddleware(logger logging.RequestLogger) gin.HandlerFunc {
 			c.Set(logging.DeferredAPIResponseContextKey, deferredAPICapture)
 		}
 		c.Writer = wrapper
-		attachRequestLogSources(c, logger, loggerEnabled && hasMatchedRoute)
-		deferredCapture := attachDeferredRequestBodyCapture(c.Request, logger, requestInfo, false, false)
+		attachRequestLogSources(c, requestLogger, loggerEnabled && hasMatchedRoute)
+		deferredCapture := attachDeferredRequestBodyCapture(c.Request, requestLogger, requestInfo, false, false)
 		if captureBody {
 			c.Set(authenticatedRequestBodyCapturerContextKey, func() {
 				if deferredCapture != nil && deferredCapture.bytesRead == 0 {

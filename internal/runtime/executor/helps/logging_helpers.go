@@ -60,8 +60,13 @@ type upstreamAttempt struct {
 	trailingNewlines     int
 }
 
-func requestLogCaptureEnabled(cfg *config.Config) bool {
-	return cfg != nil && cfg.RequestLog && !cfg.CommercialMode
+// RequestLogCaptureEnabled reports whether the upstream exchange is recorded in full.
+func RequestLogCaptureEnabled(ctx context.Context, cfg *config.Config) bool {
+	if cfg == nil || cfg.CommercialMode {
+		return false
+	}
+	// CUSTOM (cpamc-custom): a Google-account client's request is recorded in full too.
+	return cfg.RequestLog || logging.ClientRequestLogEnabled(ctx)
 }
 
 // RecordAPIRequest stores the upstream request metadata in Gin context for request logging.
@@ -70,7 +75,7 @@ func RecordAPIRequest(ctx context.Context, cfg *config.Config, info UpstreamRequ
 		return
 	}
 	// Check the immutable policy and request-scoped capture before accessing the pooled Gin context.
-	if !cfg.RequestLog {
+	if !RequestLogCaptureEnabled(ctx, cfg) { // CUSTOM (cpamc-custom)
 		if logging.DeferredAPIRequestCaptureDisabled(ctx) {
 			return
 		}
@@ -222,7 +227,7 @@ func deferAPIRequest(ginCtx *gin.Context, info UpstreamRequestLog) {
 }
 
 func deferredResponseCaptureEnabled(ctx context.Context, cfg *config.Config) bool {
-	if cfg == nil || cfg.CommercialMode || cfg.RequestLog {
+	if cfg == nil || cfg.CommercialMode || RequestLogCaptureEnabled(ctx, cfg) { // CUSTOM (cpamc-custom)
 		return false
 	}
 	return !logging.DeferredAPIRequestCaptureDisabled(ctx)
@@ -296,7 +301,7 @@ func newAPIRequestLogBuilder(index int, info UpstreamRequestLog, timestamp time.
 // RecordAPIResponseMetadata captures upstream response status/header information for the latest attempt.
 func RecordAPIResponseMetadata(ctx context.Context, cfg *config.Config, status int, headers http.Header) {
 	logging.SetResponseHeaders(ctx, headers)
-	if !requestLogCaptureEnabled(cfg) {
+	if !RequestLogCaptureEnabled(ctx, cfg) {
 		recordDeferredResponseMetadata(ctx, cfg, status, headers)
 		return
 	}
@@ -337,7 +342,7 @@ func RecordAPIResponseError(ctx context.Context, cfg *config.Config, err error) 
 	if err == nil {
 		return
 	}
-	if !requestLogCaptureEnabled(cfg) {
+	if !RequestLogCaptureEnabled(ctx, cfg) {
 		recordDeferredResponseError(ctx, cfg, err)
 		return
 	}
@@ -430,7 +435,7 @@ func BindAPIResponseStreamLogger(ctx context.Context, cfg *config.Config) *APIRe
 	if cfg == nil || cfg.CommercialMode {
 		return nil
 	}
-	if !requestLogCaptureEnabled(cfg) {
+	if !RequestLogCaptureEnabled(ctx, cfg) {
 		capture := resolveDeferredAPICapture(ctx, cfg)
 		if capture == nil {
 			return nil
@@ -555,7 +560,7 @@ func (l *APIResponseStreamLogger) RecordError(err error) {
 
 // AppendAPIResponseChunk appends an upstream response chunk to Gin context for request logging.
 func AppendAPIResponseChunk(ctx context.Context, cfg *config.Config, chunk []byte) {
-	if !requestLogCaptureEnabled(cfg) {
+	if !RequestLogCaptureEnabled(ctx, cfg) {
 		appendDeferredResponseChunk(ctx, cfg, chunk)
 		return
 	}
@@ -631,7 +636,7 @@ func RecordAPIWebsocketRequest(ctx context.Context, cfg *config.Config, info Ups
 	if cfg == nil || cfg.CommercialMode {
 		return
 	}
-	if !cfg.RequestLog {
+	if !RequestLogCaptureEnabled(ctx, cfg) { // CUSTOM (cpamc-custom)
 		RecordAPIRequest(ctx, cfg, info)
 		return
 	}
@@ -665,7 +670,7 @@ func RecordAPIWebsocketRequest(ctx context.Context, cfg *config.Config, info Ups
 // RecordAPIWebsocketHandshake stores the upstream websocket handshake response metadata.
 func RecordAPIWebsocketHandshake(ctx context.Context, cfg *config.Config, status int, headers http.Header) {
 	logging.SetResponseHeaders(ctx, headers)
-	if !requestLogCaptureEnabled(cfg) {
+	if !RequestLogCaptureEnabled(ctx, cfg) {
 		recordDeferredResponseMetadata(ctx, cfg, status, headers)
 		return
 	}
@@ -694,7 +699,7 @@ func RecordAPIWebsocketUpgradeRejection(ctx context.Context, cfg *config.Config,
 		return
 	}
 	// Check the immutable policy and request-scoped capture before accessing the pooled Gin context.
-	if !cfg.RequestLog {
+	if !RequestLogCaptureEnabled(ctx, cfg) { // CUSTOM (cpamc-custom)
 		if logging.DeferredAPIRequestCaptureDisabled(ctx) {
 			return
 		}
@@ -734,7 +739,7 @@ func WebsocketUpgradeRequestURL(rawURL string) string {
 
 // AppendAPIWebsocketResponse stores an upstream websocket response frame in Gin context.
 func AppendAPIWebsocketResponse(ctx context.Context, cfg *config.Config, payload []byte) {
-	if !requestLogCaptureEnabled(cfg) {
+	if !RequestLogCaptureEnabled(ctx, cfg) {
 		appendDeferredResponseChunk(ctx, cfg, payload)
 		return
 	}
@@ -769,7 +774,7 @@ func RecordAPIWebsocketError(ctx context.Context, cfg *config.Config, stage stri
 	if err == nil {
 		return
 	}
-	if !requestLogCaptureEnabled(cfg) {
+	if !RequestLogCaptureEnabled(ctx, cfg) {
 		stageErr := err
 		if trimmed := strings.TrimSpace(stage); trimmed != "" {
 			stageErr = fmt.Errorf("%s: %w", trimmed, err)
